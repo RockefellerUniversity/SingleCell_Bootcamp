@@ -1,0 +1,65 @@
+---
+title: "Single-cell RNA sequencing ~ Session 3<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+author: "Rockefeller University, Bioinformatics Resource Centre"
+date: "https://rockefelleruniversity.github.io/scRNA-seq/"
+output: 
+  xaringan::moon_reader:
+    css: ["default", "metropolisCustom.css", "metropolis-fontsCustom.css"]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+  html_document:
+    toc: true # table of content true
+    toc_float: yes
+    depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: false  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+params:
+  isSlides: "no"
+---
+```{r setup, include=FALSE}
+suppressPackageStartupMessages(require(knitr))
+suppressPackageStartupMessages(require(DropletUtils))
+suppressPackageStartupMessages(require(SingleCellExperiment))
+suppressPackageStartupMessages(require(scran))
+suppressPackageStartupMessages(require(scater))
+suppressPackageStartupMessages(require(scuttle))
+suppressPackageStartupMessages(require(scDblFinder))
+knitr::opts_chunk$set(echo = TRUE, tidy = T)
+```
+
+
+## Outline
+There are more and more Bioconductor packages supporting single-cell data analysis. R Amezquita, A Lun, S Hicks, and R Gottardo wrote an integrated workflow, [Orchestrating Single-Cell Analysis with Bioconductor](https://bioconductor.org/books/release/OSCA/), for single-cell data analysis and quality assessment. In this session, we will go through several important QC metrics which can't be made with Seurat. 
+
+- How to differentiate empty droplets?
+- How to estimate ambient RNA and remove them?
+- How to identify doublets?
+- Checking for confounded effect?
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Loading data and empty droplets
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("#  Loading data and empty drops
+
+---
+"    
+  )
+  
+}
+
+```
+

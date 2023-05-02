@@ -1,0 +1,9 @@
+<br>
+
+#### **Single-cell RNA sequencing , Session 2**
+
+In this session we will cover data processing with Seurat, including:
+
+* Basic QC, including mitochondrial content and cell cycle
+* Normalization and clustering
+* Visualization

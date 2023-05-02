@@ -1,0 +1,25 @@
+---
+title: "Exercise 2 - Bioconductor"
+author: "Rockefeller University, Bioinformatics Resource Centre"
+date: "https://rockefelleruniversity.github.io/scRNA-seq"
+output: 
+  html_document:
+    number_sections: false  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+params:
+  toMessage: false    
+---
+
+```{r, setup,include=FALSE}
+toMessage <- ifelse(!is.null(params$toMessage),params$toMessage,FALSE)
+message(toMessage)
+suppressPackageStartupMessages(require(DropletUtils))
+suppressPackageStartupMessages(require(SingleCellExperiment))
+suppressPackageStartupMessages(require(scran))
+suppressPackageStartupMessages(require(scater))
+suppressPackageStartupMessages(require(scuttle))
+suppressPackageStartupMessages(require(scDblFinder))
+```
+
+

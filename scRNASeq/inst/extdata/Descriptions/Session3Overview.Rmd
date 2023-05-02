@@ -1,0 +1,9 @@
+<br>
+
+#### **Single-cell RNA sequencing , Session 3**
+
+In this session we will cover data processing with Bioconductor pacakges, including:
+
+* Empty droplet removal
+* Ambient RNA removal
+* Doublet removal

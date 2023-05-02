@@ -1,0 +1,36 @@
+---
+title: "Single-cell RNA sequencing ~ Session 2 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+author: "Rockefeller University, Bioinformatics Resource Centre"
+date: "https://rockefelleruniversity.github.io/scRNA-seq/"
+output: 
+  xaringan::moon_reader:
+    css: ["default", "metropolisCustom.css", "metropolis-fontsCustom.css"]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+  html_document:
+    toc: true # table of content true
+    toc_float: yes
+    depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: false  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+params:
+  isSlides: "no"
+---
+```{r setup, include=FALSE}
+suppressPackageStartupMessages(require(knitr))
+suppressPackageStartupMessages(require(Seurat))
+suppressPackageStartupMessages(require(dplyr))
+suppressPackageStartupMessages(require(bioMart))
+suppressPackageStartupMessages(require(SeuratWrappers))
+knitr::opts_chunk$set(echo = TRUE, tidy = T)
+```
+
+##  Data analysis with [Seurat](https://satijalab.org/seurat/)
+
+[Seurat](https://satijalab.org/seurat/) is a powerful package for single-cell data analysis. It supports many common analysis of single-cell RNAseq and cross connection with many useful packages through [SeuratWrapper](https://github.com/satijalab/seurat-wrappers). 
+
+In this session, we will demonstrate our regular workflow for single-cell RNAseq data analysis with Seurat.
