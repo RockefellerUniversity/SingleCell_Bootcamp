@@ -43,7 +43,7 @@ jobs:
       - name: Query dependencies
         run: |
           install.packages('remotes')
-          saveRDS(remotes::dev_package_deps("scRNASeq/",dependencies = TRUE), ".github/depends.Rds", version = 2)
+          saveRDS(remotes::dev_package_deps("SingleCell_Bootcamp/",dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
         shell: Rscript {0}
 
@@ -75,7 +75,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          remotes::install_deps("scRNASeq/",dependencies = TRUE)
+          remotes::install_deps("SingleCell_Bootcamp/",dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
           remotes::install_cran("BiocManager")
           BiocManager::install("rmarkdown")
@@ -93,11 +93,11 @@ jobs:
       - name: Install package
         if: github.ref == 'refs/heads/master' 
         run: |
-          devtools::install("scRNASeq/",dependencies = TRUE,quick = TRUE)
+          devtools::install("SingleCell_Bootcamp/",dependencies = TRUE,quick = TRUE)
         shell: Rscript {0}
 
       - name: CompileCourse
         run: |
           require(compileCourses)
-          compileCourses::compileSingleCourseMaterial(repo="RockefellerUniversity",subdir="scRNASeq",branch="master")
+          compileCourses::compileSingleCourseMaterial(repo="RockefellerUniversity",subdir="SingleCell_Bootcamp",branch="master")
         shell: Rscript {0}
