@@ -27,7 +27,40 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ```
 
 ## Overview
-In this course we are going to introduce basic analysis for single-cell RNAseq, with a specific focus on the 10X system. The course is divided into three sessions. In the first session, we will introduce how to interpret the Cell  Ranger QC report and how to do analysis with the LOUPE Browser. We will also demonstrate the customized analysis we can support right know. In the Second session, we will demonstrate how to process scRNAseq data and make QC reports with Seurat. In the third session, we will discuss how to to do more advanced analysis and QC with Bioconductor packages. 
+<!-- In this course we are going to introduce basic analysis for single-cell RNAseq, with a specific focus on the 10X system. The course is divided into three sessions. In the first session, we will introduce how to interpret the Cell  Ranger QC report and how to do analysis with the LOUPE Browser. We will also demonstrate the customized analysis we can support right know. In the Second session, we will demonstrate how to process scRNAseq data and make QC reports with Seurat. In the third session, we will discuss how to to do more advanced analysis and QC with Bioconductor packages.  -->
+
+## Intro to single cell
+
+- why single cell? - questions that it addresses
+- cover the different technologies - laso mentio. other variations like scATAC and spatial. 
+- typical workflow at a coarse level - focus on 10X
+- talk about the scale of the issue - i.e rapidly evolving and many packages
+
+## Sequencer to Counts Matrix
+
+- CellRanger
+- Alternatives i.e. alevin
+mention other tools that might be speicifc to alternate technologies. But maybe not go into detail with them 
+
+## CellRanger
+- Walkthrough
+- QC
+
+
+## Cell Ranger
+[Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) is a widely used software for single-cell sequencing data analysis. It supports various kinds of analysis for 10X single-cell sequencing data.
+
+- Alignment and counting
+- Analysis of VDJ changes
+- Datasets aggregation
+- Convert BCL files (raw files) into FASTQ files
+- Generation of customized GTF and Genome files
+
+
+
+## Loupe Browser for viz
+
+
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -53,17 +86,26 @@ if(params$isSlides == "yes"){
 
 ```
 
-## Cell Ranger
-[Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) is a widely used software for single-cell sequencing data analysis. It supports various kinds of analysis for 10X single-cell sequencing data.
 
-- Alignment and counting
-- Analysis of VDJ changes
-- Datasets aggregation
-- Convert BCL files (raw files) into FASTQ files
-- Generation of customized GTF and Genome files
 
 
 ---
 ## Basic reports of Cell Ranger
 - [QC Report](data/WT.html)
 - cloupe file: can be processed by [LOUPE Browser](https://support.10xgenomics.com/single-cell-gene-expression/software/visualization/latest/what-is-loupe-cell-browser)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
