@@ -195,13 +195,13 @@ jobs:
         shell: Rscript {0}
 
       - name: Install package
-        if: github.ref == 'refs/heads/master' 
+        if: github.ref == 'refs/heads/main' 
         run: R CMD INSTALL ./scRNASeq/
 
       - name: Session info
         run: |
           require(compileCourses)
-          compileCourses::compileSingleCourseMaterial(repo="RockefellerUniversity",subdir="scRNASeq",branch="master")
+          compileCourses::compileSingleCourseMaterial(repo="RockefellerUniversity",subdir="scRNASeq",branch="main")
         shell: Rscript {0}
 
       - name: Move to docs
@@ -219,11 +219,11 @@ jobs:
           git config --global http.postBuffer 263112000
           git add docs/\* r_course/\*
           git commit -m 'Autobuild' 
-          git push origin HEAD:refs/heads/master
+          git push origin HEAD:refs/heads/main
       
       - name: Upload check results
         if: failure()
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@main
         with:
           name: ${{ runner.os }}-biocdocker-biocbranch-release-r-${{ steps.findrversion.outputs.rversion }}-bioc-${{ steps.findrversion.outputs.biocversionnum }}-results
           path: check
