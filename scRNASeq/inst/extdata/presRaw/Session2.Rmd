@@ -37,20 +37,6 @@ In this session, we will demonstrate our regular workflow for single-cell RNAseq
 
 
 
-
-
-
----
-title: "Section 2 ~ Process scRNA data"
-author: "Ji-Dung Luo"
-date: "`r Sys.Date()`"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ```{r load_pack,include=TRUE,eval=FALSE}
 library(Seurat)
 library(ggplot2)
@@ -87,3 +73,12 @@ library(reticulate)
 # What is this data?
 
 Matrix download, and what other files needed?
+
+
+```{r}
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+
+# untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+
+
+```
