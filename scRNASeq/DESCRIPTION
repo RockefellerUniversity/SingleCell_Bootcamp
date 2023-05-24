@@ -9,7 +9,7 @@ License: What license is it under?
 LazyData: TRUE
 biocViews: Training
 Remotes: satijalab/seurat-wrappers
-Depends: DropletUtils, scDblFinder, SingleCellExperiment, scran, scater, Seurat, dplyr, scuttle, biomaRt
+Depends: DropletUtils, scDblFinder, SingleCellExperiment, scran, scater, Seurat, dplyr, scuttle, biomaRt, Herper, clustree, ggplot2
 Suggests: knitr,
     rmarkdown,
     testthat,
