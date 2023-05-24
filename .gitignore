@@ -40,3 +40,7 @@ vignettes/*.pdf
 
 # Miniconda
 mini
+
+# Data
+filtered_feature_bc_matrix
+10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz
