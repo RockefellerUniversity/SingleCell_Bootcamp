@@ -1,0 +1,564 @@
+---
+title: "temp"
+author: "Matt"
+date: '2023-05-24'
+output: html_document
+---
+
+
+
+
+# Load Cellranger data into R
+
+## Load cellranger matrix into matrix
+
+```{r,include=F,echo=F,eval=FALSE}
+mtx_dir <- "/Users/mattpaul/Downloads/filtered_feature_bc_matrix/"
+
+#/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz"
+```
+
+```{r load_data,include=TRUE,eval=FALSE}
+library(Seurat)
+#
+mtx_dir <- "path to matrix directory"
+mtx <- Seurat::Read10X(mtx_dir)
+#
+is(mtx)
+head(mtx)
+```
+
+## Load cellranger matrix (in .h5 format) into matrix
+- In an alternative way, we can use *Read10X_h5* function to read cellranger matrix from an **.h5** file.
+- What is difference? Why would do it differently?
+
+
+```{r load_h5,include=TRUE,eval=FALSE}
+h5_file <- "path to matrix h5 file"
+h5_file <- "~/Downloads//10k_PBMC_3p_nextgem_Chromium_Controller_molecule_info.h5"
+mtx <- Seurat::Read10X_h5(h5_file)
+#
+mtx
+```
+
+## Create Seurat object from matrix - defaults for this are 0? Why different? Should include?
+* The matrix is loaded into Seurat object with **CreateSeurtObject()**
+* Cut-off
+  + min_gene: minimal genes detected in each cell. *(cells with too few genes detected)*
+  + min_cell: minimal cells a given gene was tested positive. *(Remove genes expressed in too few cells)*
+```{r load_CreateOBJ,include=TRUE,eval=FALSE}
+sample_id <- "PBMC_10k" # sample name
+min_gene <- 200 # cut-off for cells with too few genes detected
+min_cell <- 10 # cut-off to remove genes expressed in too few cells
+#
+seu_obj <- Seurat::CreateSeuratObject(mtx,project=sample_id,min.cells=min_cell,min.features=min_gene)
+seu_obj[["dset"]] <- sample_id # Create a category for sample
+seu_obj <- Seurat::RenameCells(seu_obj,add.cell.id=sample_id) # add sample name in front of cell barcode
+```
+
+```{r laod_CreatOBJ_pres,include=TRUE,eval=TRUE}
+message("Seurat Object")
+seu_obj
+#
+message("Metadata information")
+head(seu_obj,2)
+```
+
+## Estimate proportions of mitochondrial genes - what is bad proporiotn?
+2 methods. do we need to cover both?
+* Estimate the counts of mitochondrial genes in overall counts with **PercentageFeatureSet()**
+* The Feature sets can be selected by *patterns of gene names* or *directly assign specific genes*. 
+  + While assign gene names, we have to make sure *the given genes are detected in the Seurat object*.
+```{r load_estMT,include=TRUE,eval=FALSE}
+message("select by pattern")
+seu_obj[["percent.mt"]] <- PercentageFeatureSet(seu_obj,pattern = "^MT-")
+summary(seu_obj$percent.mt)
+#
+message("assign gene names")
+mt_gene <- c("MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5","MT-ND6",
+             "MT-CO1","MT-CO2","MT-CO3","MT-ATP6","MT-ATP8","MT-CYB")
+mt_gene_det <- mt_gene[mt_gene %in% rownames(seu_obj)] # make sure the genes presented in the seurat object
+seu_obj[["percent.mt2"]] <- PercentageFeatureSet(seu_obj,features = mt_gene_det)
+summary(seu_obj$percent.mt2)
+#
+message("Test condordance with Spearman's correlation")
+dat <- data.frame(byPattern=seu_obj$percent.mt,byGene=seu_obj$percent.mt2,stringsAsFactors = FALSE)
+cor_val <- cor.test(dat$byPattern,dat$byGene,method = "spearman")
+ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
+  labs(x="% of MT,est by pattern",y="% of MT, est by genes",
+       subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+```
+
+# Normalization, Feature selection, and data scaling
+- Log normalization
+- SCTransform
+
+## Log normlaization ~ default 
+* In Seurat vignette, this step includes:
+  + log normalization with *NomalizeData()*
+  + Identify Variable Features with *FindVariableFeatures()*
+  + Scale Data with *ScaleData()*
+```{r norm_log,include=TRUE,eval=FALSE}
+message("log normalization, scale to 10,000")
+seu_obj <- NormalizeData(seu_obj,normalization.method="LogNormalize",scale.factor=10000)
+#
+message("Identify variables, select top 3000 features with VST method")
+seu_obj <- FindVariableFeatures(seu_obj,select.method="vst",nfeatures=3000)
+#
+message("Scale data")
+seu_obj <- ScaleData(seu_obj)
+```
+
+## Highly Variable Features
+- Highly variable features were colored with *red*. 
+- Gene symbols of the top 10 higly variable features were labeled near by the spots
+```{r norm_plotHVF,include=TRUE,eval=TRUE}
+top10 <- head(VariableFeatures(seu_obj), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(seu_obj)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot2
+```
+
+## Normalization and scaling by usign SCTransform
+- SCTransform is a normalization based on negative binomial regression
+- It is performed with **SCTransform()** function of Seurat.
+- This function equal to the combinations of NormalizaeData(), FindVariableFeatures(), and ScaleData().
+- The normalized data is stoered in assay **SCT**.
+```{r norm_sct,include=TRUE,eval=FALSE}
+seu_obj <- SCTransform(seu_obj,variable.features.n = 3000)
+#
+seu_obj
+```
+
+## Compare the results between log normalization and SCTransform
+
+- pros and cons?
+- do we have any plots to describe this?
+
+```{r norm_comp,include=TRUE,eval=FALSE}
+message("get log normalization data")
+log_mat <- GetAssayData(seu_obj,assay="RNA",slot="data")
+log_mat <- as.matrix(log_mat)
+log_avgExp <- rowMeans(log_mat)
+#
+message("get SCTransformed data")
+sct_mat <- GetAssayData(seu_obj,assay="SCT",slot="data")
+sct_mat <- as.matrix(sct_mat)
+sct_avgExp <- rowMeans(sct_mat)
+#
+message("Test concordance with Spearman's correlation")
+dat <- data.frame(logNorm=log_avgExp,SCT=sct_avgExp,stringsAsFactors = FALSE)
+cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
+ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
+  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+```
+
+# Cell cycle Phases
+In this step, we will introduce two methods to estimate cell cycle phase for each cell.
+- The CellCycleScoring function in *Seurat*
+- Cyclone function in *scran* 
+
+## Estimate with CellCycleScoring function of Seurat
+* Requirement
+  + The Seurat object after normalization
+  + Features for S-Phase (feat_s)
+  + Features for G2M-Phase (feat_g2m)
+  + Seurat provide features for S/G2M-Phase
+```{r ccPhase_Seurat,include=TRUE,eval=FALSE}
+message("Features for S-Phase")
+feat_s <- cc.genes$s.genes
+feat_s
+#
+message("Features for G2M-Phase")
+feat_g2m <- cc.genes$g2m.genes
+feat_g2m
+```
+
+## Estimate with CellCycleScoring function of Seurat
+* Rationale
+  + Estimate the scoring based on specific features for S-phase/G2M-phase, respectively
+  + Differentiate Phase by the scores.
+  + For a given cell with significant high S.Score or G2M.Score was assigned as S/G2M, respectively
+  + Cells with low both S.Score and G2M.Score were assigned as G1.
+* Would *overestimate* cells in S-/G2M-phases in the tissues with low cell cycle, eg neurons (what does this look like?)
+```{r ccPhase_plot_Seurat,include=TRUE,eval=FALSE}
+seu_obj <- CellCycleScoring(seu_obj,s.features = feat_s,g2m.features = feat_g2m)
+#
+dat_s <- data.frame(cell_id=Cells(seu_obj),cat="S_Score",Phase=seu_obj$Phase,score=seu_obj$S.Score,stringsAsFactors = FALSE)
+dat_g2m <- data.frame(cell_id=Cells(seu_obj),cat="G2M_Score",Phase=seu_obj$Phase,score=seu_obj$G2M.Score,stringsAsFactors = FALSE)
+dat <- rbind(dat_s,dat_g2m)
+#
+dat$Phase <- factor(dat$Phase,levels = c("G1","S","G2M"))
+ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_boxplot()+
+  labs(x="",y="Score",fill="Phase")+
+  facet_wrap(~cat)+theme_classic()
+```
+
+
+## Cell cycle estimation by cyclone
+* This step is processed by cyclon function in scran
+* Requirement
++ convert Seurat object to SinlgeCellExperiment Object
++ features for G1, S, and G2M Phases
+* Rationale
++ Estimate scores for each cell in different phases with the corresponding features
++ Assign the cell cycle phases by the maximum of scores
+* Much *slower* than CellCycleScoring in Seurat
+
+## Requirement for cyclon
+
+how do we make that object?
+```{r ccPhase_cyclon_prep,include=TRUE,eval=FALSE}
+library(scran)
+#
+message("convert seurat object into SingleCellExperiment")
+sce <- as.SingleCellExperiment(seu_obj,assay = "RNA")
+rowData(sce)$SYMBOL <- rownames(sce)
+sce
+#
+message("Features for cell cycle phases")
+load("~/Downloads/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData")
+ccGene_hs <- ccGene_mm_hs$human_symbol
+lapply(ccGene_hs,function(x){head(x,2)})
+```
+
+## Process with cyclone
+```{r ccPhase_cyclon_proc,include=TRUE,eval=FALSE}
+assignments <- cyclone(sce, ccGene_hs, gene.names=rowData(sce)$SYMBOL)
+lapply(assignments,head)
+#
+seu_obj[["cyclon_Phase"]] <- assignments$phases
+seu_obj[["cyclon_G1Score"]] <- assignments$scores$G1
+seu_obj[["cyclon_SScore"]] <- assignments$scores$S
+seu_obj[["cyclon_G2MScore"]] <- assignments$scores$G2M
+```
+
+## Score vs Phases
+```{r ccPhase_cyclon_boxPlot,include=TRUE,eval=FALSE}
+dat_g1 <- data.frame(cell_id=Cells(seu_obj),cat="cyclon_G1Score",Phase=seu_obj$cyclon_Phase,score=seu_obj$cyclon_G1Score,stringsAsFactors = FALSE)
+dat_s <- data.frame(cell_id=Cells(seu_obj),cat="cyclon_SScore",Phase=seu_obj$cyclon_Phase,score=seu_obj$cyclon_SScore,stringsAsFactors = FALSE)
+dat_g2m <- data.frame(cell_id=Cells(seu_obj),cat="cyclon_G2MScore",Phase=seu_obj$cyclon_Phase,score=seu_obj$cyclon_G2MScore,stringsAsFactors = FALSE)
+dat <- rbind(dat_g1,dat_s,dat_g2m)
+#
+dat$Phase <- factor(dat$Phase,levels = c("G1","S","G2M"))
+dat$cat <- factor(dat$cat,levels = c("cyclon_G1Score","cyclon_SScore","cyclon_G2MScore"))
+ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_boxplot()+
+  labs(x="",y="Score",fill="Phase")+
+  facet_wrap(~cat)+theme_classic()
+```
+
+## Compare the two strategies
+- *cyclone* assigned more cells to *G1* phase. (*more accurate?*). seems like a very big discrepancy?
+- *cyclone* spends more time than *CellCycleScoring*.
+- It might be worth to process both methods and evaluate which results make more sense for your own dataset.
+```{r ccPhase_comp,include=TRUE,eval=FALSE}
+message("Cell Cycle Phase determined by Seurat::CellCycleScoring()")
+table(seu_obj$Phase)
+#
+message("Cell Cycle Phase determined by scran::cyclone()")
+table(seu_obj$cyclon_Phase)
+#
+message("Compare the two method: Seurat in row and scran in column")
+table(seu_obj$Phase,seu_obj$cyclon_Phase)
+```
+
+# Detect doublets with Scrublet
+
+## Description
+* Doublets mean multiple cells clumped in the same single droplet. 
++ A doublet may have much more UMIs and Genes in a single cell barcode than the overall population
++ Multiple marker genes, even they are exclusive, can be detected in doublets at the same time. 
+
+* Scrublet is a tool to detect doublets
++ The GitHub [link](https://github.com/swolock/scrublet) 
++ Original Paper on bioRxiv [link](https://www.biorxiv.org/content/10.1101/357368v1)
++ It's based on python. So, we have to use reticulate to invoke scrublet into R.
+
+## Estimate doublet score
+```{r}
+library(Herper)
+
+conda_install  <- install_CondaTools("scrublet","scRNA",pathToMiniConda = "../mini")
+
+Sys.setenv('RETICULATE_PYTHON'=file.path(conda_install$pathToEnvBin, "python"))
+```
+
+
+```{r det_doublet_est,include=TRUE,eval=FALSE}
+
+
+message("invoke scrublet in R by using reticulate")
+# library(reticulate)
+# py_path <- "path to the python with scrublet installed"
+# # py_path <- "/Users/JDLuo/opt/anaconda3/envs/reticulate/bin/python"
+# Sys.setenv('RETICULATE_PYTHON'=py_path)
+scr <- import("scrublet")
+#
+message("dumping count matrix from seurat object")
+mat <- GetAssayData(seu_obj,assay = "RNA",slot = "counts")
+mat <- as.matrix(mat)
+#
+message("Estimate doublet score")
+scrub <- scr$Scrublet(t(mat))
+doublet <- scrub$scrub_doublets()
+names(doublet) <- c("doublet_score","doublet")
+#
+message("doublet score")
+summary(doublet$doublet_score)
+#
+message("doublets")
+table(doublet$doublet)
+```
+
+## Import Scrublet results into Seurat object
+```{r det_doublet_pres,include=TRUE,eval=FALSE}
+seu_obj[["doublet_score"]] <- doublet$doublet_score
+seu_obj[["doublet"]] <- doublet$doublet
+#
+message("UMIs,genes, and doublet scores of each cell in doublets/singlets")
+VlnPlot(seu_obj,group.by = "doublet",
+        features = c("nCount_RNA","nFeature_RNA","doublet_score"),
+        pt.size = 0)
+#
+FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",pt.size = 0.1,group.by = "doublet")
+```
+
+# Quality assessment
+
+## Distribution of particular variables in violin plot
+* This kind of plot is applied to evaluate the variables, including
+  + UMIs (*nCount_RNA*) per cell
+  + Genes detected (*nFeature_RNA*) per cell
+  + Ratio of UMIs of mitochondrial genes to nucleus genes (*percent.mt*)
+* If a bimodal distribution is identified, we need to check any interference
+
+nFeature is bimodal
+```{r qcPlot_vlnPlot_pres1,include=TRUE,eval=FALSE}
+VlnPlot(seu_obj,group.by = "dset",
+        features = c("nCount_RNA","nFeature_RNA","percent.mt"),
+        pt.size = 0)
+```
+
+## Evaluate the interactions between two variables with scatter plots
+* Comparison between UMIs and genes detected per cell
+  + UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) shall be in a high correlation
+  + doublets would be with high UMIs and high genes detected.
+```{r qcPlot_scatter_pres1,include=TRUE,eval=FALSE}
+message("UMIs vs genes detected per cell, group by doublet")
+FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
+               group.by = "doublet")
+```
+
+* Comparison between UMI counts and the percent of mitochondrial content
+  + Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
+```{r qcPlot_scatter_pres2,include=TRUE,eval=FALSE}
+message("UMIs vs the ratio of mitochondrial genes")
+FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "percent.mt")
+```
+
+## Ridge plot
+* This plot would be applied to demonstrate a given variable and their corresponding score (eg. doublet vs doublet_score).
+* It is applied to evaluate the difference between groups in the variable.
+* This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
+```{r qcPlot_ridgePlot_pres,include=TRUE,eval=FALSE}
+message("doublet vs doublet_score")
+RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
+```
+
+# Filtering doublets and cell debris - why does debris have high mt?
+
+## Criteria
+* The cell debris are with high percent.mt and low UMI counts. Generally, we set various cut-off on percent.mt
+  + In most scRNA cases, we set the *percent.mt > 10* (95% of overall population)
+  + For several specific tissues with high oxygen consumption, like activated leukocytes or muscles, we set the *percent.mt > 25*.
+  + For single-nuclei profiling, we should not get any UMIs originated from mitochondrial genes. We set the *percent.mt > 1*.
+* The doublets detected by Scrublet shall be removed.
+```{r filtCell_pres,include=TRUE,eval=FALSE}
+message("cells shall be moved")
+table(seu_obj$doublet=="TRUE" | seu_obj$percent.mt >= 10)
+message("filtering cells")
+seu_filt <- subset(seu_obj,subset=doublet=="FALSE" & 
+                     percent.mt < 10)
+seu_filt
+```
+
+# Evaluate the percent of variances. can explained by particular variables - is this a per cell value?
+* This step is applied to identify the unexpected variables contribute to a high percent of the variances. (Also known as **confounders**)
+* Once the confounders are identified, we have to minimize the effectiveness by using **SCTranform()** or **ScaleData()**.
+* The functions *getVarianceExplained* and *plotExplanatoryVariables* in *scater* are applied.
+
+```{r evalVarExp,include=TRUE,eval=FALSE}
+library(scater)
+sce <- as.SingleCellExperiment(seu_filt,assay = "RNA")
+vars <- getVarianceExplained(sce, 
+                             variables = c("percent.mt","nCount_RNA","nFeature_RNA",
+                                           "doublet_score",
+                                           "cyclon_G1Score","cyclon_SScore","cyclon_G2MScore","cyclon_Phase"))
+plotExplanatoryVariables(vars)
+```
+
+```{r scaleVar,include=TRUE,eval=FALSE}
+seu_filt <- SCTransform(seu_filt,vars.to.regress = c("nCount_RNA","nFeature_RNA","cyclon_SScore"))
+#
+sce <- as.SingleCellExperiment(seu_filt,assay = "SCT")
+vars <- getVarianceExplained(sce, 
+                             variables = c("percent.mt","nCount_RNA","nFeature_RNA",
+                                           "doublet_score",
+                                           "cyclon_G1Score","cyclon_SScore","cyclon_G2MScore","cyclon_Phase"))
+plotExplanatoryVariables(vars)
+```
+
+# Dimension Reduction
+- Perform linear dimensional reduction with Principle Component Analysis (PCA)
+- Determine dimensionality with Elbow plot
+- Process non-linear dimensional reduction with UMAP
+- to select major PCs for the following clustering 
+
+## Linear dimensional reduction
+Perform PCA with *RunPCA()* function in Seurat. Set Principle components to 30.
+
+```{r dimRed_pca,include=TRUE,eval=FALSE}
+set.seed(1001)
+seu_filt <- SCTransform(seu_filt)
+seu_filt <- RunPCA(seu_filt,assay = "SCT",npcs = 30)
+```
+
+## Evaluate dimensionality with elbow plot
+```{r dimRed_elbow,include=TRUE,eval=TRUE}
+ElbowPlot(seu_filt,ndims = 30,reduction = "pca")
+```
+
+## Elbow plot with color
+
+create cutoff based on if variabilty is low, and you already have most of it, 
+or if variabiltiy is alrgely not changing. 
+```{r dimRed_elbow2,include=TRUE,eval=FALSE}
+library(dplyr)
+# Determine percent of variation associated with each PC
+pct <- seu_filt[["pca"]]@stdev / sum(seu_filt[["pca"]]@stdev) * 100 
+# Calculate cumulative percents for each PC
+cumu <- cumsum(pct) 
+# Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
+co1 <- which(cumu > 90 & pct < 5)[1] 
+# Determine the difference between variation of PC and subsequent PC, last point where change of % of variation is more than 0.1%.
+co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1), decreasing = T)[1] + 1 
+pcs <- min(co1, co2)
+# Create a dataframe with values
+plot_df <- data.frame(pct = pct,cumu = cumu,rank = 1:length(pct))
+```
+
+```{r dimRed_elbow2_rep,include=TRUE,eval=FALSE}
+message("Elbow plot to visualize")
+ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pcs)) + geom_text() + 
+  geom_vline(xintercept = 90, color = "grey") + 
+  geom_hline(yintercept = min(pct[pct > 5]), color = "grey") +
+  theme_bw()
+#
+message("PCs used")
+pc <- pcs
+pc
+```
+
+## Make non-linear dimensional reduction - why UMAP? What is it? Explain,
+* Estimate neighbors with **FindNeighors()** function in *Seurat*
+  + reduction method: *PCA*
+  + use dimessions from 1 to the PCs detected by elbow plot
+* Make non-linear dimensional reduction with UMAP
+```{r dimRed_UMAP,include=TRUE,eval=FALSE}
+seu_filt <- FindNeighbors(seu_filt,dims = 1:pc,reduction = "pca")
+seu_filt <- RunUMAP(seu_filt,dims = 1:pc,reduction = "pca")
+```
+
+# Clustering
+- The cells are clustered based on UMAP by using *FindClusters()* function in Seurat.
+- The clustering is differentiated by **original Louvain algorithm**.
+- To find out a better resolution, we test clustering with different resolutions and evluate in a clustree
+
+## Identify clusters with default Louvain algorithm
+```{r clust_default,include=TRUE,eval=FALSE}
+seu_filt <- FindClusters(seu_filt,resolution = 0.5)
+seu_filt[["cluster_byDefault"]] <- seu_filt$seurat_clusters
+DimPlot(seu_filt,group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend()
+```
+
+## Test resolution from 0.1 to 1.0
+```{r clust_resoEval,include=TRUE,eval=FALSE}
+library(clustree)
+library(ggplot2)
+#
+# resolution from 0.1 to 1.0
+reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+reso_res <- lapply(1:length(reso),function(x,seu_filt,reso){
+  seu_filt <- FindClusters(seu_filt,resolution = reso[x])
+  clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
+  return(clust)},seu_filt,reso)
+names(reso_res) <- paste0("k",1:length(reso))
+k_tab <- do.call(cbind,reso_res)
+k_dat <- as.data.frame(k_tab)
+```
+
+## Evaluate resolutions with clustree
+- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
+- To identify the better resolution
+  + less cross talks between lineages
+  + more clusters identified
+* In this case, we use *resolution=0.7*
+```{r clust_resoEval2,include=TRUE,eval=FALSE}
+clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+```
+
+## Clustering
+```{r clust_resoFix,include=TRUE,eval=FALSE}
+seu_filt <- FindClusters(seu_filt,resolution = 0.2)
+DimPlot(seu_filt,group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend()
+```
+
+# Evaluate Results
+## Test with know markers - where are these markers fom?
+```{r resEval_knownMarker,include=TRUE,eval=FALSE}
+FeaturePlot(seu_filt, features = c("MS4A1", "GNLY", "CD3E", "CD14", "FCER1A", "FCGR3A", "LYZ", "PPBP",
+    "CD8A","IL7R","CCR7","S100A4","CST3"))
+
+message("Naive CD4 T-cells")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("IL7R","CCR7"))
+#
+message("CD14+ Mono")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("CD14","LYZ"))
+#
+message("Memory CD4 T-cells")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("IL7R","S100A4"))
+#
+message("B-cells")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("MS4A1"))
+#
+message("CD8_ T-cells")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("CD8A"))
+#
+message("FCGR3A+ Mono")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("FCGR3A","MS4A7"))
+#
+message("NK")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("GNLY","NKG7"))
+#
+message("DC")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("FCER1A","CST3"))
+#
+message("Platelet")
+VlnPlot(seu_filt,group.by = "seurat_clusters",features = c("PPBP"))
+#
+```
+
+```{r }
+sce <- as.SingleCellExperiment(seu_filt,assay = "RNA")
+vars <- getVarianceExplained(sce, 
+                             variables = c("percent.mt","nCount_RNA","nFeature_RNA",
+                                           "doublet_score","seurat_clusters",
+                                           "cyclon_G1Score","cyclon_SScore","cyclon_G2MScore","cyclon_Phase"))
+plotExplanatoryVariables(vars)
+```
+
+
