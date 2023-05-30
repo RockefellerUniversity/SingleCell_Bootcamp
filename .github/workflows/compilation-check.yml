@@ -130,8 +130,7 @@ jobs:
         with:
           lfs: true
       - name: Checkout LFS objects
-        run: git lfs checkout
-        
+        run: git lfs pull
       - name: Query dependencies
         run: |
           install.packages('remotes')
@@ -139,7 +138,6 @@ jobs:
           message(paste('****', Sys.time(), 'installing BiocManager ****'))
           remotes::install_cran("BiocManager")
         shell: Rscript {0}
-        
       ## Find the corresponding R version based on the Bioconductor version
       ## to use for the macOS and Windows checks by the next GHA job
       - id: findrversion
