@@ -127,8 +127,6 @@ jobs:
       ## If they update their steps, we will also need to update ours.
       - uses: actions/checkout@v2
       - name: Query dependencies
-        with:
-          lfs: true
         run: |
           install.packages('remotes')
           saveRDS(remotes::dev_package_deps("scRNASeq/",dependencies = TRUE), ".github/depends.Rds", version = 2)
