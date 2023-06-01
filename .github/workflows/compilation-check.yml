@@ -113,6 +113,13 @@ jobs:
           cd -
           git --version
         shell: bash {0}
+        
+      - name: Install GitLFS
+        run: |
+          sudo apt-get update 
+          sudo apt-get install git-lfs
+          git lfs install
+        shell: bash {0}
       
       - name: Install GLPK
         run: |
