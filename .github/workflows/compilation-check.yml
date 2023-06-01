@@ -203,8 +203,6 @@ jobs:
         run: R CMD INSTALL ./scRNASeq/
 
       - name: Session info
-        with:
-          lfs: true
         run: |
           require(compileCourses)
           compileCourses::compileSingleCourseMaterial(repo="RockefellerUniversity",subdir="scRNASeq",branch="main")
