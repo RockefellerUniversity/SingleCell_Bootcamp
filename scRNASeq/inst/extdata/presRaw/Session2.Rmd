@@ -739,6 +739,7 @@ names(doublet) <- c("doublet_score","doublet")
 ```
 
 ```{R, eval=T, echo=F}
+rm(mtx)
 load("data/doublet.RData")
 
 ```
@@ -922,6 +923,7 @@ seu_filt <- subset(seu_obj, subset=doublet=="FALSE" &
 
 ```{r, echo=F, eval=TRUE}
 #save(seu_filt,file="../data/seu_filt.RData")
+rm(doublet)
 load("data/seu_filt.RData")
 ```
 
