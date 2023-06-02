@@ -831,7 +831,7 @@ VlnPlot(seu_obj, group.by = "dset",
 ---
 ## Distribution of particular variables in violin plot
 
-```{r qcPlot_vlnPlot_pres1,include=TRUE,echo=F}
+```{r include=TRUE,echo=F}
 VlnPlot(seu_obj, group.by = "dset",
         features = c("nCount_RNA", "nFeature_RNA", "percent.mt"),
         pt.size = 0)
@@ -1106,7 +1106,7 @@ We can use cutoffs to derive this computationally based on:
   * How much variation has already been described.
   * The rate of change in variation between PCs.
 
-```{r dimRed_elbow2,include=TRUE,eval=T}
+```{r include=TRUE,eval=T}
 # Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
 co1 <- which(cumu > 90 & pct < 5)[1] 
 # Determine the difference between variation of PC and subsequent PC, last point where change of % of variation is more than 0.1%.
@@ -1251,7 +1251,7 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ## Evaluate resolutions with clustree
 - The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
 * In this case, we use *resolution=0.7*
-```{r clust_resoEval2,include=TRUE,eval=T, echo=F}
+```{r include=TRUE,eval=T, echo=F}
 clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ```
 
