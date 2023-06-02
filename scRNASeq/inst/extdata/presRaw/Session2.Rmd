@@ -1016,9 +1016,17 @@ seu_filt <- SCTransform(seu_filt, vars.to.regress = c("nCount_RNA","nFeature_RNA
 sce <- as.SingleCellExperiment(seu_filt, assay = "SCT")
 ```
 
-```{R, eval=T, echo=F}
+```{R, eval=F, echo=F}
 #save(seu_filt, sce, file="../data/SCT2.RData")
+save(seu_filt, file="../data/SCT2.RData")
+save(sce, file="../data/sce.RData")
+
+```
+```{R,sctload, eval=T, echo=F}
 load("data/SCT2.RData")
+```
+```{R,sceload, eval=T, echo=F}
+load("data/sce.RData")
 ```
 
 ```{r,eval=T, echo=F}
