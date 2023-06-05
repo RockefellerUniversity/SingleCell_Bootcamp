@@ -884,7 +884,7 @@ By reviewing the curve of the downsamlped metrics we can assess whether we are a
  <div align="center">
 <img src="imgs/anal4.png" alt="igv" height="200" width="200">
 </div>
-
+]
 ---
 
 
@@ -910,11 +910,43 @@ if(params$isSlides == "yes"){
 
 ```
 
+## Loupe Browser for visualization
 
 
-## Loupe Browser for vizualization
+.pull-left[
+
+The Loupe browser is a tool for visualization of Cell Ranger cloupe files. 
+
+It provides t-sne visualization of your single-cell data alongside sample/cell information as well as methods to test and visualise changes in gene expression.
+
+Loupe browser can be freely downloaded from the 10x website.
+
+]
+
+.pull-right[
+ <div align="center">
+<img src="imgs/loupeDownload.png" alt="igv" height="400" width="350">
+</div>
+]
+---
+
+## Loupe Browser for visualization
 
 
+.pull-left[
+
+Having downloaded the Loupe browser we can load our cloupe files directly in and rapidly visually interrogate our data.
+
+In todays session we will review some of the features available in Loupe using the PBMC example data set.
+
+]
+
+.pull-right[
+ <div align="center">
+<img src="imgs/loupeFront.png" alt="igv" height="300" width="400">
+</div>
+]
+---
 
 
 
