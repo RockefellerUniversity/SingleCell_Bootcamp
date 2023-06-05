@@ -18,7 +18,7 @@ output:
     theme: united  # many options for theme, this one is my favorite.
     highlight: tango  # specifies the syntax highlighting style
 params:
-  isSlides: "no"
+  isSlides: "yes"
 ---
 
 ```{r,include=FALSE}
@@ -26,10 +26,627 @@ suppressPackageStartupMessages(require(knitr))
 knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ```
 
-## Overview
-<!-- In this course we are going to introduce basic analysis for single-cell RNAseq, with a specific focus on the 10X system. The course is divided into three sessions. In the first session, we will introduce how to interpret the Cell  Ranger QC report and how to do analysis with the LOUPE Browser. We will also demonstrate the customized analysis we can support right know. In the Second session, we will demonstrate how to process scRNAseq data and make QC reports with Seurat. In the third session, we will discuss how to to do more advanced analysis and QC with Bioconductor packages.  -->
 
-## Intro to single cell
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Introduction to single cell sequencing
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Introduction to single cell sequencing
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Overview
+
+- High-throughput Sequencing
+- Emergence of single-cell
+- Differing single-cell assays
+- Differing single-cell technologies
+- Overview of Single-cell sequencing
+
+---
+
+
+
+## Sequencing
+
+The emergence of high-throughput sequencing technologies such as 454 (Roche) and Solexa (Illumina) sequencing allowed for the highly parallel short read sequencing of DNA molecules.
+
+- 454 (Roche) ~ 2005
+- Solexa (Illumina)  ~ 2006
+
+---
+## Sequencing overview
+
+![overview](./imgs/wps.png)
+
+---
+
+## Sequence files - FastQ
+ **FastQ (FASTA with Qualities)**
+<div align="center">
+<img src="imgs/fq1.png" alt="igv" height="200" width="800">
+</div>
+
+- "@" followed by identifier.
+- Sequence information.
+- "+" 
+- Quality scores encodes as ASCI.
+
+---
+
+## Sequence files - FastQ
+ **FastQ - Header**
+ <div align="center">
+<img src="imgs/fq2.png" alt="igv" height="200" width="800">
+</div>
+- Header for each read can contain additional information
+    - HS2000-887_89 - Machine name.
+    - 5 - Flowcell lane.
+    - /1 - Read 1 or 2 of pair (here read 1)
+    
+---
+
+## Sequence files - FastQ
+ **FastQ - Qualities**
+ <div align="center">
+<img src="imgs/fq3.png" alt="igv" height="200" width="800">
+</div>
+ 
+- Qualities follow "+" line.
+- -log10 probability of sequence base being wrong. 
+- Encoded in ASCI to save space.
+- Used in quality assessment and downstream analysis
+ 
+
+---
+
+## Sequencing use-cases
+
+- ChIP-seq - Study transcription factor binding
+- RNA-seq - Study genome wide transcriptomics
+- Whole Genome/Exome Sequencing - Study genome variation/changes
+- MNAseq/DNAse-seq/ATAC-seq - Study chromatin structure/accessibility
+- CrispR-seq - Study genome wide phenotypes
+- And many more..
+
+---
+
+## Bulk sequencing methods
+
+Sequencing typically performed on bulk tissue or cells.
+
+Tissues - Liver vs Heart
+Conditions - Cancer vs surrounding normal tissue
+Treatments - Hep-G2 cells with/without rapamycin 
+Genetic perturbation - Ikzf WT/KO in B-cells.
+
+Analysis of the bulk characteristics of data without understanding of hetergeneity of data.
+
+---
+## FACS Cell and Nuclei sorting
+
+Newer technologies such as TRAP from the Heintz lab or nuclei sorting allow for capture of distinct cell types based on expressed markers.
+
+Pros
+- Allow for the capure of rare cell populations such as specific neuron types.
+
+Cons
+- Require known markers for desired cell populations
+
+---
+## Single-cell sequencing
+
+With the advent of advanced microfluidics and refined sequencing technlogies, single-cell sequencing has emerged as a technology to profile individual cells from a heterogenous population without prior knowledge of cell populations.
+
+Pros
+- No prior knowledge of cell populations required.
+- Simultaneously assess profiles of 1000s of cells.
+
+Cons
+- Low sequencing sequencing depth for individual cells (1000s vs millions of reads for bulk). 
+
+---
+
+## Single-cell use cases
+
+Single-cell sequencing, as with bulk sequencing, has now been applied to the study of a wide range of differing assays.
+
+- **scRNA-seq/snRNA-seq - Transcriptomics**
+- scATAC-seq/snATAC-seq - Chromatin accessibility
+- CITE-seq - Surface protein expression
+- AIRR - TCR/BCR profiling
+- Spatial-seq - Spatial profiling of gene expression.
+
+---
+
+## Single-cell platforms
+
+- **10x Genomics (microfluidics)**
+- Smart-seq3 (microfluidics)
+- Drop-seq (microfluidics)
+- VASA-seq	(FANS)
+- inDrop-seq (microfluidics)
+- In-house solutions 
+
+
+Many companies offer single-cell sequencing technologies which may be used with the Illumina sequencer.
+
+---
+
+## Major Single-cell platforms
+
+Two popular major companies offer the most used technologies.
+
+- **10x Genomics**
+- Smart-seq3
+
+Major difference between the two are the sequencing depth and coverage profiles across transcripts.
+
+- 10x is 3' biased so will not provide full length transcript coverage.
+- As 10x is sequencing only the 3' of transcripts/genes, less sequencing depth is required per transcript/gene
+
+
+
+
+---
+
+## The 10x Genomics system
+
+![overview](./imgs/10x_full.png)
+
+---
+
+## The 10x Genomics system - Microfluidics
+
+![overview](./imgs/10x_a.png)
+
+---
+
+## The 10x Genomics system  - Gel beads
+
+![overview](./imgs/10x_bead.png)
+
+---
+
+## The 10x Genomics system  - Sequencing primers
+
+![overview](./imgs/10x_sequencing.png)
+
+---
+
+## The 10x Genomics system  - Sequencing R1
+
+**Read 1**
+
+---
+
+
+## The 10x Genomics system  - Sequencing R2
+
+**Read 2**
+
+---
+
+## The 10x Genomics system  - Sequence reads
+
+The sequence reads contain:- 
+
+- Information on cell identity (10x barcode)
+- Information on molecule identity (UMI)
+- Information on sample identity (Index read)
+
+---
+
+## From Sequences to Processed data
+
+As with standard bulk sequencing data, the next steps are typically to align the data to a reference genome/transcriptome and summarise data to a signal matrix.
+
+- Align reads to transcriptome and summarise signal to genes for RNAseq
+- Align reads to genome, call enriched windows/peaks and summarise signal in peaks.
+
+---
+
+## Processing scRNA-seq/snRNA-seq data.
+
+For the processing of scRNA/snRNA from fastQ to count matrix, there are many options available to us.
+
+**Alignment and counting**
+- Cellranger count
+- STAR - STARsolo
+- Subread cellCounts
+
+**Pseudoalignment and counting**
+- Salmon - Alevin
+- Kallisto - Bustools
+
+---
+
+## Droplets to counts
+
+.pull-left[
+The output of these tools is typically a matrix of the signal attributed to cells and genes (typically read counts).
+
+This matrix is the input for all downstream post-processing, quality control, normalisation, batch correction, clustering, dimension reduction and differential expression analysis.
+
+The output matrix is often stored in a compressed format such as:- 
+- MEX (Market Exchange Format)
+- HDF5 (Hierarchical Data Format)
+
+
+]
+.pull-right[
+![overview](./imgs/countingDrops.png)
+]
+
+---
+
+## HDF5 format
+
+- Optimized format for big data.
+- Contains matrix information alongside column and row information.
+- Loom format version of HDF5 most popular.
+- Efficient to work with programmatically.
+
+![](https://linnarssonlab.org/loompy/_images/Loom_components.png)
+
+---
+
+## MEX format
+
+- Plain/Compressed text format
+- Contains matrix information in tsv file
+- Separate row and column files contain barcode (cell) and feature (gene/transcript) information.
+
+![](./imgs/matrixFile.png)
+---
+
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Cell Ranger - Setting up
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Ranger - Setting up
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Cell Ranger
+
+.pull-left[
+Cell Ranger is a suite of tools for single cell processing and analysis available from 10x Genomics.
+
+In this session we will make use of Cell Ranger **Count** tool to process our generated fastQ and create the required files.
+]
+.pull-right[
+![](./imgs/CellRangerPage.png)
+]
+
+---
+## Cell Ranger Download
+
+.pull-left[
+- Cell Ranger is available from the [10x genomics website](https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest).
+
+- Also available are pre-baked references for Human and Mouse genomes (GRCh37/38 and GRCm37)
+
+]
+.pull-right[![](./imgs/CellRangerDownload.png)
+]
+
+---
+## Cell Ranger Download page
+
+<iframe width="100%" height= "80%" src="https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest?"></iframe>
+
+---
+
+## Cell Ranger
+
+- Cell Ranger only runs on linux machines (CentOS/RedHat 7.0+ and Ubuntu 14.04+).
+- Typically, due to memory requirements, users run Cell Ranger on a remote server and now their own machines.
+- To download Cell Ranger and the required reference on remote server, we typically use the wget command.
+
+Download the software
+```{}
+wget -O cellranger-7.1.0.tar.gz "https://cf.10xgenomics.com/releases/cell-exp/cellranger-7.1.0.tar.gz?Expires=1686030213&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZi4xMHhnZW5vbWljcy5jb20vcmVsZWFzZXMvY2VsbC1leHAvY2VsbHJhbmdlci03LjEuMC50YXIuZ3oiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE2ODYwMzAyMTN9fX1dfQ__&Signature=jlyPxMYCCjFJZzrVMPcb7GSVZSYCCbyfnTQO2PlnCszG-ycgpHgUllHuV6l0ke7p5fPgM~m8xiQPiq-5VqDwdXKuGuKXtWMFFtakYnSroj7O79gQf2lKEXpRQlfeou5EEP4KQBjquwfbHZWs-NNFKyGMYjYrt6qxoyMzrcrgl2rEvRO7Pu8vwk0DJFnwRRRu~wFJEaDqUJ4vFXuKw1jT9aus~bzLeF4fsWDVQYfA7H71yc5zBvKxz1tfD-zTm7ARaA6j-gyC3ffQf9K5W7HSMJD8Iqez39-B8SHMwzsBv0o~uPlatSv-1YataeSHQQykRWxjZdrMg-5IL2neGrM8zA__&Key-Pair-Id=APKAI7S6A5RYOXBWRPDA"
+```
+
+Download reference for Human genome (GRCh38)
+```{}
+wget -O https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz
+```
+
+---
+
+## Cell Ranger set-up
+
+- Having downloaded the software and references, we can then unpack them.
+
+Unpack software and references
+```{}
+tar -xzvf cellranger-7.1.0.tar.gz
+tar -xzvf refdata-gex-GRCh38-2020-A.tar.gz
+```
+
+- Finally we can add the cellranger directory to our PATH.
+
+```{}
+ export PATH=/PATH_TO_CELLRANGER_DIRECTORY/cellranger-7.1.0:$PATH
+```
+
+---
+
+## Running Cell Ranger count
+
+Now we have the downloaded Cell Ranger software and required pre-build reference for Human (GRCh38) we can start the generation of count data from scRNA-seq/snRNA-seq fastQ data.
+
+Typically FastQ files for your scRNA run will have been generated using the **Cell Ranger mkfastq** toolset to produce a directory a fastQ files. 
+
+We can now use CellRanger count command with our reference and fastQ files to generate our count matrix and associated files.
+
+```{}
+cellranger count --id=my_run_name \
+   --fastqs=PATH_TO_FASTQ_DIRECTORY \
+   --transcriptome=/PATH_TO_CELLRANGER_DIRECTORY/refdata-gex-GRCh38-2020-A
+```
+---
+
+## Working with custom genomes
+
+If you are working with a genome which is not Human and/or mouse you will need to find another source for your Cell Ranger reference.
+
+- Luckily many references are pre-built by other consortiums.
+- We can build our own references using other tools in Cell Ranger.
+
+---
+
+## Creating your own Cell Ranger references
+
+To create your own references you will need two additional files.
+
+- FASTA file - File containing the full genome sequence for the reference of interest
+- GTF file - File containing the gene/transcript models for the reference of interest.
+
+---
+
+## FASTA file (Genome sequence)
+
+- The reference genome stored as a collection of contigs/chromosomes.
+- A contig is a stretch of DNA sequence encoded as A,G,C,T,N.
+- Typically comes in FASTA format.
+    - ">" line contains information on contig
+    - Lines following contain contig sequence
+
+<div align="center">
+<img src="imgs/fasta.png" alt="igv" height="300" width="600">
+</div>
+
+---
+
+## GTF (Gene Transfer Format)
+
+ <div align="center">
+<img src="imgs/gff.png" alt="igv" height="150" width="700">
+</div>
+
+- Used to genome annotation.
+- Stores position, feature (exon) and meta-feature (transcript/gene) information.
+
+- **Importantly for Cell Ranger Count, only features labelled as exon (_column 3_) will be considered for counting signal in genes**
+- **Many genomes label mitochondrial genes with _CDS_ and not _exon_ so these must be updated**
+
+---
+
+## Using Cell Ranger mkgtf
+
+Now we have the gene models in the GTF format we can use the **Cell Ranger mkgtf** tools to validate our GTF and remove any unwanted annotation types using the attribute flag.
+
+Below is an example of how 10x generated the GTF for the Human reference.
+
+```{}
+cellranger mkgtf Homo_sapiens.GRCh38.ensembl.gtf \
+Homo_sapiens.GRCh38.ensembl.filtered.gtf \
+                   --attribute=gene_biotype:protein_coding \
+                   --attribute=gene_biotype:lncRNA \
+                   --attribute=gene_biotype:antisense \
+                   --attribute=gene_biotype:IG_LV_gene \
+                   --attribute=gene_biotype:IG_V_gene \
+                   --attribute=gene_biotype:IG_V_pseudogene \
+                   --attribute=gene_biotype:IG_D_gene \
+                   --attribute=gene_biotype:IG_J_gene \
+                   --attribute=gene_biotype:IG_J_pseudogene \
+                   --attribute=gene_biotype:IG_C_gene \
+                   --attribute=gene_biotype:IG_C_pseudogene \
+                   --attribute=gene_biotype:TR_V_gene \
+                   --attribute=gene_biotype:TR_V_pseudogene \
+                   --attribute=gene_biotype:TR_D_gene \
+                   --attribute=gene_biotype:TR_J_gene \
+                   --attribute=gene_biotype:TR_J_pseudogene \
+                   --attribute=gene_biotype:TR_C_gene
+```
+
+
+
+
+---
+
+## Using Cell Ranger mkref
+
+Following filtering of your GTF to the required biotypes, we can use the Cell Ranger mkref tool to finally create our custom reference.
+
+```{}
+cellranger mkref --genome=custom_reference \
+--fasta=custom_reference.fa  \
+--genes=custom_reference_filtered.gtf
+```
+
+---
+
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Cell Ranger -  Output files
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Ranger - Output files
+
+---
+"    
+  )
+  
+}
+
+```
+
+
+## Cell Ranger - Outputs
+
+Having completed the Cell Ranger count step, the user will have created a folder named as set by the **--id** flag for count command.
+
+Within this folder will be the **outs/** directory containing all the outputs generated from Cell Ranger count.
+
+![](./imgs/outputs.png)
+
+---
+
+## Cell Ranger - Count Matrices 
+
+The count matrices to be used for further analysis are stored in both MEX and HDF5 formats within the output directories.
+
+The filtered matrix only contains detected, cell-associated barcodes whereas the raw contains all barcodes (background and cell-associated).
+
+**MEX format**
+- filtered_feature_bc_matrix
+- raw_feature_bc_matrix
+
+**HDF5 format**
+- filtered_feature_bc_matrix.h5
+- raw_feature_bc_matrix.h5
+
+---
+
+## Cell Ranger - BAM files 
+
+.pull-left[
+The outs directory also contains a BAM file of alignments for all barcodes against the reference _(possorted_genome_bam.bam)_ as well as an associated BAI index file _(possorted_genome_bam.bam.bai)_.
+
+This BAM file is often used in downstream analysis such as scSplit/Velocyto as well as for the generation of signal graphs such as bigWigs.
+]
+.pull-right[
+ <div align="center">
+<img src="imgs/sam1.png" alt="igv" height="200" width="100">
+</div>
+ <div align="center">
+<img src="imgs/sam2.png" alt="igv" height="150" width="450">
+</div>
+<!-- ![](./) -->
+<!-- ![](./imgs/sam2.png) -->
+]
+
+
+---
+## Cell Ranger - Cloupe files 
+
+Cell Ranger also outputs files for visualisation within its own cloupe browser - _cloupe.cloupe_.
+
+This allows for the visualisation of scRNA-seq/snRNA-seq as a t-sne/umap with the ability to overlay metrics of QC and gene expression onto the cells in real time
+
+ <div align="center">
+<img src="imgs/cloupe.png" alt="igv" height="400" width="450">
+</div>
+
+
+---
+## Cell Ranger - Metrics and Web-summary files
+
+Cell Ranger will also output summaries of useful metrics as a text file _(metrics_summary.csv)_ and as a intuitive web-page.
+
+Metrics include
+
+- Counts/UMIs per cell.
+- Number of cells detected.
+- Alignment quality.
+- Distibution of reads in genomic features.
+- Sequencing saturation
+- t-sne/UMAP with default clustering.
+
+---
+## QC is essential.
+
+.pull-left[
+There are many potential issues which can arise in scRNA-seq/snRNA-seq data including -
+
+- Empty droplets.
+- Low quality cell (dead or dying)
+- Ambient RNA contamination.
+- Doublet detection
+]
+.pull-right[
+ <div align="center">
+<img src="imgs/bad_cells.png" alt="igv" height="300" width="200">
+</div>
+]
+
+Assessment of the overall quality of a scRNA-seq/snRNA-seq experiment and filtering of low quality or contaminated cell counts is an essential step in analysis.
+
+---
+
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Cell Ranger - Web Summary QC
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Ranger - Web Summary QC
+
+---
+"    
+  )
+  
+}
+
+```
+
+---
+---
 
 - why single cell? - questions that it addresses
 - cover the different technologies - laso mentio. other variations like scATAC and spatial. 
