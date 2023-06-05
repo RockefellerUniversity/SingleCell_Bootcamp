@@ -331,7 +331,7 @@ To do this in Seurat we have 3 functions:
 When using the *NormalizeData()* function we use the defaults for the normalization method and scale factor. 
   
 ```{r norm_log,include=TRUE,eval=TRUE}
-seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize", scale.factor=10000)
+seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
 ```
 
 ---
@@ -1022,14 +1022,18 @@ sce <- as.SingleCellExperiment(seu_filt, assay = "SCT")
 ```{R, eval=F, echo=F}
 #save(seu_filt, sce, file="../data/SCT2.RData")
 save(seu_filt, file="../data/SCT2.RData")
+saveRDS(seu_filt, file="../data/SCT2.rds")
 save(sce, file="../data/sce.RData")
 
 ```
-```{R,sctload, eval=T, echo=F}
-load("data/SCT2.RData")
-```
+
 ```{R,sceload, eval=T, echo=F}
 load("data/sce.RData")
+```
+
+```{R,sctload, eval=T, echo=F}
+#load("data/SCT2.RData")
+seu_filt <- load("data/SCT2.rds")
 ```
 
 ```{r,eval=T, echo=F}
@@ -1080,7 +1084,7 @@ Perform PCA with *RunPCA()* function in Seurat. Set Principle components to 30.
 ```{r dimRed_pca,include=TRUE,eval=T}
 set.seed(1001)
 DefaultAssay(seu_filt) <- "RNA"
-seu_filt <- RunPCA(seu_filt,assay = "RNA",npcs = 50)
+seu_filt <- RunPCA(seu_filt, assay = "RNA", npcs = 50)
 
 ```
 
@@ -1090,7 +1094,7 @@ seu_filt <- RunPCA(seu_filt,assay = "RNA",npcs = 50)
 Typically we want to balance having enough/not too many groups with the most variance explained by the groups, to get the most parsimonious results. We use elbow plots to find an inflection point.
 
 ```{r dimRed_elbow,include=TRUE,eval=TRUE}
-ElbowPlot(seu_filt,ndims = 30,reduction = "pca")
+ElbowPlot(seu_filt, ndims = 50, reduction = "pca")
 ```
 
 ---
