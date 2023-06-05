@@ -18,7 +18,7 @@ output:
     theme: united  # many options for theme, this one is my favorite.
     highlight: tango  # specifies the syntax highlighting style
 params:
-  isSlides: "no"
+  isSlides: "yes"
 ---
 
 ```{r,include=FALSE}
@@ -129,10 +129,10 @@ The emergence of high-throughput sequencing technologies such as 454 (Roche) and
 
 Sequencing typically performed on bulk tissue or cells.
 
-Tissues - Liver vs Heart
-Conditions - Cancer vs surrounding normal tissue
-Treatments - Hep-G2 cells with/without rapamycin 
-Genetic perturbation - Ikzf WT/KO in B-cells.
+- Tissues - Liver vs Heart
+- Conditions - Cancer vs surrounding normal tissue
+- Treatments - Hep-G2 cells with/without rapamycin 
+- Genetic perturbation - Ikzf WT/KO in B-cells.
 
 Analysis of the bulk characteristics of data without understanding of hetergeneity of data.
 
@@ -232,6 +232,7 @@ Major difference between the two are the sequencing depth and coverage profiles 
 
 **Read 1**
 
+![](./imgs/Read1.png)
 ---
 
 
@@ -239,6 +240,7 @@ Major difference between the two are the sequencing depth and coverage profiles 
 
 **Read 2**
 
+![](./imgs/Read2.png)
 ---
 
 ## The 10x Genomics system  - Sequence reads
@@ -645,46 +647,252 @@ if(params$isSlides == "yes"){
 
 ```
 
----
----
 
-- why single cell? - questions that it addresses
-- cover the different technologies - laso mentio. other variations like scATAC and spatial. 
-- typical workflow at a coarse level - focus on 10X
-- talk about the scale of the issue - i.e rapidly evolving and many packages
+## Web Summary overview
 
-## Sequencer to Counts Matrix
+.pull-left[
+The web summary html file contains an interactive report describing the most essential QC for your single cell experiment as well as initial clustering and dimension reduction for your data.
 
-- CellRanger
-- Alternatives i.e. alevin
-mention other tools that might be speicifc to alternate technologies. But maybe not go into detail with them 
-
-## CellRanger
-- Walkthrough
-- QC
-
-
-## Cell Ranger
-[Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) is a widely used software for single-cell sequencing data analysis. It supports various kinds of analysis for 10X single-cell sequencing data.
-
-- Alignment and counting
-- Analysis of VDJ changes
-- Datasets aggregation
-- Convert BCL files (raw files) into FASTQ files
-- Generation of customized GTF and Genome files
-
-
-
-## Loupe Browser for viz
-
-
+The web summary also contains useful information on the input files and the versions used in this analysis for later reproducibility.
+]
+.pull-right[
+![](./imgs/websum1.png)
+]
 
 ---
+## Web Summary overview - Sample panel
+
+.pull-left[
+The first thing we can review is the **Sample** information panel.
+
+This contains information on:-
+
+- Sample ID - Sample name (Assigned in **cellranger count**)
+- Chemistry - The 10x chemistry used
+- Include introns - Whether counting was run to include intron counts (typical for single neuron RNA-seq).
+- Reference Path and Transcriptome - References used in analysis
+- Pipeline Version - Version of Cell Ranger used.
+
+
+]
+.pull-right[
+![](./imgs/websum4.png)
+]
+---
+
+## Web Summary overview - Sequencing panel
+
+.pull-left[
+The **Sequencing** panel highlights information on the quality of the illumina sequencing.
+
+This contains information on:-
+
+- Number of reads - Total number of paired reads in library
+- Valid barcodes - Number of barcodes matching barcodes in whitelist (known to be kit ~ 1 million).
+- Valid UMIs - Total number of UMIs that are not all one base and contain no unknown bases.
+- Sequencing saturation - Unique valid barcode/UMI versus all valid barcode/UMI
+- Q30 scores - Assessment of sequencing qualities for barcode/umi/index/RNA reads.
+
+
+]
+.pull-right[
+![](./imgs/websum5.png)
+]
+---
+
+## Web Summary overview - Mapping panel
+
+.pull-left[
+The **Mapping** panel highlights information on the mapping of reads to the reference genome and transcriptome.
+
+This contains information on:-
+
+- Reads mapped to genome - Total number of reads mapping to the genome
+- Reads mapped confidently to genome - Reads mapping uniquely to the genome
+- Reads mapped confidently to exonic/Intronic - Reads mapping uniquely to the exons or introns
+- Reads mapped confidently to transcriptome - Reads mapping to a unique gene (and consistent with slice junctions).
+
+
+]
+.pull-right[
+![](./imgs/websum5.png)
+]
+---
+
+## Web Summary overview - Cells panel
+
+.pull-left[
+The **Cells** panel highlights some of the most important information in the report, the total number of cells captured and the distribution of counts across cells and genes.
+
+Information includes:-
+
+- Estimated number of cells - Total number of barcodes associated to at least one cell.
+- Fraction reads in cells - Fraction of reads from valid barcode, associated to a cell and mapped to transcriptome. 
+- Median reads per cell - Median number of transcriptome reads within cell associated barcodes
+- Median genes per cell - - Median number of genes detected (at least 1 count) per cell associated barcodes.
+
+
+]
+.pull-right[
+![](./imgs/websum6.png)
+]
+---
+
+
+## Web Summary overview - Knee plot
+
+.pull-left[
+
+The Cell panel also includes and interactive knee plot.
+
+The knee plot shows:- 
+
+- On the x-axis, the barcodes ordered by the most frequent on the left to the least frequent on the right
+
+- On the y-axis, the frequency of each ordered barcode.
+
+- Highlighted in blue are the barcodes marked as associated to cells.
+
+
+
+]
+.pull-right[
+![](./imgs/websum6.png)
+]
+---
+
+
+## Web Summary overview - Knee plot
+
+.pull-left[
+
+It is apparent that barcodes labelled blue (cell-associated barcodes) do not have a cut-off based on UMI count.
+
+In the latest version of Cell Ranger a two step process is used to define cell-associated barcodes based on the EmptyDrops method (Lun et al.,2019).
+
+- First high RNA containing cells are identified based on a UMI cut-off.
+- Second, low UMI containing cells are used as a background training set to identify additonal cell-associated barcodes not called in first step.
+
+If required, a **--force-cells** flag can be used with _cellranger count_ to identify a set number of cell-associated barcodes.
+
+
+
+
+]
+.pull-right[
+![](./imgs/websum6.png)
+]
+---
+
+## Web Summary overview - Knee plot
+
+.pull-left[
+
+The Knee plot also acts a good QC tools to investigate differing types of single cell failure.
+
+Whereas our previous knee plot represented a good sample, differing knee plot patterns can be indicative of specific problems with the single cell protocol.
+
+In this example we see no specific cliff and knee suggesting a failure in the integration of oil, beads and samples (wetting failure) or a compromised sample.
+
+
+
+]
+.pull-right[
+![](./imgs/wetfailure.png)
+]
+---
+
+## Web Summary overview - Knee plot
+
+.pull-left[
+
+If there is a clog in the machine we may see a knee plot where the overall number of samples is low.
+
+
+
+]
+.pull-right[
+![](./imgs/lowbarcode.png)
+]
+---
+
+## Web Summary overview - Knee plot
+
+.pull-left[
+
+There may be occasions where we see two sets of cliff-and-knees in our knee plot.
+
+This could be indicative of a heterogenous sample where we have two populations of cells with differing overall RNA levels.
+
+Knee plots should be interpreted in the context of the biology under investigation.
+
+
+]
+.pull-right[
+![](./imgs/hetero.png)
+]
+---
+
+
+## Web Summary overview - Analysis page
+
+.pull-left[
+The web-summary also contains an analysis page where default dimension reduction, clustering and differential expressions between clusters has been performed.
+
+Additionally the analysis page contains information on sequencing saturation and gene per cell vs reads per cell.
+
+]
+
+.pull-right[
+![](./imgs/anal1.png)
+]
+
+---
+
+
+## Web Summary overview - t-sne and clustering
+
+.pull-left[
+The t-sne plot shows the distribution and similarity within your data.
+
+- Review for high and low UMI cells driving t-sne structure and/or clustering.
+- Expected separation between and structure across clusters may be observed within the t-sne plot.
+- Identify expected clusters based on expression of marker genes
+
+]
+
+.pull-right[
+![](./imgs/anal2.png)
+]
+
+---
+
+
+## Web Summary overview - Sequence and Gene saturation
+
+.pull-left[
+The sequence saturation and Median genes per cell plots show these calculations (as show on summary page) over successive downsampling of the data. 
+
+By reviewing the curve of the downsamlped metrics we can assess whether we are approaching saturation for either of these metrics.
+
+]
+
+.pull-right[
+ <div align="center">
+<img src="imgs/anal3.png" alt="igv" height="200" width="200">
+</div>
+ <div align="center">
+<img src="imgs/anal4.png" alt="igv" height="200" width="200">
+</div>
+
+---
+
+
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Cell Ranger results
+# Loupe Browser
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
 
@@ -692,8 +900,7 @@ if(params$isSlides == "yes"){
 "    
   )
 }else{
-  cat("# Cell Ranger results
-
+  cat("# Cell Ranger - Loupe Browser
 
 ---
 "    
@@ -705,11 +912,8 @@ if(params$isSlides == "yes"){
 
 
 
+## Loupe Browser for vizualization
 
----
-## Basic reports of Cell Ranger
-- [QC Report](data/WT.html)
-- cloupe file: can be processed by [LOUPE Browser](https://support.10xgenomics.com/single-cell-gene-expression/software/visualization/latest/what-is-loupe-cell-browser)
 
 
 
