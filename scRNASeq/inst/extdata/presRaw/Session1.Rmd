@@ -696,7 +696,7 @@ This contains information on:-
 
 ]
 .pull-right[
-![](./imgs/websum5.png)
+![](./imgs/websum2.png)
 ]
 ---
 
@@ -715,7 +715,7 @@ This contains information on:-
 
 ]
 .pull-right[
-![](./imgs/websum5.png)
+![](./imgs/websum3.png)
 ]
 ---
 
