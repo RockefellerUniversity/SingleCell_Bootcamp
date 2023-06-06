@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 ### Rockefeller University, Bioinformatics Resource Centre
 ]
 .date[
-### <a href="https://rockefelleruniversity.github.io/scRNA-seq/" class="uri">https://rockefelleruniversity.github.io/scRNA-seq/</a>
+### <a href="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" class="uri">https://rockefelleruniversity.github.io/SingleCell_Bootcamp/</a>
 ]
 
 ---
@@ -41,7 +41,6 @@ class: center, middle, inverse, title-slide
 - Transfer UMAP and annotation from Seurat to LOUPE 
 
 ---
-
 ## Seurat
 * An R toolkit for single cell genomics [link](https://satijalab.org/seurat/index.html)
 * The workflow we used in this section was based on Seurat vignette [link](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html).
@@ -53,9 +52,36 @@ class: center, middle, inverse, title-slide
 * Demo data used in this section was the **10k Human PBMC data** from *10X Genomics* [link](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high).
 
 ---
-## What is this data?
+## Set Up
 
-This is Human PBMC data from 10X genomics. We will be using the filtered dataset that has been produced by Cell Ranger. 
+All prerequisites, links to material and slides for this course can be found on github. At this point hopefully everyone has installed the required packages listed on our homepage. 
+
+* [Bootcamp](https://rockefelleruniversity.github.io/SingleCell_Bootcamp/)
+
+Or can be downloaded as a zip archive from here.
+
+* [Download zip](https://github.com/rockefelleruniversity/SingleCell_Bootcamp/zipball/master)
+
+---
+## Course materials
+
+Once the zip file in unarchived. All presentations as HTML slides and pages, their R code and HTML practical sheets will be available in the directories underneath.
+
+* **presentations/slides/**
+Presentations as an HTML slide show.
+* **presentations/singlepage/** 
+Presentations as an HTML single page.
+* **presentations/r_code/**
+R code in presentations.
+* **exercises/**
+Practicals as HTML pages. 
+* **answers/**
+Practicals with answers as HTML pages and R code solutions. 
+
+---
+## What is our data?
+
+We will use the 10k Human PBMC data from [10X genomics](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high). We will be using the filtered dataset that has been produced by Cell Ranger. 
 
 
 
@@ -3788,19 +3814,19 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 13:46:07 UMAP embedding parameters a = 0.9922 b = 1.112
+## 14:23:05 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 13:46:07 Read 9379 rows and found 19 numeric columns
+## 14:23:05 Read 9379 rows and found 19 numeric columns
 ```
 
 ```
-## 13:46:07 Using Annoy for neighbor search, n_neighbors = 30
+## 14:23:05 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 13:46:07 Building Annoy index with metric = cosine, n_trees = 50
+## 14:23:05 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -3813,13 +3839,13 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 13:46:08 Writing NN index file to temp file /tmp/RtmpSzCI6H/file18f46ca8b05a
-## 13:46:08 Searching Annoy index using 1 thread, search_k = 3000
-## 13:46:12 Annoy recall = 100%
-## 13:46:12 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 13:46:14 Initializing from normalized Laplacian + noise (using irlba)
-## 13:46:14 Commencing optimization for 500 epochs, with 398570 positive edges
-## 13:46:28 Optimization finished
+## 14:23:06 Writing NN index file to temp file /tmp/RtmplXX4Qu/file18f21f447cd4
+## 14:23:06 Searching Annoy index using 1 thread, search_k = 3000
+## 14:23:09 Annoy recall = 100%
+## 14:23:10 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 14:23:12 Initializing from normalized Laplacian + noise (using irlba)
+## 14:23:12 Commencing optimization for 500 epochs, with 398570 positive edges
+## 14:23:24 Optimization finished
 ```
 
 ---
@@ -3941,7 +3967,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.9453
 ## Number of communities: 9
-## Elapsed time: 1 seconds
+## Elapsed time: 0 seconds
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 9379
@@ -3950,7 +3976,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.9256
 ## Number of communities: 10
-## Elapsed time: 1 seconds
+## Elapsed time: 0 seconds
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 9379
@@ -3986,7 +4012,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.8790
 ## Number of communities: 16
-## Elapsed time: 1 seconds
+## Elapsed time: 0 seconds
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 9379
@@ -4013,7 +4039,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.8563
 ## Number of communities: 19
-## Elapsed time: 1 seconds
+## Elapsed time: 0 seconds
 ```
 
 ```r
@@ -4407,7 +4433,15 @@ Seurat has many different options for differentials. You can use these to fully 
 
 
 
+---
+## Further reading
 
+We have based our workflow on the [Seurat vignettes](https://satijalab.org/seurat/articles/get_started.html) and [OSCA book](https://bioconductor.org/books/release/OSCA/) from Bioconductor.
+
+
+UMAPS:
+* [Data Science blog post](https://towardsdatascience.com/dimensionality-reduction-for-data-visualization-pca-vs-tsne-vs-umap-be4aa7b1cb29)
+* [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
 
 
 

@@ -1559,7 +1559,7 @@ border-radius: 0px;
 <html> ¶ ¶ <hr color="#EB811B" size="1px" width="796px"> ¶ </html></h1>
 <h4 class="author">Rockefeller University, Bioinformatics Resource
 Centre</h4>
-<h4 class="date"><a href="https://rockefelleruniversity.github.io/scRNA-seq/" class="uri">https://rockefelleruniversity.github.io/scRNA-seq/</a></h4>
+<h4 class="date"><a href="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" class="uri">https://rockefelleruniversity.github.io/SingleCell_Bootcamp/</a></h4>
 
 </div>
 
@@ -1599,10 +1599,41 @@ Biotechnol</em> (2015) <a href="https://doi.org/10.1038/nbt.3192">link</a></li>
 data</strong> from <em>10X Genomics</em> <a href="https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high">link</a>.</li>
 </ul>
 </div>
-<div id="what-is-this-data" class="section level2">
-<h2>What is this data?</h2>
-<p>This is Human PBMC data from 10X genomics. We will be using the
-filtered dataset that has been produced by Cell Ranger.</p>
+<div id="set-up" class="section level2">
+<h2>Set Up</h2>
+<p>All prerequisites, links to material and slides for this course can
+be found on github. At this point hopefully everyone has installed the
+required packages listed on our homepage.</p>
+<ul>
+<li><a href="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/">Bootcamp</a></li>
+</ul>
+<p>Or can be downloaded as a zip archive from here.</p>
+<ul>
+<li><a href="https://github.com/rockefelleruniversity/SingleCell_Bootcamp/zipball/master">Download
+zip</a></li>
+</ul>
+</div>
+<div id="course-materials" class="section level2">
+<h2>Course materials</h2>
+<p>Once the zip file in unarchived. All presentations as HTML slides and
+pages, their R code and HTML practical sheets will be available in the
+directories underneath.</p>
+<ul>
+<li><strong>presentations/slides/</strong> Presentations as an HTML
+slide show.</li>
+<li><strong>presentations/singlepage/</strong> Presentations as an HTML
+single page.</li>
+<li><strong>presentations/r_code/</strong> R code in presentations.</li>
+<li><strong>exercises/</strong> Practicals as HTML pages.</li>
+<li><strong>answers/</strong> Practicals with answers as HTML pages and
+R code solutions.</li>
+</ul>
+</div>
+<div id="what-is-our-data" class="section level2">
+<h2>What is our data?</h2>
+<p>We will use the 10k Human PBMC data from <a href="https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high">10X
+genomics</a>. We will be using the filtered dataset that has been
+produced by Cell Ranger.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">download.file</span>(<span class="st">&quot;https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz&quot;</span>,</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz&quot;</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">untar</span>(<span class="st">&quot;10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz&quot;</span>)</span></code></pre></div>
@@ -4811,20 +4842,20 @@ the point where our data plateaus.</p>
 <pre><code>## Computing nearest neighbor graph</code></pre>
 <pre><code>## Computing SNN</code></pre>
 <div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>seu_filt <span class="ot">&lt;-</span> <span class="fu">RunUMAP</span>(seu_filt, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span>pc, <span class="at">reduction =</span> <span class="st">&quot;pca&quot;</span>)</span></code></pre></div>
-<pre><code>## 13:48:57 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
-<pre><code>## 13:48:57 Read 9379 rows and found 19 numeric columns</code></pre>
-<pre><code>## 13:48:57 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
-<pre><code>## 13:48:57 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
+<pre><code>## 14:26:03 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
+<pre><code>## 14:26:03 Read 9379 rows and found 19 numeric columns</code></pre>
+<pre><code>## 14:26:03 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
+<pre><code>## 14:26:03 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
 <pre><code>## 0%   10   20   30   40   50   60   70   80   90   100%</code></pre>
 <pre><code>## [----|----|----|----|----|----|----|----|----|----|</code></pre>
 <pre><code>## **************************************************|
-## 13:48:59 Writing NN index file to temp file /tmp/RtmpSzCI6H/file18f440b9e012
-## 13:48:59 Searching Annoy index using 1 thread, search_k = 3000
-## 13:49:02 Annoy recall = 100%
-## 13:49:03 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 13:49:05 Initializing from normalized Laplacian + noise (using irlba)
-## 13:49:05 Commencing optimization for 500 epochs, with 398570 positive edges
-## 13:49:19 Optimization finished</code></pre>
+## 14:26:05 Writing NN index file to temp file /tmp/RtmplXX4Qu/file18f25af4101d
+## 14:26:05 Searching Annoy index using 1 thread, search_k = 3000
+## 14:26:08 Annoy recall = 100%
+## 14:26:09 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 14:26:11 Initializing from normalized Laplacian + noise (using irlba)
+## 14:26:12 Commencing optimization for 500 epochs, with 398570 positive edges
+## 14:26:23 Optimization finished</code></pre>
 </div>
 <div id="umap" class="section level2">
 <h2>UMAP</h2>
@@ -4987,7 +5018,7 @@ potential resolutions.</p>
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.8563
 ## Number of communities: 19
-## Elapsed time: 1 seconds</code></pre>
+## Elapsed time: 0 seconds</code></pre>
 <div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(reso_res) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;k&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(reso))</span>
 <span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>k_tab <span class="ot">&lt;-</span> <span class="fu">do.call</span>(cbind, reso_res)</span>
 <span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>k_dat <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(k_tab)</span></code></pre></div>
@@ -5286,6 +5317,15 @@ operating characteristic (roc)</em>,<em>Student’s T-test
 generalized linear model (poisson)</em>, <em>logitstic regression
 (LR)</em>, <em>MAST</em>, <em>DESeq2</em></li>
 </ul>
+</div>
+<div id="further-reading" class="section level2">
+<h2>Further reading</h2>
+<p>We have based our workflow on the <a href="https://satijalab.org/seurat/articles/get_started.html">Seurat
+vignettes</a> and <a href="https://bioconductor.org/books/release/OSCA/">OSCA book</a> from
+Bioconductor.</p>
+<p>UMAPS: * <a href="https://towardsdatascience.com/dimensionality-reduction-for-data-visualization-pca-vs-tsne-vs-umap-be4aa7b1cb29">Data
+Science blog post</a> * <a href="https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf">Bioinformatic
+presentation - Babraham Institute</a></p>
 </div>
 </div>
 
