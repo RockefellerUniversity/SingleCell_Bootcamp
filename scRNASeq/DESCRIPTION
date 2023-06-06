@@ -9,11 +9,14 @@ License: What license is it under?
 LazyData: TRUE
 biocViews: Training
 Remotes: satijalab/seurat-wrappers
-Depends: DropletUtils, scDblFinder, SingleCellExperiment, scran, scater, Seurat, dplyr, scuttle, biomaRt, Herper, clustree, ggplot2, pheatmap
+Depends: DropletUtils, scDblFinder, SingleCellExperiment, scran, scater, Seurat, 
+    dplyr, scuttle, biomaRt, Herper, clustree, ggplot2, pheatmap, harmony, 
+    singleR, RCurl, batchelor, slingshot, TSCAN, SoupX, clustree, devtools
 Suggests: knitr,
     rmarkdown,
     testthat,
-    yaml
+    yaml,
+    SeuratData
 SystemRequirements: R, RStudio
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
