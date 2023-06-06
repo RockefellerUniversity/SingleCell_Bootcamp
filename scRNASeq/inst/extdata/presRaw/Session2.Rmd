@@ -161,7 +161,7 @@ a
 ```
 
 
-```{r}
+```{r, eval=F, echo=T}
 head(mtx)
 ```
 
@@ -1315,7 +1315,7 @@ markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
 ```
 
 ```{r, eval=T, echo=F}
-#save(markers, file="../data/markers.RData")
+save(markers, file="../data/markers.RData")
 load("data/markers.RData")
 ```
 
@@ -1402,6 +1402,8 @@ Here is another example with NK cells.
 known_marker <- c("GNLY","NKG7")
 FeaturePlot(seu_filt, features = known_marker)
 ```
+
+
 ---
 ## Match marker gene expresion by clusters
 
@@ -1453,7 +1455,7 @@ pheatmap(avgExp_mat,scale = "row")
 
 ## Assign cell types by clusters
 
-We can then manually annotate the clusters based on these markers.
+We can then manually annotate the clusters based on these markers. We do this manually based on the average expression of markers in the cluster. We will show you how to automate this later. 
 
 ```{r sec2_resEval_cellTypeAsign,include=TRUE,eval=T}
 
