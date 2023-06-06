@@ -1569,7 +1569,7 @@ head(deg)
 
 To visualize the global changes, we can use a Volcano plot. As always we must first prepare our dataframe for plotting. In this case we can categorize our genes into groups based on significance and fold change: l2FC 0.585 (which is 1.5x) and padj 0.05.
 
-```{r sec2_degCal_volcano,include=TRUE,eval=FALSE}
+```{r sec2_degCal_volcano,include=TRUE,eval=T}
 deg$sig <- NA
 deg$sig[deg$avg_log2FC >= 0.585 & deg$p_val_adj < 0.05] <- "CD14+"
 deg$sig[deg$avg_log2FC <=- 0.585 & deg$p_val_adj < 0.05] <- "FCER1A+"
