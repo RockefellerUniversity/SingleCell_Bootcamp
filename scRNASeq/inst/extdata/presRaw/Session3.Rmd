@@ -20,6 +20,7 @@ output:
 params:
   isSlides: "no"
 ---
+
 ```{r setup, include=FALSE}
 suppressPackageStartupMessages(require(knitr))
 suppressPackageStartupMessages(require(DropletUtils))
@@ -123,7 +124,7 @@ ifnb_list
 
 ```{r, echo=F, eval=F}
 save("ifnb_list",
-     file = "../data/seuOBJ_IFNB_splitByStim.RData")
+     file = "data/seuOBJ_IFNB_splitByStim.RData")
 ```
 
 ---
@@ -199,7 +200,7 @@ if(params$isSlides == "yes"){
 
 We can use *merge()* function to integrate our two data sets, as they are. We need to provide Group information and a name for the project as arguments. 
 
-```{r mergeData_woCor_merged,include=TRUE,eval=FALSE}
+```{r mergeData_woCor_merged,include=TRUE,eval=T}
 
 ifnb_merge <- merge(ifnb_list$CTRL, ifnb_list$STIM,
                             add.cell.ids = c("CTRL","STIM"), project = "ifnb_seuMerge")
@@ -329,7 +330,7 @@ DimPlot(ifnb_merge,group.by = "stim",pt.size = 0.2)
 
 We can now see that our two data sets overlay with each other.
 
-```{r sec3_mergeData_RPCA_cluster,include=TRUE,eval=T, echo=F}
+```{r sec3_mergeData_RPCA_cluster2,include=TRUE,eval=T, echo=F}
 
 ifnb_merge <- ScaleData(ifnb_merge)
 
@@ -466,11 +467,11 @@ We will use the batchelor package to run MNN with the *fastMNN()* function.
   * subset.row: subset genes. Here, we are using the top variable features
 
   
-```{r sec3_mergeData_MNN_cor,include=TRUE,eval=FALSE}
+```{r sec3_mergeData_MNN_cor,include=TRUE,eval=T}
 library(batchelor)
 mnn_res <- fastMNN("CTRL"=sce_list$CTRL, "STIM"=sce_list$STIM,
-                   d=50, # number of principle compoents used
-                   k=20, # the number of nearest neighbors to consider
+                   d=50, 
+                   k=20,
                    subset.row=chosen_hvgs)
 mnn_res
 ```
@@ -498,7 +499,7 @@ assay(mnn_res,"reconstructed")[1:2,1:5]
 Make UMAP using the scater package.
 
 ```{r sec3_dataMerge_MNN_cluster,include=TRUE,eval=T}
-library(Scater)
+library(scater)
 set.seed(1001)
 mnn_res <- runUMAP(mnn_res, dimred="corrected")
 mnn_res$batch <- factor(mnn_res$batch)
@@ -511,7 +512,6 @@ plotUMAP(mnn_res, colour_by="batch")
 We will cluster using SNN graph approach from scran as this is comptaible with our SingleCellExperiment object. 
 
 ```{r}
-message("clustering")
 snn.gr <- buildSNNGraph(mnn_res,use.dimred="corrected")
 cluster_mnn <- igraph::cluster_louvain(snn.gr)$membership
 table(cluster_mnn)
@@ -751,7 +751,7 @@ panc_list <- lapply(panc_list,function(seu,feats){
 
 Identify the anchors between reference and query data sets, using *FindTransferAnchors()*. These are essential to transfer information from our reference to our query. We can then transfer the cell type information. For each cell in query dataset, the score for each given cell type was estimated by the gene expression pattern of anchor genes using the *TransferData()* function. 
 
-```{r sec3_ctAnno_Seurat_tranferAnno,include=TRUE,eval=FALSE}
+```{r sec3_ctAnno_Seurat_tranferAnno,include=TRUE,eval=T}
 anchors <- FindTransferAnchors(reference = panc_list$ref,
                                query=panc_list$query,
                                dims=1:30,reference.reduction="pca")
@@ -774,7 +774,7 @@ pheatmap::pheatmap(mat,scale = "row",show_rownames = FALSE)
 
 ```{r sec3_ctAnno_Seurat_pres,include=TRUE,eval=T}
 
-pred_cellType <- setNames(pred_res$predicted.id,rownames(pred_res))
+pred_cellType <- setNames(pred_res$predicted.id, rownames(pred_res))
 panc_list$query[["cellType_predBySeurat"]] <- pred_cellType[match(Cells(panc_list$query),
                                                                   names(pred_cellType))]
 
@@ -790,9 +790,10 @@ table(panc_list$query$cellType_predBySeurat)
 This package uses SingleCellExperiment objects, so we need to convert our Seurat object.
 
 ```{r sec3_ctAnno_SingleR_pred,include=TRUE,eval=T}
-sce_list <- lapply(panc_list,function(seu){
-  sce <- as.SingleCellExperiment(seu,assay="RNA")
+sce_list <- lapply(panc_list, function(seu){
+  sce <- as.SingleCellExperiment(seu, assay="RNA")
   return(sce)})
+
 ```
 
 ---
@@ -821,7 +822,7 @@ pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE)
 
 Lastly we want to add our annotation back to our query dataset. 
 
-```{r sec3_ctAnno_SingleR_import,include=TRUE,eval=FALSE}
+```{r sec3_ctAnno_SingleR_import,include=TRUE,eval=T}
 cell_type <- setNames(pred_res$pruned.labels,rownames(pred_res))
 panc_list$query$cellType_predBySingleR <- cell_type[match(Cells(panc_list$query),names(cell_type))]
 head(panc_list$query,2)
@@ -1042,7 +1043,7 @@ plotUMAP(sce.sling2, colour_by="avg_pseudoTime") +
 
 So far we have visualized the lineages together. We will want to break this down and compare to clusters. First we will look at clusters. 
 
-```{r sec3_trajANA_trajSep,include=TRUE,eval=FALSE}
+```{r sec3_trajANA_trajSep,include=TRUE,eval=T}
 plotUMAP(sce.sling2, colour_by="label")
 ```
 
@@ -1148,7 +1149,7 @@ plotExpression(sce.sling2,
 ## Plotting top driver genes
 
 We can now repeat this for the top 5 late genes. 
-```{r sec3_trajANA_driveL1_topLate,include=TRUE,eval=F}
+```{r sec3_trajANA_driveL1_topLate2,include=TRUE,eval=T}
 
 sub <- res[res$stat=="late",]
 sub <- sub[order(-sub$logFC),]
@@ -1216,7 +1217,7 @@ plotExpression(sce.sling2,
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
 rm(sce.sling2)
-rm(list(res, embedded, embedded_curve,sce2, pseudo.paths, avg_pseudoTime, curve, sce.sling, sce, tbl, panc_list, cell_type, mat, pred_res,sce_list,pred_cellType,anchors,ref_panc,feats,ref_list,seu_list,panc8, seu_obj,mnn_res,cell_type,snn.gr,cluster_mnn,universe,sce_list,sce,dec_list,dec,combined_dec,chosen_hvgs,hvgc_list,anchors,ifnb_merge,ifnb_list,feats,ifnb_list_rpca ,ifnb))
+rm(res, embedded, embedded_curve,sce2, pseudo.paths, avg_pseudoTime, curve, sce.sling, sce, tbl, panc_list, cell_type, mat, pred_res,sce_list,pred_cellType,anchors,ref_panc,feats,ref_list,seu_list,panc8, seu_obj,mnn_res,cell_type,snn.gr,cluster_mnn,universe,sce_list,sce,dec_list,dec,combined_dec,chosen_hvgs,hvgc_list,anchors,ifnb_merge,ifnb_list,feats,ifnb_list_rpca ,ifnb)
 gc()
 
 
