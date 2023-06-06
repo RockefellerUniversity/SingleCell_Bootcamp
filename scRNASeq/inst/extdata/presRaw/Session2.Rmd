@@ -283,6 +283,7 @@ summary(seu_obj$percent.mt2)
 
 We can double check that this matches easily by comparing the percentages. 
 ```{r, eval =F}
+library(ggplot2)
 dat <- data.frame(byPattern=seu_obj$percent.mt, byGene=seu_obj$percent.mt2,stringsAsFactors = FALSE)
 cor_val <- cor.test(dat$byPattern,dat$byGene,method = "spearman")
 ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
@@ -295,6 +296,7 @@ ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
 ## Estimate proportions of mitochondrial genes
 
 ```{r, echo =F, fig.height=4,fig.width=7}
+library(ggplot2)
 dat <- data.frame(byPattern=seu_obj$percent.mt, byGene=seu_obj$percent.mt2,stringsAsFactors = FALSE)
 cor_val <- cor.test(dat$byPattern,dat$byGene,method = "spearman")
 ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
@@ -904,7 +906,7 @@ Comparison between UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
 
-```{r qcPlot_scatter_pres1,include=TRUE,eval=T, echo=F, fig.height=4,fig.width=7}
+```{r ,include=TRUE,eval=T, echo=F, fig.height=4,fig.width=7}
 
 FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
                group.by = "doublet")
@@ -915,7 +917,7 @@ FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
 
 * Comparison between UMI counts and the percent of mitochondrial content
 * Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
-```{r qcPlot_scatter_pres2,include=TRUE,eval=F}
+```{r ,include=TRUE,eval=F}
 FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 ```
 
@@ -936,7 +938,7 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 * It is applied to evaluate the difference between groups in the variable.
 * This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
 
-```{r qcPlot_ridgePlot_pres,include=TRUE,eval=F}
+```{r ,include=TRUE,eval=F}
 RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
 ```
 
