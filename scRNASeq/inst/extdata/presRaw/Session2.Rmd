@@ -1315,7 +1315,7 @@ markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
 ```
 
 ```{r, eval=T, echo=F}
-save(markers, file="../data/markers.RData")
+#save(markers, file="../data/markers.RData")
 load("data/markers.RData")
 ```
 
