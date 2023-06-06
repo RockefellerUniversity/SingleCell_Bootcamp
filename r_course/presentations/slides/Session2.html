@@ -28,17 +28,21 @@ class: center, middle, inverse, title-slide
 
 
 ## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
+
+---
+## A basic scRNAseq workflow
 - Load data into Seurat
-- Data normalization
-- Calculate mitochondrial contains
-- Estimate cell cycle phases
+- Data normalization with Seurat
+- Calculate mitochondrial content
+- Estimate cell cycle phases with Seurat and cyclone
 - Evaluate Doublets with scrublet
 - QC plots
-- Dimension reduction
-- Clustering
-- Evaluate results ~ cell type specific clusters
+- Dimension reduction with Seurat
+- Clustering with Seurat
+- Evaluate results - cell type specific clusters
 - Identify marker genes by clusters
-- Transfer UMAP and annotation from Seurat to LOUPE 
 
 ---
 ## Seurat
@@ -2526,7 +2530,7 @@ head(mtx)
 
 
 ---
-## Load cellranger matrix (in .h5 format) into matrix
+## Load in .h5 format matrix
 As an alternative we can use *Read10X_h5* function to read cellranger matrix from an **.h5** file. This format is often used by python packages. 
 
 
@@ -2616,7 +2620,7 @@ Like everything scRNAseq is imperfect. Often cellular debris makes its way into 
 We can find a lot of these bad droplets by looking for a high percentage of mitochondrial counts.
 
 ---
-## Estimate proportions of mitochondrial genes
+## Estimate mitochondrial proportion
 
 The *PercentageFeatureSet()* function can be used to estimate the percentage of all counts that belong to a set of features. These features can be given as a vector or as a pattern.
 
@@ -2637,7 +2641,7 @@ summary(seu_obj$percent.mt)
 ```
 
 ---
-## Estimate proportions of mitochondrial genes
+## Estimate mitochondrial proportion
 
 We can also use regular expression pattern matching to define our feature sets. This is often easier, but may not be possible, depending on your organism.
 
@@ -2653,7 +2657,7 @@ summary(seu_obj$percent.mt2)
 ```
 
 ---
-## Estimate proportions of mitochondrial genes
+## Estimate mitochondrial proportion
 
 We can double check that this matches easily by comparing the percentages. 
 
@@ -2667,7 +2671,7 @@ ggplot(dat, aes(x = byPattern, y = byGene)) + geom_point() + geom_smooth() + lab
 ```
 
 ---
-## Estimate proportions of mitochondrial genes
+## Estimate mitochondrial proportion
 
 
 ```
@@ -2690,14 +2694,14 @@ class: inverse, center, middle
 
 ---
 
-## Normalization, feature selection, and data scaling
+## To scaled data
 
 * Normalization: Feature counts are normalized to total counts each cell
 * Feature selection: Identifies features that are highly variable
 * Data scaling: Scales and centers features in the dataset
 
 ---
-## Normalization, feature selection, and data scaling
+## To scaled data
 
 There are 2 main approaches for this:
 - Log normalization [default]
@@ -2777,11 +2781,11 @@ plot2
 ![](Session2_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
 
 ---
-## Normalization and scaling with SCTransform
+## SCTransform
 
 - SCTransform is a normalization based on negative binomial regression.
 - It is performed with **SCTransform()** function of Seurat.
-- This function equal to the combinations of NormalizaeData(), FindVariableFeatures(), and ScaleData().
+- This function equal to the combinations of NormalizeData(), FindVariableFeatures(), and ScaleData().
 
 
 ```r
@@ -2801,7 +2805,7 @@ seu_obj
 
 
 ---
-## Normalization and scaling with SCTransform
+## SCTransform
 
 The normalized data is stored in assay **SCT**. We can see this is now the active assay. Our log normalization is stored in the "RNA" assay. 
 
@@ -3482,8 +3486,8 @@ class: inverse, center, middle
 
 ---
 
-## Distribution of particular variables in violin plot
-This kind of plot is applied to evaluate the variables:
+## Distribution of variables in violin plot
+We can use violin plots to check the distribution of specific variables such as:
   + UMIs (*nCount_RNA*) per cell
   + Genes detected (*nFeature_RNA*) per cell
   + Ratio of UMIs of mitochondrial genes to nucleus genes (*percent.mt*)
@@ -3495,15 +3499,15 @@ VlnPlot(seu_obj, group.by = "dset", features = c("nCount_RNA", "nFeature_RNA", "
 ```
 
 ---
-## Distribution of particular variables in violin plot
+## Distribution of variables in violin plot
 
 If a bimodal distribution is identified, we need to check for any interference. We can see some evidence of bimodality in our dataset here.
 
 ![](Session2_files/figure-html/unnamed-chunk-53-1.png)&lt;!-- --&gt;
 
 ---
-## Evaluate the interactions between two variables with scatter plots
-Comparison between UMIs and genes detected per cell:
+## Evaluating interactions
+Scatter plots can be used to look for interactions between specific variables. Here we compare UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
 
@@ -3513,7 +3517,7 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", grou
 ```
 
 ---
-## Evaluate the interactions between two variables with scatter plots
+## Evaluating interactions
 Comparison between UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
@@ -3521,9 +3525,9 @@ Comparison between UMIs and genes detected per cell:
 ![](Session2_files/figure-html/unnamed-chunk-54-1.png)&lt;!-- --&gt;
 
 ---
-## Evaluate the interactions between two variables with scatter plots
+## Evaluating interactions
 
-* Comparison between UMI counts and the percent of mitochondrial content
+Comparison between UMI counts and the percent of mitochondrial content:
 * Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
 
 ```r
@@ -3531,9 +3535,9 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 ```
 
 ---
-## Evaluate the interactions between two variables with scatter plots
+## Evaluating interactions
 
-* Comparison between UMI counts and the percent of mitochondrial content
+Comparison between UMI counts and the percent of mitochondrial content:
 * Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
 ![](Session2_files/figure-html/qcPlot_scatter_pres2-1.png)&lt;!-- --&gt;
 
@@ -3641,6 +3645,11 @@ seu_filt &lt;- SCTransform(seu_filt, vars.to.regress = pot_conf)
 
 
 ---
+## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
+
+---
 class: inverse, center, middle
 
 # Dimension Reduction
@@ -3720,7 +3729,7 @@ ElbowPlot(seu_filt, ndims = 50, reduction = "pca")
 ![](Session2_files/figure-html/dimRed_elbow-1.png)&lt;!-- --&gt;
 
 ---
-## Evaluate dimensionality computationally
+## Deriving the elbow
 
 We can use cutoffs to derive this computationally based on:
   * How low variation is.
@@ -3737,7 +3746,7 @@ cumu &lt;- cumsum(pct)
 ```
 
 ---
-## Evaluate dimensionality computationally
+## Deriving the elbow
 
 We can use cutoffs to derive this computationally based on:
   * How low variation is.
@@ -3763,7 +3772,7 @@ pc
 ```
 
 ---
-## Evaluate dimensionality cutoffs with elbow plot
+## Deriving the elbow
 
 We can now look at our cutoff on our elbow plot.
 
@@ -3777,7 +3786,7 @@ ggplot(plot_df, aes(cumu, pct, label = rank, color = rank &gt; pc)) + geom_text(
 ```
 
 ---
-## Evaluate dimensionality cutoffs with elbow plot
+## Deriving the elbow
 
 We can now look at our cutoff on our elbow plot. This seems to match the point where our data plateaus.
 
@@ -3814,19 +3823,19 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 14:23:05 UMAP embedding parameters a = 0.9922 b = 1.112
+## 16:07:27 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 14:23:05 Read 9379 rows and found 19 numeric columns
+## 16:07:27 Read 9379 rows and found 19 numeric columns
 ```
 
 ```
-## 14:23:05 Using Annoy for neighbor search, n_neighbors = 30
+## 16:07:27 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 14:23:05 Building Annoy index with metric = cosine, n_trees = 50
+## 16:07:27 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -3839,13 +3848,13 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 14:23:06 Writing NN index file to temp file /tmp/RtmplXX4Qu/file18f21f447cd4
-## 14:23:06 Searching Annoy index using 1 thread, search_k = 3000
-## 14:23:09 Annoy recall = 100%
-## 14:23:10 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 14:23:12 Initializing from normalized Laplacian + noise (using irlba)
-## 14:23:12 Commencing optimization for 500 epochs, with 398570 positive edges
-## 14:23:24 Optimization finished
+## 16:07:28 Writing NN index file to temp file /tmp/RtmpW75Ngc/file1919118b7a35
+## 16:07:28 Searching Annoy index using 1 thread, search_k = 3000
+## 16:07:32 Annoy recall = 100%
+## 16:07:33 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 16:07:35 Initializing from normalized Laplacian + noise (using irlba)
+## 16:07:35 Commencing optimization for 500 epochs, with 398570 positive edges
+## 16:07:49 Optimization finished
 ```
 
 ---
@@ -3890,7 +3899,7 @@ class: inverse, center, middle
 - To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
 
 ---
-## Identify clusters with default Louvain algorithm
+## Identify clusters
 
 We will have a quick look first at how to run the clustering, using the *FindClusters()* function. We just need to provide our Seurat object and a resolution.
 
@@ -3916,7 +3925,7 @@ seu_filt[["cluster_byDefault"]] &lt;- seu_filt$seurat_clusters
 ```
 
 ---
-## Identify clusters with default Louvain algorithm
+## Identify clusters
 Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
 
 
@@ -3967,7 +3976,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.9453
 ## Number of communities: 9
-## Elapsed time: 0 seconds
+## Elapsed time: 1 seconds
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 9379
@@ -3976,7 +3985,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.9256
 ## Number of communities: 10
-## Elapsed time: 0 seconds
+## Elapsed time: 1 seconds
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 9379
@@ -4012,7 +4021,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.8790
 ## Number of communities: 16
-## Elapsed time: 0 seconds
+## Elapsed time: 1 seconds
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 9379
@@ -4039,7 +4048,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.8563
 ## Number of communities: 19
-## Elapsed time: 0 seconds
+## Elapsed time: 1 seconds
 ```
 
 ```r
@@ -4112,6 +4121,11 @@ DimPlot(seu_filt, group.by = "cluster_byDefault", label = TRUE, pt.size = 0.2) +
 ```
 
 ![](Session2_files/figure-html/unnamed-chunk-70-1.png)&lt;!-- --&gt;
+
+---
+## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
 
 ---
 ## Identify cluster-specific marker genes
@@ -4232,7 +4246,7 @@ FeaturePlot(seu_filt, features = known_marker)
 
 
 ---
-## Match marker gene expresion by clusters
+## Match markers to clusters
 
 We can also check the expression of markers in each cluster. First we need to get our count data and our full list of markers.
 
@@ -4246,7 +4260,7 @@ known_marker &lt;- c("IL7R", "CCR7", "S100A4", "CD8A", "MS4A1", "CD14", "LYZ", "
 ```
 
 ---
-## Match marker gene expresion by clusters
+## Match markers to clusters
 
 Next we need to extract out the counts per cluster for our genes of interest. Here we use an lapply to iterate over every cluster, extracting counts and getting the average for each gene of interest.
 
@@ -4269,7 +4283,7 @@ names(avgExp_byClust) &lt;- paste0("C", clust)
 
 
 ---
-## Match marker gene expresion by clusters
+## Match markers to clusters
 
 Finally we get to draw a heatmap with *pheatmap()*. We need a matrix for this, so we first stick our results from each cluster together.
 
@@ -4342,7 +4356,9 @@ class: inverse, center, middle
 
 ---
 
-## Differential gene expression between cell types
+## Differential gene expression
+
+Now we have classified our clusters as specific cell types we can look for differentially expressed genes.
 
 DEGs are identified using *Seurat::FindMarkers()*. We will use monocytes as an example, comparing *CD14+ Monocytes* to *FCER1A+ Monocytes*.
 
@@ -4356,7 +4372,6 @@ Here we will run the differential with default settings for logfc threshold, min
 deg &lt;- FindMarkers(seu_filt, group.by = "cellType_byClust", ident.1 = "CD14+ Monocytes",
     ident.2 = "FCER1A+ Monocytes", logfc.threshold = 0.25, test.use = "wilcox", min.pct = 0.1)
 ```
-
 
 ---
 ## Results intepretation
