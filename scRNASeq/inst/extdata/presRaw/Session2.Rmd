@@ -1660,7 +1660,15 @@ gc()
 ```
 
 
+---
+## Further reading
 
+We have based our workflow on the [Seurat vignettes](https://satijalab.org/seurat/articles/get_started.html) and [OSCA book](https://bioconductor.org/books/release/OSCA/) from Bioconductor.
+
+
+UMAPS:
+* [Data Science blog post](https://towardsdatascience.com/dimensionality-reduction-for-data-visualization-pca-vs-tsne-vs-umap-be4aa7b1cb29)
+* [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
 
 
 
