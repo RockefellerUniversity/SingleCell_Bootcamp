@@ -1298,10 +1298,19 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ---
 ## Clustering - optimized
 
-We can see that we have slightly more clusters. We can now compare back to the original clustering, and there are some clearly defined clusters, which weren't there before.
+Lets retry clustering with our improved resolution. 
 
 ```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
 seu_filt <- FindClusters(seu_filt, resolution = 0.7)
+```
+
+---
+## Clustering - optimized
+
+We can see that we have slightly more clusters. We can now compare back to the original clustering, and there are some clearly defined clusters, which weren't there before.
+
+
+```{r, fig.height=4,fig.width=7}
 DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend() + ggtitle("Optimized Clusters")
 ```
 
@@ -1434,7 +1443,6 @@ known_marker <- c("IL7R","CCR7","S100A4","CD8A",
 ```
 
 ---
-
 ## Match marker gene expresion by clusters
 
 Next we need to extract out the counts per cluster for our genes of interest. Here we use an lapply to iterate over every cluster, extracting counts and getting the average for each gene of interest.
@@ -1467,6 +1475,7 @@ avgExp_mat <- do.call(cbind, avgExp_byClust)
 pheatmap(avgExp_mat,scale = "row")
 ```
 
+---
 ## Assign cell types by clusters
 
 We can then manually annotate the clusters based on these markers. We do this manually based on the average expression of markers in the cluster. We will show you how to automate this later. 
@@ -1486,6 +1495,7 @@ seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(6)] <- "DCs"
 seu_filt$cellType_byClust[is.na(seu_filt$cellType_byClust)] <- "Unspecified"
 ```
 
+---
 ## Assign cell types by clusters
 
 Cell numbers in each cell type
@@ -1494,10 +1504,11 @@ Cell numbers in each cell type
 table(seu_filt$cellType_byClust)
 ```
 
+---
 ## Assign cell types by clusters
 
 We can also display seurat clusters and cell types in UMAP.
-```{r}
+```{r,fig.height=4,fig.width=7}
 
 DimPlot(seu_filt, group.by = c("seurat_clusters","cellType_byClust"),label = TRUE,pt.size = 0.2)+NoLegend()
 ```
@@ -1589,6 +1600,8 @@ ggplot(deg, aes(x=avg_log2FC, y=-log10(p_val_adj), color=sig)) + geom_point() +
   theme_classic()
 ```
 
+
+---
 ## Customizing your differentials
 Seurat has many different options for differentials. You can use these to fully customize your analysis.
 
