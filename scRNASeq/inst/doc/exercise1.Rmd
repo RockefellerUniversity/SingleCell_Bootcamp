@@ -1,5 +1,5 @@
 ---
-title: "Exercise 1 - Seurat"
+title: "Exercise 1 - Cell Ranger and Loupe browser"
 author: "Rockefeller University, Bioinformatics Resource Centre"
 date: "https://rockefelleruniversity.github.io/scRNA-seq"
 output: 
@@ -16,6 +16,14 @@ toMessage <- ifelse(!is.null(params$toMessage),params$toMessage,FALSE)
 message(toMessage)
 suppressPackageStartupMessages(require(Seurat))
 ```
+
+
+<p>&nbsp;</p>
+
+We have no specific exercises for Cell Ranger and Loupe browser. 
+
+We recommend reading in the example dataset into Loupe browser and try to become familiar with user experience. 
+
 
 
 
