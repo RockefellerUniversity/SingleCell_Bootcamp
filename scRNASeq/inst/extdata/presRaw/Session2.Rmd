@@ -1612,7 +1612,22 @@ Seurat has many different options for differentials. You can use these to fully 
 
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
-rm(list=ls())
+rm(seu_filt)
+rm(markers)
+rm(sce)
+rm(deg)
+
+rm(clust)
+rm(mat)
+rm(k_dat)
+rm(plot_df)
+rm(dat)
+rm(assignments)
+rm(ccGene_hs)
+rm(sct_mat)
+rm(log_mat)
+rm(log_avgExp )
+rm(sct_avgExp)
 gc()
 
 
