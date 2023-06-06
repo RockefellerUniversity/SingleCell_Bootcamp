@@ -4811,20 +4811,20 @@ the point where our data plateaus.</p>
 <pre><code>## Computing nearest neighbor graph</code></pre>
 <pre><code>## Computing SNN</code></pre>
 <div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>seu_filt <span class="ot">&lt;-</span> <span class="fu">RunUMAP</span>(seu_filt, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span>pc, <span class="at">reduction =</span> <span class="st">&quot;pca&quot;</span>)</span></code></pre></div>
-<pre><code>## 05:13:54 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
-<pre><code>## 05:13:54 Read 9379 rows and found 19 numeric columns</code></pre>
-<pre><code>## 05:13:54 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
-<pre><code>## 05:13:54 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
+<pre><code>## 13:48:57 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
+<pre><code>## 13:48:57 Read 9379 rows and found 19 numeric columns</code></pre>
+<pre><code>## 13:48:57 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
+<pre><code>## 13:48:57 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
 <pre><code>## 0%   10   20   30   40   50   60   70   80   90   100%</code></pre>
 <pre><code>## [----|----|----|----|----|----|----|----|----|----|</code></pre>
 <pre><code>## **************************************************|
-## 05:13:55 Writing NN index file to temp file /tmp/Rtmpmn2glM/file1bd377a1b419
-## 05:13:55 Searching Annoy index using 1 thread, search_k = 3000
-## 05:13:59 Annoy recall = 100%
-## 05:14:00 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 05:14:02 Initializing from normalized Laplacian + noise (using irlba)
-## 05:14:03 Commencing optimization for 500 epochs, with 398570 positive edges
-## 05:14:15 Optimization finished</code></pre>
+## 13:48:59 Writing NN index file to temp file /tmp/RtmpSzCI6H/file18f440b9e012
+## 13:48:59 Searching Annoy index using 1 thread, search_k = 3000
+## 13:49:02 Annoy recall = 100%
+## 13:49:03 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 13:49:05 Initializing from normalized Laplacian + noise (using irlba)
+## 13:49:05 Commencing optimization for 500 epochs, with 398570 positive edges
+## 13:49:19 Optimization finished</code></pre>
 </div>
 <div id="umap" class="section level2">
 <h2>UMAP</h2>

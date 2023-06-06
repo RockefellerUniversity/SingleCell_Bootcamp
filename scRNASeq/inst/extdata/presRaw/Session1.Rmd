@@ -250,6 +250,7 @@ The sequence reads contain:-
 - Information on cell identity (10x barcode)
 - Information on molecule identity (UMI)
 - Information on sample identity (Index read)
+- Information on the RNA molecule (transcriptome read)
 
 ---
 
@@ -411,6 +412,8 @@ Now we have the downloaded Cell Ranger software and required pre-build reference
 Typically FastQ files for your scRNA run will have been generated using the **Cell Ranger mkfastq** toolset to produce a directory a fastQ files. 
 
 We can now use CellRanger count command with our reference and fastQ files to generate our count matrix and associated files.
+
+If you are analysing single nuclei RNA-seq data remember to set the **--include-introns** flag.
 
 ```{}
 cellranger count --id=my_run_name \
@@ -660,7 +663,7 @@ The web summary also contains useful information on the input files and the vers
 ]
 
 ---
-## Web Summary overview - Sample panel
+## Sample panel
 
 .pull-left[
 The first thing we can review is the **Sample** information panel.
@@ -680,7 +683,7 @@ This contains information on:-
 ]
 ---
 
-## Web Summary overview - Sequencing panel
+## Sequencing panel
 
 .pull-left[
 The **Sequencing** panel highlights information on the quality of the illumina sequencing.
@@ -700,7 +703,7 @@ This contains information on:-
 ]
 ---
 
-## Web Summary overview - Mapping panel
+## Mapping panel
 
 .pull-left[
 The **Mapping** panel highlights information on the mapping of reads to the reference genome and transcriptome.
@@ -719,7 +722,7 @@ This contains information on:-
 ]
 ---
 
-## Web Summary overview - Cells panel
+## Cells panel
 
 .pull-left[
 The **Cells** panel highlights some of the most important information in the report, the total number of cells captured and the distribution of counts across cells and genes.
@@ -739,7 +742,7 @@ Information includes:-
 ---
 
 
-## Web Summary overview - Knee plot
+## Knee plot
 
 .pull-left[
 
@@ -762,7 +765,7 @@ The knee plot shows:-
 ---
 
 
-## Web Summary overview - Knee plot
+## Knee plot
 
 .pull-left[
 
@@ -784,7 +787,7 @@ If required, a **--force-cells** flag can be used with _cellranger count_ to ide
 ]
 ---
 
-## Web Summary overview - Knee plot
+## Knee plot
 
 .pull-left[
 
@@ -802,7 +805,7 @@ In this example we see no specific cliff and knee suggesting a failure in the in
 ]
 ---
 
-## Web Summary overview - Knee plot
+## Knee plot
 
 .pull-left[
 
@@ -816,7 +819,7 @@ If there is a clog in the machine we may see a knee plot where the overall numbe
 ]
 ---
 
-## Web Summary overview - Knee plot
+## Knee plot
 
 .pull-left[
 
@@ -834,7 +837,7 @@ Knee plots should be interpreted in the context of the biology under investigati
 ---
 
 
-## Web Summary overview - Analysis page
+## Analysis page
 
 .pull-left[
 The web-summary also contains an analysis page where default dimension reduction, clustering and differential expressions between clusters has been performed.
@@ -850,7 +853,7 @@ Additionally the analysis page contains information on sequencing saturation and
 ---
 
 
-## Web Summary overview - t-sne and clustering
+## t-sne and clustering
 
 .pull-left[
 The t-sne plot shows the distribution and similarity within your data.
@@ -868,7 +871,7 @@ The t-sne plot shows the distribution and similarity within your data.
 ---
 
 
-## Web Summary overview - Sequence and Gene saturation
+## Sequence and Gene saturation
 
 .pull-left[
 The sequence saturation and Median genes per cell plots show these calculations (as show on summary page) over successive downsampling of the data. 
@@ -939,6 +942,8 @@ Having downloaded the Loupe browser we can load our cloupe files directly in and
 
 In todays session we will review some of the features available in Loupe using the PBMC example data set.
 
+You can download this dataset from our [S3 bucket](https://rubioinformatics.s3.amazonaws.com/cloupe.cloupe) to use in the Loupe browser
+
 ]
 
 .pull-right[
@@ -947,8 +952,12 @@ In todays session we will review some of the features available in Loupe using t
 </div>
 ]
 ---
+## Resources
 
-
+- [10X Single cell software](https://support.10xgenomics.com/single-cell-gene-expression/software/overview/welcome)
+- [Cell Ranger Download](https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest)
+- [Loupe Broswer Download](https://www.10xgenomics.com/products/loupe-browser/downloads)
+- [Interpreting Web Summaries](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/summary)
 
 
 
