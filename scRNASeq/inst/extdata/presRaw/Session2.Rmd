@@ -1,7 +1,7 @@
 ---
 title: "Single-cell RNA sequencing ~ Session 2 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
 author: "Rockefeller University, Bioinformatics Resource Centre"
-date: "https://rockefelleruniversity.github.io/scRNA-seq/"
+date: "https://rockefelleruniversity.github.io/SingleCell_Bootcamp/"
 output: 
   xaringan::moon_reader:
     css: ["default", "metropolisCustom.css", "metropolis-fontsCustom.css"]

@@ -5,21 +5,21 @@
 
 **This course is compiled automatically on _`r Sys.Date()`_ **
 <br>
-[<img src="https://github.com/RockefellerUniversity/scRNA-seq/workflows/compilation-check/badge.svg">](https://github.com/RockefellerUniversity/scRNA-seq/actions?query=workflow%3compilation-check)
+[<img src="https://github.com/RockefellerUniversity/SingleCell_Bootcamp/workflows/compilation-check/badge.svg">](https://github.com/RockefellerUniversity/SingleCell_Bootcamp/actions?query=workflow%3compilation-check)
 
 **The course is tested and available on MacOS, Windows and Ubuntu Linux for `r R.Version()$version.string`**
 <br>
-[<img src="https://github.com/RockefellerUniversity/scRNA-seq/workflows/OS-check/badge.svg">](https://github.com/RockefellerUniversity/scRNA-seq/actions?query=workflow%3AOS-check)
+[<img src="https://github.com/RockefellerUniversity/SingleCell_Bootcamp/workflows/OS-check/badge.svg">](https://github.com/RockefellerUniversity/SingleCell_Bootcamp/actions?query=workflow%3AOS-check)
 
 <br>
 <br>
 
 ### Overview
 
-In this course we are going to introduce basic analysis for single-cell RNAseq, with a specific focus on the 10X system. The course is divided into three sessions. In the first session, we will introduce how to interpret the Cell  Ranger QC report and how to do analysis with the LOUPE Browser. We will also demonstrate the customized analysis we can support right know. In the Second session, we will demonstrate how to process scRNAseq data and make QC reports with Seurat. In the third session, we will discuss how to to do more advanced analysis and QC with Bioconductor packages. 
+In this course we are going to introduce basic analysis for single-cell RNAseq, with a specific focus on the 10X system. The course is divided into three sessions. In the first session, we will introduce how to interpret the Cell  Ranger QC report and how to do analysis with the LOUPE Browser. In the Second session, we will demonstrate how to process scRNAseq data and make QC reports with Seurat. In the third session, we will discuss how to to do more advanced analysis and QC. 
 
 Exercises and answer sheets are included to help you practice techniques and provide examples.
 
-Course material and exercises are available to view as rendered HTML at https://rockefelleruniversity.github.io/scRNA-seq/.
+Course material and exercises are available to view as rendered HTML at https://rockefelleruniversity.github.io/SingleCell_Bootcamp/.
 All material is available to download under GPL v2 license.
 

@@ -2,8 +2,8 @@
 
 #### **Single-cell RNA sequencing , Session 3**
 
-In this session we will cover data processing with Bioconductor pacakges, including:
+In this session we will cover advanced data processing:
 
-* Empty droplet removal
+* Batch correction
 * Ambient RNA removal
-* Doublet removal
+* Trajectory analysis
