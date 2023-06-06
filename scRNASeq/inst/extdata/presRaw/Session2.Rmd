@@ -117,19 +117,19 @@ mtx <- Seurat::Read10X(mtx_dir)
 ```{r, eval=F, echo=F}
 a <- is(mtx)
 b <- head(mtx)
-save(a,b, file="/data/mtx_res.RData")
+save(a,b, file="data/mtx_res.RData")
 ```
 
 
 ```{R, eval=F, echo=F}
 library(Seurat)
-load("/data/seurat_read.RData")
+load("data/seurat_read.RData")
 ```
 
 
 ```{R, eval=T, echo=F}
 library(Seurat)
-load("/data/mtx_res.RData")
+load("data/mtx_res.RData")
 ```
 
 
@@ -179,11 +179,11 @@ seu_obj <- Seurat::CreateSeuratObject(mtx, project=sample_id, min.cells=min_cell
 ```
 
 ```{r, eval=F, echo=F}
-save(seu_obj, file="/data/seu_obj_raw.RData")
+save(seu_obj, file="data/seu_obj_raw.RData")
 ```
 
 ```{R, eval=T, echo=F}
-load("/data/seu_obj_raw.RData")
+load("data/seu_obj_raw.RData")
 ```
 
 ---
@@ -407,11 +407,11 @@ seu_obj
 
 ```{r, eval=F, echo=F}
 SCT_assay <- seu_obj2@assays$SCT
-save(SCT_assay, file="/data/SCT_assay.RData")
+save(SCT_assay, file="data/SCT_assay.RData")
 ```
 
 ```{r, eval=T, echo=F}
-load("/data/SCT_assay.RData")
+load("data/SCT_assay.RData")
 seu_obj@assays$SCT <- SCT_assay
 DefaultAssay(seu_obj) <- "SCT"
 seu_obj
@@ -587,7 +587,7 @@ We have the list here for you to load in.
 
 ```{R}
 
-load("/data/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData")
+load("data/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData")
 ccGene_hs <- ccGene_mm_hs$human_symbol
 lapply(ccGene_hs, function(x){head(x,2)})
 ```
@@ -605,12 +605,12 @@ assignments <- cyclone(sce, ccGene_hs, gene.names=rowData(sce)$SYMBOL)
 ```
 
 ```{R, echo=F}
-#save(assignments, file="/data/cyclone.RData")
+#save(assignments, file="data/cyclone.RData")
 ```
 
 ```{r, echo=T}
 
-load("/data/cyclone.RData")
+load("data/cyclone.RData")
 ```
 
 ---
@@ -773,13 +773,13 @@ names(doublet) <- c("doublet_score","doublet")
 
 
 ```{r, eval=F, echo=F}
-#save(doublet,file = "/data/doublet.RData")
+#save(doublet,file = "data/doublet.RData")
 
 ```
 
 ```{R, eval=T, echo=F}
 
-load("/data/doublet.RData")
+load("data/doublet.RData")
 
 ```
 
@@ -993,10 +993,10 @@ seu_filt <- subset(seu_obj, subset=doublet=="FALSE" &
 ```
 
 ```{r, echo=F, eval=TRUE}
-#save(seu_filt,file="/data/seu_filt.RData")
+#save(seu_filt,file="data/seu_filt.RData")
 rm(doublet)
 rm(seu_obj)
-#load("/data/seu_filt.RData")
+#load("data/seu_filt.RData")
 ```
 
 
@@ -1040,20 +1040,20 @@ seu_filt <- SCTransform(seu_filt, vars.to.regress = pot_conf)
 
 
 ```{R, eval=F, echo=F}
-#save(seu_filt, sce, file="/data/SCT2.RData")
-save(seu_filt, file="/data/SCT2.RData")
-#saveRDS(seu_filt, file="/data/SCT2.rds")
-#save(sce, file="/data/sce.RData")
+#save(seu_filt, sce, file="data/SCT2.RData")
+save(seu_filt, file="data/SCT2.RData")
+#saveRDS(seu_filt, file="data/SCT2.rds")
+#save(sce, file="data/sce.RData")
 
 ```
 
 ```{R,sceload, eval=T, echo=F}
-#load("/data/sce.RData")
+#load("data/sce.RData")
 ```
 
 ```{R,sctload, eval=T, echo=F}
-load("/data/SCT2.RData")
-#seu_filt <- load("/data/SCT2.rds")
+load("data/SCT2.RData")
+#seu_filt <- load("data/SCT2.rds")
 ```
 
 ---
@@ -1336,8 +1336,8 @@ markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
 ```
 
 ```{r, eval=T, echo=F}
-#save(markers, file="/data/markers.RData")
-load("/data/markers.RData")
+#save(markers, file="data/markers.RData")
+load("data/markers.RData")
 ```
 
 ```{r}
