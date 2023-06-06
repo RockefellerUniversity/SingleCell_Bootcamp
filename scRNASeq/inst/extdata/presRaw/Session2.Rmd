@@ -29,26 +29,18 @@ suppressPackageStartupMessages(require(SeuratWrappers))
 knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ```
 
----
 
-##  Data analysis with [Seurat](https://satijalab.org/seurat/)
-
-[Seurat](https://satijalab.org/seurat/) is a powerful package for single-cell data analysis. It supports many common analysis of single-cell RNAseq and cross connection with many useful packages through [SeuratWrapper](https://github.com/satijalab/seurat-wrappers). 
-
-In this session, we will demonstrate our regular workflow for single-cell RNAseq data analysis with Seurat.
-
-
-```{r load_pack,include=TRUE,eval=TRUE}
-library(Seurat)
-library(ggplot2)
-library(scran)
-library(scuttle)
-library(reticulate)
+```{r setup, include=FALSE}
+suppressPackageStartupMessages(require(knitr))
+suppressPackageStartupMessages(require(Seurat))
+suppressPackageStartupMessages(require(dplyr))
+suppressPackageStartupMessages(require(bioMart))
+suppressPackageStartupMessages(require(SeuratWrappers))
+knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ```
 
-# Introduction
 
-## Outlines
+## A basic scRNAseq workflow
 - Load data into Seurat
 - Data normalization
 - Calculate mitochondrial contains
@@ -136,19 +128,19 @@ mtx <- Seurat::Read10X(mtx_dir)
 ```{r, eval=F, echo=F}
 a <- is(mtx)
 b <- head(mtx)
-save(a,b, file="../data/mtx_res.RData")
+save(a,b, file="/data/mtx_res.RData")
 ```
 
 
 ```{R, eval=F, echo=F}
 library(Seurat)
-load("data/seurat_read.RData")
+load("/data/seurat_read.RData")
 ```
 
 
 ```{R, eval=T, echo=F}
 library(Seurat)
-load("data/mtx_res.RData")
+load("/data/mtx_res.RData")
 ```
 
 
@@ -178,14 +170,13 @@ As an alternative we can use *Read10X_h5* function to read cellranger matrix fro
 h5_file <- "path to matrix h5 file"
 h5_file <- "~/Downloads/10k_PBMC_3p_nextgem_Chromium_Controller_molecule_info.h5"
 mtx <- Seurat::Read10X_h5(h5_file)
-#
-mtx
 ```
 
 ---
 ## Create Seurat object from matrix 
-* The matrix is loaded into Seurat object with **CreateSeurtObject()**
-* Cut-off
+The matrix is loaded into Seurat object with **CreateSeurtObject()**
+
+Cut-offs:
   + min_gene: minimum genes detected per cell: *cells with too few genes detected*
   + min_cell: minimum cells a gene expressed in: *Remove genes expressed in too few cells*
 ```{r load_CreateOBJ,include=TRUE,eval=TRUE}
@@ -194,23 +185,16 @@ min_gene <- 200
 min_cell <- 10 
 ```
 
----
-## Create Seurat object from matrix 
-* The matrix is loaded into Seurat object with **CreateSeurtObject()**
-* Cut-off
-  + min_gene: minimum genes detected per cell: *cells with too few genes detected*
-  + min_cell: minimum cells a gene expressed in: *Remove genes expressed in too few cells*
-
 ```{r, eval=F}
 seu_obj <- Seurat::CreateSeuratObject(mtx, project=sample_id, min.cells=min_cell, min.features=min_gene)
 ```
 
 ```{r, eval=F, echo=F}
-save(seu_obj, file="../data/seu_obj_raw.RData")
+save(seu_obj, file="/data/seu_obj_raw.RData")
 ```
 
 ```{R, eval=T, echo=F}
-load("data/seu_obj_raw.RData")
+load("/data/seu_obj_raw.RData")
 ```
 
 ---
@@ -262,7 +246,6 @@ if(params$isSlides == "yes"){
 
 ```
 
----
 ## Mitochondrial Proportion
 
 Like everything scRNAseq is imperfect. Often cellular debris makes its way into a droplet. 
@@ -290,7 +273,6 @@ summary(seu_obj$percent.mt)
 We can also use regular expression pattern matching to define our feature sets. This is often easier, but may not be possible, depending on your organism.
 
 ```{r load_estMT,include=TRUE,eval=TRUE}
-message("select by pattern")
 seu_obj[["percent.mt2"]] <- PercentageFeatureSet(seu_obj, pattern = "^MT-")
 summary(seu_obj$percent.mt2)
 
@@ -312,7 +294,7 @@ ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
 ---
 ## Estimate proportions of mitochondrial genes
 
-```{r, echo =F}
+```{r, echo =F, fig.height=4,fig.width=7}
 dat <- data.frame(byPattern=seu_obj$percent.mt, byGene=seu_obj$percent.mt2,stringsAsFactors = FALSE)
 cor_val <- cor.test(dat$byPattern,dat$byGene,method = "spearman")
 ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
@@ -412,7 +394,7 @@ plot2
 - Highly variable features were colored with *red*. 
 - Gene symbols of the top 10 highly variable features were labeled near by the spots
 
-```{r echo=F}
+```{r echo=F,fig.height=4,fig.width=7}
 top10 <- head(VariableFeatures(seu_obj), 10)
 
 plot1 <- VariableFeaturePlot(seu_obj)
@@ -434,11 +416,11 @@ seu_obj
 
 ```{r, eval=F, echo=F}
 SCT_assay <- seu_obj2@assays$SCT
-save(SCT_assay, file="../data/SCT_assay.RData")
+save(SCT_assay, file="/data/SCT_assay.RData")
 ```
 
 ```{r, eval=T, echo=F}
-load("data/SCT_assay.RData")
+load("/data/SCT_assay.RData")
 seu_obj@assays$SCT <- SCT_assay
 DefaultAssay(seu_obj) <- "SCT"
 seu_obj
@@ -489,7 +471,7 @@ ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
 
 We can see there is very high similarity between the results. 
 
-```{R, echo=F}
+```{R, echo=F, fig.height=4,fig.width=7}
 dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
 cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
 
@@ -581,7 +563,7 @@ dat$Phase <- factor(dat$Phase, levels = c("G1","S","G2M"))
 
 We can see in both S and G2/M scores are highest in cells with the corresponding assignment. 
 
-```{R}
+```{R ,fig.height=4,fig.width=7}
 
 ggplot(dat,aes(x=Phase, y=score, fill=Phase))+geom_boxplot()+
   labs(x="",y="Score",fill="Phase")+
@@ -614,7 +596,7 @@ We have the list here for you to load in.
 
 ```{R}
 
-load("data/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData")
+load("/data/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData")
 ccGene_hs <- ccGene_mm_hs$human_symbol
 lapply(ccGene_hs, function(x){head(x,2)})
 ```
@@ -632,12 +614,12 @@ assignments <- cyclone(sce, ccGene_hs, gene.names=rowData(sce)$SYMBOL)
 ```
 
 ```{R, echo=F}
-#save(assignments, file="../data/cyclone.RData")
+#save(assignments, file="/data/cyclone.RData")
 ```
 
 ```{r, echo=T}
 
-load("data/cyclone.RData")
+load("/data/cyclone.RData")
 ```
 
 ---
@@ -685,7 +667,7 @@ dat$cat <- factor(dat$cat,levels = c("cyclon_G1Score","cyclon_SScore","cyclon_G2
 
 We can see in both S and G2/M scores are highest in cells with the corresponding assignment. 
 
-```{r}
+```{r,fig.height=4,fig.width=7}
 ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_boxplot()+
   labs(x="",y="Score",fill="Phase")+
   facet_wrap(~cat)+theme_classic()
@@ -705,6 +687,9 @@ Cell Cycle Phase determined by *scran::cyclone()*
 ```{r}
 table(seu_obj$cyclon_Phase)
 ```
+
+---
+## Compare the two strategies
 
 Compare the two method: *Seurat* in row and *scran* in column
 
@@ -797,13 +782,13 @@ names(doublet) <- c("doublet_score","doublet")
 
 
 ```{r, eval=F, echo=F}
-#save(doublet,file = "../data/doublet.RData")
+#save(doublet,file = "/data/doublet.RData")
 
 ```
 
 ```{R, eval=T, echo=F}
-rm(mtx)
-load("data/doublet.RData")
+
+load("/data/doublet.RData")
 
 ```
 
@@ -838,7 +823,7 @@ seu_obj[["doublet"]] <- doublet$doublet
 
 UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TRUE) and singlets (FALSE).
 
-```{r}
+```{r, fig.height=4,fig.width=7}
 
 VlnPlot(seu_obj,group.by = "doublet",
         features = c("nCount_RNA","nFeature_RNA","doublet_score"),
@@ -850,7 +835,7 @@ VlnPlot(seu_obj,group.by = "doublet",
 
 UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TRUE) and singlets (FALSE).
 
-```{r}
+```{r, fig.height=4,fig.width=7}
 FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",pt.size = 0.1,group.by = "doublet")
 ```
 
@@ -895,7 +880,7 @@ VlnPlot(seu_obj, group.by = "dset",
 
 If a bimodal distribution is identified, we need to check for any interference. We can see some evidence of bimodality in our dataset here.
 
-```{r include=TRUE,echo=F}
+```{r include=TRUE,echo=F, fig.height=4,fig.width=7}
 VlnPlot(seu_obj, group.by = "dset",
         features = c("nCount_RNA", "nFeature_RNA", "percent.mt"),
         pt.size = 0)
@@ -906,8 +891,20 @@ VlnPlot(seu_obj, group.by = "dset",
 Comparison between UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
-  
-```{r qcPlot_scatter_pres1,include=TRUE,eval=TRUE}
+
+```{r qcPlot_scatter_pres1,include=TRUE,eval=F}
+
+FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
+               group.by = "doublet")
+```
+
+---
+## Evaluate the interactions between two variables with scatter plots
+Comparison between UMIs and genes detected per cell:
+  * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
+  * Doublets with high UMIs and high genes detected.
+
+```{r qcPlot_scatter_pres1,include=TRUE,eval=T, echo=F, fig.height=4,fig.width=7}
 
 FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
                group.by = "doublet")
@@ -918,9 +915,29 @@ FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
 
 * Comparison between UMI counts and the percent of mitochondrial content
 * Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
-```{r qcPlot_scatter_pres2,include=TRUE,eval=TRUE}
-message("UMIs vs the ratio of mitochondrial genes")
+```{r qcPlot_scatter_pres2,include=TRUE,eval=F}
 FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
+```
+
+---
+## Evaluate the interactions between two variables with scatter plots
+
+* Comparison between UMI counts and the percent of mitochondrial content
+* Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
+```{r qcPlot_scatter_pres2,include=TRUE,eval=TRUE, echo=F, fig.height=4,fig.width=7}
+FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
+```
+
+
+---
+## Ridge plot
+
+* This plot would be applied to demonstrate a given variable and their corresponding score (e.g. doublet vs doublet_score).
+* It is applied to evaluate the difference between groups in the variable.
+* This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
+
+```{r qcPlot_ridgePlot_pres,include=TRUE,eval=F}
+RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
 ```
 
 ---
@@ -930,7 +947,7 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 * It is applied to evaluate the difference between groups in the variable.
 * This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
 
-```{r qcPlot_ridgePlot_pres,include=TRUE,eval=TRUE}
+```{r qcPlot_ridgePlot_pres,include=TRUE,eval=TRUE, echo=F, fig.height=4,fig.width=7}
 RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
 ```
 
@@ -985,16 +1002,12 @@ seu_filt <- subset(seu_obj, subset=doublet=="FALSE" &
 ```
 
 ```{r, echo=F, eval=TRUE}
-#save(seu_filt,file="../data/seu_filt.RData")
+#save(seu_filt,file="/data/seu_filt.RData")
 rm(doublet)
 rm(seu_obj)
-#load("data/seu_filt.RData")
+#load("/data/seu_filt.RData")
 ```
 
-
-<!-- # ```{r} -->
-<!-- # seu_filt -->
-<!-- # ``` -->
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1035,20 +1048,20 @@ seu_filt <- SCTransform(seu_filt, vars.to.regress = pot_conf)
 
 
 ```{R, eval=F, echo=F}
-#save(seu_filt, sce, file="../data/SCT2.RData")
-save(seu_filt, file="../data/SCT2.RData")
-#saveRDS(seu_filt, file="../data/SCT2.rds")
-#save(sce, file="../data/sce.RData")
+#save(seu_filt, sce, file="/data/SCT2.RData")
+save(seu_filt, file="/data/SCT2.RData")
+#saveRDS(seu_filt, file="/data/SCT2.rds")
+#save(sce, file="/data/sce.RData")
 
 ```
 
 ```{R,sceload, eval=T, echo=F}
-#load("data/sce.RData")
+#load("/data/sce.RData")
 ```
 
 ```{R,sctload, eval=T, echo=F}
-load("data/SCT2.RData")
-#seu_filt <- load("data/SCT2.rds")
+load("/data/SCT2.RData")
+#seu_filt <- load("/data/SCT2.rds")
 ```
 
 ---
@@ -1315,8 +1328,8 @@ markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
 ```
 
 ```{r, eval=T, echo=F}
-#save(markers, file="../data/markers.RData")
-load("data/markers.RData")
+#save(markers, file="/data/markers.RData")
+load("/data/markers.RData")
 ```
 
 ```{r}
@@ -1560,7 +1573,7 @@ deg$stat <- NA
 deg$stat[deg$avg_log2FC >= 0.585 & deg$p_val_adj < 0.05] <- "CD14+"
 deg$stat[deg$avg_log2FC <=- 0.585 & deg$p_val_adj < 0.05] <- "FCER1A+"
 deg$stat[is.na(deg$stat)] <- "nc"
-deg$stat <- factor(deg$stat,levels = c("CD14+","nc","FCER1A+"))
+deg$stat <- factor(deg$stat, levels = c("CD14+","nc","FCER1A+"))
 
 table(deg$stat)
 ```
@@ -1569,9 +1582,9 @@ table(deg$stat)
 ## Volcano Plot
 
 ```{r}
-ggplot(deg,aes(x=avg_log2FC,y=-log10(p_val_adj),color=stat))+geom_point()+
-  scale_color_manual(values = c("red","grey","blue"))+
-  labs(x="log2_Fold-Changes",y="-log10_adjPV",color="")+
+ggplot(deg, aes(x=avg_log2FC, y=-log10(p_val_adj), color=deg$stat)) + geom_point() +
+  scale_color_manual(values = c("red", "grey", "blue")) +
+  labs(x="log2_Fold-Changes", y="-log10_adjPV", color="") +
   theme_classic()
 ```
 
@@ -1592,3 +1605,20 @@ gc()
 
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
