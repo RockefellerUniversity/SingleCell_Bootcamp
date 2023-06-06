@@ -1612,9 +1612,7 @@ Seurat has many different options for differentials. You can use these to fully 
 
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
-rm(seu_filt)
-rm(markers)
-rm(sce)
+rm(ls())
 gc()
 
 
