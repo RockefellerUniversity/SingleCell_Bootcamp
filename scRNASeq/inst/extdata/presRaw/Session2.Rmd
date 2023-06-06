@@ -1610,7 +1610,7 @@ Seurat has many different options for differentials. You can use these to fully 
 - Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*
 
 
-```{r, echo=F, eval=T, warning=F, message=FALSE}
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
 rm(seu_filt)
 rm(markers)
