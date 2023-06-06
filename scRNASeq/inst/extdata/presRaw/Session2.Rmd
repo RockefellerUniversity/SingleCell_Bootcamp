@@ -201,7 +201,7 @@ min_cell <- 10
   + min_gene: minimum genes detected per cell: *cells with too few genes detected*
   + min_cell: minimum cells a gene expressed in: *Remove genes expressed in too few cells*
 
-```{r, eval=T}
+```{r, eval=F}
 seu_obj <- Seurat::CreateSeuratObject(mtx, project=sample_id, min.cells=min_cell, min.features=min_gene)
 ```
 
