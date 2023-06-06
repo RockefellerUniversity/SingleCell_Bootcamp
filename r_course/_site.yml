@@ -1,0 +1,50 @@
+output_dir: '.'
+navbar:
+  title: scRNAseq Bootcamp
+  left:
+  - text: Home
+    href: index.html
+  - text: Slides
+    menu:
+    - text: Session1
+      menu:
+      - text: Slide
+        href: presentations/slides/Session1.html
+      - text: Single Page
+        href: presentations/singlepage/Session1.html
+      - text: Code
+        href: presentations/r_code/Session1.R
+    - text: Session2
+      menu:
+      - text: Slide
+        href: presentations/slides/Session2.html
+      - text: Single Page
+        href: presentations/singlepage/Session2.html
+      - text: Code
+        href: presentations/r_code/Session2.R
+  - text: Exercises
+    menu:
+    - text: exercise1
+      menu:
+      - text: Exercise
+        href: exercises/exercises/exercise1_exercise.html
+      - text: Solution
+        href: exercises/answers/exercise1_answers.html
+    - text: exercise2
+      menu:
+      - text: Exercise
+        href: exercises/exercises/exercise2_exercise.html
+      - text: Solution
+        href: exercises/answers/exercise2_answers.html
+  right:
+  - text: Getting help!
+    href: https://github.com//RockefellerUniversity/SingleCell_Bootcamp/issues
+  - href: https://twitter.com/Rockefeller_BRC
+    icon: ion-social-twitter
+output:
+  html_document:
+    toc: yes
+    theme: cosmo
+    toc_float: yes
+    highlight: textmate
+
