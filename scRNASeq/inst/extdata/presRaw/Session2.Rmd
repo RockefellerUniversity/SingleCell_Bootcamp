@@ -30,17 +30,21 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ```
 
 ## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
+
+---
+## A basic scRNAseq workflow
 - Load data into Seurat
-- Data normalization
-- Calculate mitochondrial contains
-- Estimate cell cycle phases
+- Data normalization with Seurat
+- Calculate mitochondrial content
+- Estimate cell cycle phases with Seurat and cyclone
 - Evaluate Doublets with scrublet
 - QC plots
-- Dimension reduction
-- Clustering
-- Evaluate results ~ cell type specific clusters
+- Dimension reduction with Seurat
+- Clustering with Seurat
+- Evaluate results - cell type specific clusters
 - Identify marker genes by clusters
-- Transfer UMAP and annotation from Seurat to LOUPE 
 
 ---
 ## Seurat
@@ -178,7 +182,7 @@ b
 
 
 ---
-## Load cellranger matrix (in .h5 format) into matrix
+## Load in .h5 format matrix
 As an alternative we can use *Read10X_h5* function to read cellranger matrix from an **.h5** file. This format is often used by python packages. 
 
 ```{r load_h5,include=TRUE,eval=FALSE}
@@ -268,7 +272,7 @@ Like everything scRNAseq is imperfect. Often cellular debris makes its way into 
 We can find a lot of these bad droplets by looking for a high percentage of mitochondrial counts.
 
 ---
-## Estimate proportions of mitochondrial genes
+## Estimate mitochondrial proportion
 
 The *PercentageFeatureSet()* function can be used to estimate the percentage of all counts that belong to a set of features. These features can be given as a vector or as a pattern.
 
@@ -283,7 +287,7 @@ summary(seu_obj$percent.mt)
 ```
 
 ---
-## Estimate proportions of mitochondrial genes
+## Estimate mitochondrial proportion
 
 We can also use regular expression pattern matching to define our feature sets. This is often easier, but may not be possible, depending on your organism.
 
@@ -294,7 +298,7 @@ summary(seu_obj$percent.mt2)
 ```
 
 ---
-## Estimate proportions of mitochondrial genes
+## Estimate mitochondrial proportion
 
 We can double check that this matches easily by comparing the percentages. 
 ```{r, eval =F}
@@ -308,7 +312,7 @@ ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
 ```
 
 ---
-## Estimate proportions of mitochondrial genes
+## Estimate mitochondrial proportion
 
 ```{r, echo =F, fig.height=4,fig.width=7}
 library(ggplot2)
@@ -344,14 +348,14 @@ if(params$isSlides == "yes"){
 
 ```
 
-## Normalization, feature selection, and data scaling
+## To scaled data
 
 * Normalization: Feature counts are normalized to total counts each cell
 * Feature selection: Identifies features that are highly variable
 * Data scaling: Scales and centers features in the dataset
 
 ---
-## Normalization, feature selection, and data scaling
+## To scaled data
 
 There are 2 main approaches for this:
 - Log normalization [default]
@@ -420,11 +424,11 @@ plot2
 ```
 
 ---
-## Normalization and scaling with SCTransform
+## SCTransform
 
 - SCTransform is a normalization based on negative binomial regression.
 - It is performed with **SCTransform()** function of Seurat.
-- This function equal to the combinations of NormalizaeData(), FindVariableFeatures(), and ScaleData().
+- This function equal to the combinations of NormalizeData(), FindVariableFeatures(), and ScaleData().
 
 ```{r norm_sct, include=TRUE, eval=F}
 seu_obj <- SCTransform(seu_obj, variable.features.n = 3000)
@@ -445,7 +449,7 @@ seu_obj
 
 
 ---
-## Normalization and scaling with SCTransform
+## SCTransform
 
 The normalized data is stored in assay **SCT**. We can see this is now the active assay. Our log normalization is stored in the "RNA" assay. 
 
@@ -880,8 +884,8 @@ if(params$isSlides == "yes"){
 
 ```
 
-## Distribution of particular variables in violin plot
-This kind of plot is applied to evaluate the variables:
+## Distribution of variables in violin plot
+We can use violin plots to check the distribution of specific variables such as:
   + UMIs (*nCount_RNA*) per cell
   + Genes detected (*nFeature_RNA*) per cell
   + Ratio of UMIs of mitochondrial genes to nucleus genes (*percent.mt*)
@@ -893,7 +897,7 @@ VlnPlot(seu_obj, group.by = "dset",
 ```
 
 ---
-## Distribution of particular variables in violin plot
+## Distribution of variables in violin plot
 
 If a bimodal distribution is identified, we need to check for any interference. We can see some evidence of bimodality in our dataset here.
 
@@ -904,8 +908,8 @@ VlnPlot(seu_obj, group.by = "dset",
 ```
 
 ---
-## Evaluate the interactions between two variables with scatter plots
-Comparison between UMIs and genes detected per cell:
+## Evaluating interactions
+Scatter plots can be used to look for interactions between specific variables. Here we compare UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
 
@@ -916,7 +920,7 @@ FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
 ```
 
 ---
-## Evaluate the interactions between two variables with scatter plots
+## Evaluating interactions
 Comparison between UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
@@ -928,18 +932,18 @@ FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
 ```
 
 ---
-## Evaluate the interactions between two variables with scatter plots
+## Evaluating interactions
 
-* Comparison between UMI counts and the percent of mitochondrial content
+Comparison between UMI counts and the percent of mitochondrial content:
 * Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
 ```{r ,include=TRUE,eval=F}
 FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 ```
 
 ---
-## Evaluate the interactions between two variables with scatter plots
+## Evaluating interactions
 
-* Comparison between UMI counts and the percent of mitochondrial content
+Comparison between UMI counts and the percent of mitochondrial content:
 * Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
 ```{r qcPlot_scatter_pres2,include=TRUE,eval=TRUE, echo=F, fig.height=4,fig.width=7}
 FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
@@ -1083,6 +1087,11 @@ load("data/SCT2.RData")
 ```
 
 ---
+## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
+
+---
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
@@ -1136,7 +1145,7 @@ ElbowPlot(seu_filt, ndims = 50, reduction = "pca")
 ```
 
 ---
-## Evaluate dimensionality computationally
+## Deriving the elbow
 
 We can use cutoffs to derive this computationally based on:
   * How low variation is.
@@ -1152,7 +1161,7 @@ cumu <- cumsum(pct)
 ```
 
 ---
-## Evaluate dimensionality computationally
+## Deriving the elbow
 
 We can use cutoffs to derive this computationally based on:
   * How low variation is.
@@ -1171,7 +1180,7 @@ pc
 ```
 
 ---
-## Evaluate dimensionality cutoffs with elbow plot
+## Deriving the elbow
 
 We can now look at our cutoff on our elbow plot.
 
@@ -1185,7 +1194,7 @@ ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pc)) + geom_text() +
 ```
 
 ---
-## Evaluate dimensionality cutoffs with elbow plot
+## Deriving the elbow
 
 We can now look at our cutoff on our elbow plot. This seems to match the point where our data plateaus.
 
@@ -1266,7 +1275,7 @@ if(params$isSlides == "yes"){
 - To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
 
 ---
-## Identify clusters with default Louvain algorithm
+## Identify clusters
 
 We will have a quick look first at how to run the clustering, using the *FindClusters()* function. We just need to provide our Seurat object and a resolution.
 
@@ -1276,7 +1285,7 @@ seu_filt[["cluster_byDefault"]] <- seu_filt$seurat_clusters
 ```
 
 ---
-## Identify clusters with default Louvain algorithm
+## Identify clusters
 Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
 
 ```{r, fig.height=4,fig.width=7}
@@ -1347,6 +1356,11 @@ We can see that we have slightly more clusters. We can now compare back to the o
 ```{r ,include=TRUE,eval=T, fig.height=4,fig.width=7}
 DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2)+NoLegend() + ggtitle("Default Clusters")
 ```
+
+---
+## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
 
 ---
 ## Identify cluster-specific marker genes
@@ -1452,7 +1466,7 @@ FeaturePlot(seu_filt, features = known_marker)
 
 
 ---
-## Match marker gene expresion by clusters
+## Match markers to clusters
 
 We can also check the expression of markers in each cluster. First we need to get our count data and our full list of markers.
 ```{r resEval_knowMarker_heatmap,include=TRUE,eval=T}
@@ -1469,7 +1483,7 @@ known_marker <- c("IL7R","CCR7","S100A4","CD8A",
 ```
 
 ---
-## Match marker gene expresion by clusters
+## Match markers to clusters
 
 Next we need to extract out the counts per cluster for our genes of interest. Here we use an lapply to iterate over every cluster, extracting counts and getting the average for each gene of interest.
 
@@ -1491,7 +1505,7 @@ names(avgExp_byClust) <- paste0("C",clust)
 
 
 ---
-## Match marker gene expresion by clusters
+## Match markers to clusters
 
 Finally we get to draw a heatmap with *pheatmap()*. We need a matrix for this, so we first stick our results from each cluster together.
 
@@ -1563,7 +1577,9 @@ if(params$isSlides == "yes"){
 
 ```
 
-## Differential gene expression between cell types
+## Differential gene expression
+
+Now we have classified our clusters as specific cell types we can look for differentially expressed genes.
 
 DEGs are identified using *Seurat::FindMarkers()*. We will use monocytes as an example, comparing *CD14+ Monocytes* to *FCER1A+ Monocytes*.
 
@@ -1581,7 +1597,6 @@ deg <- FindMarkers(seu_filt, group.by = "cellType_byClust",
 
 
 ```
-
 
 ---
 ## Results intepretation
