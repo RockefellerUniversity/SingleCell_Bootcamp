@@ -501,6 +501,11 @@ ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
   theme_classic()
 ```
 
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(dat, log_mat, sct_mat, plot1, plot2)
+gc()
+```
+
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
@@ -1303,13 +1308,23 @@ To identify the best resolution for each dataset we iteratively test potential r
 library(clustree)
 
 reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
-reso_res <- lapply(1:length(reso),function(x,seu_filt,reso){
+reso_res <- lapply(1:length(reso), function(x,seu_filt,reso){
   seu_filt <- FindClusters(seu_filt,resolution = reso[x])
   clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
-  return(clust)}, seu_filt,reso)
+  return(clust)}, seu_filt, reso)
 names(reso_res) <- paste0("k",1:length(reso))
+```
+
+---
+## Testing resolutions
+
+To identify the best resolution for each dataset we iteratively test potential resolutions.
+
+```{r,include=TRUE,eval=T}
 k_tab <- do.call(cbind,reso_res)
 k_dat <- as.data.frame(k_tab)
+
+head(k_dat,2)
 ```
 
 ---
