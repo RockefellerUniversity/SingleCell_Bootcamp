@@ -48,7 +48,7 @@ summary(seu$percent.mt)
 - Make log normalization and identify variable features with the following settings
   + log normalization: *normalization.method="logNormalize"*.
   + find variable features: *select.method="vst"* and *nfeatures=3000*.
-```{r prac1_dataProc_logNorm,echo=toMessage}
+```{r prac1_dataProc_logNorm,echo=toMessage, eval=F}
 seu <- NormalizeData(seu,normalization.method =  "LogNormalize")
 seu <- FindVariableFeatures(seu,selection.method = "vst",nfeatures = 3000)
 seu
