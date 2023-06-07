@@ -1066,13 +1066,31 @@ head(amb)
 ---
 ## Correct ambient RNAs with DropletUtils
 
+We can read back in our filtered PBMC data.
+
 ```{r, eval=F, echo=F}
 load("data/seu_obj_raw.RData")
 seu <- seu_obj
 ```
 
-```{r, eval=T}
+```{r}
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
 filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
+```
+
+```{r, eval=T, echo=F}
+unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
+unlink("filtered_feature_bc_matrix/", recursive=TRUE)
+```
+
+---
+## Correct ambient RNAs with DropletUtils
+
+Then filter out empty droplets.
+
+```{r, eval=T}
+
 filt_mtx_drop <- filt_mtx[rownames(filt_mtx) %in% names(amb),]
 seu <- CreateSeuratObject(filt_mtx_drop)
 ```
