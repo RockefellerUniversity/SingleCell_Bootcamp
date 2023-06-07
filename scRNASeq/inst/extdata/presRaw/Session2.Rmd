@@ -1325,7 +1325,7 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ---
 ## Evaluate resolutions with clustree
 - The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
-* In this case, we use *resolution=0.7*
+* In this case, we use *resolution=0.4*
 ```{r include=TRUE,eval=T, echo=F, warning=FALSE, fig.height=4,fig.width=7}
 clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ```
@@ -1336,7 +1336,7 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 Lets retry clustering with our improved resolution. 
 
 ```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
-seu_filt <- FindClusters(seu_filt, resolution = 0.7)
+seu_filt <- FindClusters(seu_filt, resolution = 0.4)
 ```
 
 ---
@@ -1523,15 +1523,15 @@ We can then manually annotate the clusters based on these markers. We do this ma
 ```{r sec2_resEval_cellTypeAsign,include=TRUE,eval=T}
 
 seu_filt[["cellType_byClust"]] <- NA
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(5,8)] <- "B-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2,3)] <- "Naive CD4 T-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1)] <- "Memory CD4 T-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] <- "CD8 T-cells/NKs"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] <- "NKs"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9,10)] <- "FCER1A+ Monocytes"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(5)] <- "B-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1,4,6)] <- "Naive CD4 T-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] <- "Memory CD4 T-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] <- "CD8 T-cells/NKs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(8)] <- "NKs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2)] <- "FCGR3A+ Monocytes"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0)] <- "CD14+ Monocytes"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(11)] <- "Platelets"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(6)] <- "DCs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9)] <- "Platelets"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(10)] <- "DCs"
 seu_filt$cellType_byClust[is.na(seu_filt$cellType_byClust)] <- "Unspecified"
 ```
 
@@ -1590,7 +1590,7 @@ Here we will run the differential with default settings for logfc threshold, min
 
 ```{r sec2_degCal,include=TRUE,eval=T}
 deg <- FindMarkers(seu_filt, group.by = "cellType_byClust",
-                   ident.1 = "CD14+ Monocytes",ident.2 = "FCER1A+ Monocytes",
+                   ident.1 = "CD14+ Monocytes",ident.2 = "FCGR3A+ Monocytes",
                    logfc.threshold = 0.25,
                    test.use = "wilcox",
                    min.pct = 0.1)
@@ -1624,9 +1624,9 @@ To visualize the global changes, we can use a Volcano plot. As always we must fi
 ```{r sec2_degCal_volcano,include=TRUE,eval=T}
 deg$sig <- NA
 deg$sig[deg$avg_log2FC >= 0.585 & deg$p_val_adj < 0.05] <- "CD14+"
-deg$sig[deg$avg_log2FC <=- 0.585 & deg$p_val_adj < 0.05] <- "FCER1A+"
+deg$sig[deg$avg_log2FC <=- 0.585 & deg$p_val_adj < 0.05] <- "FCGR3A+"
 deg$sig[is.na(deg$sig)] <- "nc"
-deg$sig <- factor(deg$sig, levels = c("CD14+","nc","FCER1A+"))
+deg$sig <- factor(deg$sig, levels = c("CD14+","nc","FCGR3A+"))
 
 table(deg$sig)
 ```
@@ -1650,6 +1650,44 @@ Seurat has many different options for differentials. You can use these to fully 
 - If we want to get a unfiltered results: set *logfc.threshold = 0* and *min.pct = 0*
 - Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*
 
+---
+## Export Seurat results into Cloupe file
+We can export the UMAP and annotations of Seurat object and import them into cloupe file.
+* Embedding is applied to extract dimension reduction (eg. PCA, UMAP, tSNE) into matrix
+  + This data frame include: Barcode, X (UMAP_1), and Y (UMAP_2)
+  + Need to match Barcode to the barcode in cloupe file
+  + Store in a csv format
+```{r}
+umap <- Embeddings(seu_filt,reduction = "umap")
+head(umap,2)
+#
+umap_tab <- data.frame(Barcode=rownames(umap),
+                       "X coordinate"=umap[,1],Y=umap[,2],
+                       stringsAsFactors = FALSE)
+umap_tab$Barcode <- gsub("PBMC_10k_","",umap_tab$Barcode)
+head(umap_tab,2)
+#
+write.table(umap_tab,file = "umap_dat.csv",
+            sep=",",quote = FALSE,row.names = FALSE)
+```
+
+## Export clusters and annotations
+```{r}
+meta <- seu_filt@meta.data
+clust_dat <- data.frame(Barcode=Cells(seu_filt),cluster=meta$seurat_clusters,stringsAsFactors = FALSE)
+clust_dat$Barcode <- gsub("PBMC_10k_","",clust_dat$Barcode)
+head(clust_dat)
+#
+write.table(clust_dat,file = "clust_dat.csv",
+            sep=",",quote = FALSE,row.names = FALSE)
+#
+cellType_dat <- data.frame(Barcode=Cells(seu_filt),cellType=meta$cellType_byClust,stringsAsFactors = FALSE)
+cellType_dat$Barcode <- gsub("PBMC_10k_","",cellType_dat$Barcode)
+head(cellType_dat)
+#
+write.table(cellType_dat,file = "cellType_dat.csv",
+            sep=",",quote = FALSE,row.names = FALSE)
+```
 
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
