@@ -640,6 +640,11 @@ seu_obj <- RunUMAP(seu_obj, reduction = "harmony", dims = 1:10, reduction.name =
 DimPlot(seu_obj, reduction = "umap_harmony")
 ```
 
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu_obj, ifnb, ifnb_list, ifnb_merge, ifnb_list_rpca, feats, anchors, sce_list, dec_list, hvgc_list, combined_dec, chosen_hvgs, mnn_res, snn.gr, cluster_mnn ,cellType )
+gc()
+```
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -857,6 +862,11 @@ tbl <- table(panc_list$query$cellType_predBySeurat,panc_list$query$cellType_pred
 pheatmap::pheatmap(tbl,scale = "row")
 ```
 
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(panc8, seu_list, ref_list, feats, anchors, ref_panc, panc_list, seu, pred_res, mat, pred_cellType, sce_list, cell_type)
+gc()
+```
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1008,7 +1018,6 @@ ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
   theme_classic()
 ```
 
-
 ---
 ## Detect empty droplets by using DropletUtils
 
@@ -1068,6 +1077,10 @@ filt_mtx_drop <- filt_mtx[rownames(filt_mtx) %in% names(amb),]
 seu <- CreateSeuratObject(filt_mtx_drop)
 ```
 
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(filt_mtx_drop)
+```
+
 ```{r, eval=T}
 seu <- data_proc(seu)
 seu <- ScaleData(seu)
@@ -1107,6 +1120,7 @@ colnames(out) <- colnames(sce)
 ## Correct ambient RNAs with DropletUtils
 
 Now that we have run a correction, we want to reprocess and cluster our data.
+
 ```{r}
 seu_list[["withCorr"]] <- CreateSeuratObject(out)
 seu_list[["withCorr"]] <- data_proc(seu_list[["withCorr"]])
@@ -1225,8 +1239,8 @@ We can estimate contamination using known marker genes
 mark_list <- list("CD4 T-cell"=c("IL7R","CCR7","S100A4"),"CD8 T-cell"=c("CD8A"),"B-Cell"=c("MS4A1"),
                   "Monocyte"=c("CD14","FCGR3A"),"DC"=c("FCER1A"),"NK"=c("NKG7","GNLY"),"Platelet"=c("PPBP"))
 
-use_toEst = estimateNonExpressingCells(soupOBJ, nonExpressedGeneList = mark_list)
-soupOBJ = calculateContaminationFraction(soupOBJ, mark_list, useToEst = use_toEst)
+use_toEst <- estimateNonExpressingCells(soupOBJ, nonExpressedGeneList = mark_list)
+soupOBJ <- calculateContaminationFraction(soupOBJ, mark_list, useToEst = use_toEst)
 rho <- unique(soupOBJ$metaData$rho)
 rho
 ```
@@ -1330,6 +1344,11 @@ DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLe
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 ```
 
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(bcrank, uniq, e.out, amb, filt_mtx, seu, sce, seu_list, out, soupOBJ, clust, autoCor_mtx, seu_autoCorr, use_toEst, rho, estCor_mtx, seu_estCorr, seu_cbFilt, seu_filt)
+gc()
+```
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
