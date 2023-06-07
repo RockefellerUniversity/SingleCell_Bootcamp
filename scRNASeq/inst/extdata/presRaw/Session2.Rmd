@@ -1660,31 +1660,31 @@ We can export the UMAP and annotations of Seurat object and import them into clo
 ```{r}
 umap <- Embeddings(seu_filt,reduction = "umap")
 head(umap,2)
-#
+
 umap_tab <- data.frame(Barcode=rownames(umap),
-                       "X coordinate"=umap[,1],Y=umap[,2],
-                       stringsAsFactors = FALSE)
+                       "X coordinate"=umap[,1],Y=umap[,2])
 umap_tab$Barcode <- gsub("PBMC_10k_","",umap_tab$Barcode)
 head(umap_tab,2)
-#
+
 write.table(umap_tab,file = "umap_dat.csv",
             sep=",",quote = FALSE,row.names = FALSE)
 ```
 
+---
 ## Export clusters and annotations
 ```{r}
 meta <- seu_filt@meta.data
-clust_dat <- data.frame(Barcode=Cells(seu_filt),cluster=meta$seurat_clusters,stringsAsFactors = FALSE)
+clust_dat <- data.frame(Barcode=Cells(seu_filt),cluster=meta$seurat_clusters)
 clust_dat$Barcode <- gsub("PBMC_10k_","",clust_dat$Barcode)
 head(clust_dat)
-#
+
 write.table(clust_dat,file = "clust_dat.csv",
             sep=",",quote = FALSE,row.names = FALSE)
-#
-cellType_dat <- data.frame(Barcode=Cells(seu_filt),cellType=meta$cellType_byClust,stringsAsFactors = FALSE)
+
+cellType_dat <- data.frame(Barcode=Cells(seu_filt),cellType=meta$cellType_byClust)
 cellType_dat$Barcode <- gsub("PBMC_10k_","",cellType_dat$Barcode)
 head(cellType_dat)
-#
+
 write.table(cellType_dat,file = "cellType_dat.csv",
             sep=",",quote = FALSE,row.names = FALSE)
 ```
@@ -1695,6 +1695,13 @@ rm(seu_filt)
 rm(markers)
 rm(sce)
 rm(deg)
+rm(cellType_dat)
+rm(umap)
+rm(umap_tab)
+rm(meta)
+rm(clust_dat)
+
+unlink("umap_dat.csv")
 
 rm(clust)
 rm(mat)
@@ -1709,6 +1716,7 @@ rm(log_avgExp )
 rm(sct_avgExp)
 gc()
 
+unlink("clust_dat.csv")
 
 ```
 
