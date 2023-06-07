@@ -846,7 +846,7 @@ UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TR
 
 ```{r, fig.height=4,fig.width=7}
 
-VlnPlot(seu_obj,group.by = "doublet",
+VlnPlot(seu_obj, group.by = "doublet",
         features = c("nCount_RNA","nFeature_RNA","doublet_score"),
         pt.size = 0)
 ```
