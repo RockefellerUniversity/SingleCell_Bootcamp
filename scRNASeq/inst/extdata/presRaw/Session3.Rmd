@@ -1958,14 +1958,14 @@ table(seu_obj$hash.ID)
 
 
 ---
-## Evaluate HTOs in Ridge plot
+## Evaluate HTOs
 ```{r sec3_CITE_ridget,include=TRUE,eval=FALSE}
 RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
           features = rownames(seu_obj[["HTO"]])[1:2],ncol = 2)
 ```
 
 ---
-## Evaluate HTOs in Ridge plot
+## Evaluate HTOs
 ```{r sec3_CITE_ridget,include=TRUE,eval=FALSE}
 RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
           features = rownames(seu_obj[["HTO"]])[3:4],ncol = 2)
