@@ -898,6 +898,931 @@ rm(panc8, seu_list, ref_list, feats, anchors, ref_panc, panc_list, seu, pred_res
 gc()
 ```
 
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Droplet processing
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Droplet processing
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Droplet processing
+
+Often empty droplets can still make their way past Cell Ranger, or we may want to do custom filtering outside of Cell Ranger.
+
+Ambient RNAs from lysed cells can contaminate droplets and make empty droplets seem like they contain a cell. 
+
+We are revisiting the PBMC 10k data from 10X Genomics as an example to deal with these issues. This time we will use the raw matrix.
+
+
+---
+## Detect TRUE cells
+- The knee plot is available in the Web Summary from cellranger.
+- We can also draw the knee plot by using DropletUtils
+
+
+---
+## Grab dataset
+
+```{r, eval=T}
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
+```
+
+```{r, eval=T}
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
+
+```
+
+---
+## Load dataset
+
+We need to load in the dataset, but it is important not to set any filters yet. 
+
+```{r sec3_dropProc_kneePlot_prep,include=TRUE, eval=T}
+library(DropletUtils)
+library(Seurat)
+
+raw_mtx <- Seurat::Read10X("raw_feature_bc_matrix")
+dim(raw_mtx)
+
+```
+
+
+---
+## Load dataset
+
+Calculate the counts for each cell barcode and their rank.
+
+```{r}
+bcrank <- barcodeRanks(raw_mtx)
+head(bcrank,2)
+```
+
+---
+## Draw Knee plot
+
+To draw a custom knee plot we need to remove duplicated ranks and grab the knee and inflection points. 
+
+```{r sec3_dropProc_kennPlot_press,include=TRUE,eval=T}
+
+uniq <- !duplicated(bcrank$rank)
+bcrank <- bcrank[uniq,]
+
+knee <- metadata(bcrank)$knee
+message(paste0("knee point: ",knee))
+inflection <- metadata(bcrank)$inflection
+message(paste0("inflection point: ",inflection))
+```
+
+---
+## Draw Knee plot
+
+We can now draw our knee plot using *ggplot()*. 
+
+```{r, eval=F}
+ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
+  geom_hline(yintercept = knee, linetype="dashed",color="blue")+
+  geom_hline(yintercept = inflection, linetype="dashed",color="green")+
+  scale_x_continuous(trans = "log10")+
+  scale_y_continuous(trans = "log10")+
+  labs(x="cell barcode ranked by counts",
+       y="UMI counts of each cell barcode")+
+  theme_classic()
+```
+
+---
+## Draw Knee plot
+
+We can now draw our knee plot using *ggplot()*. The knee is labelled in blue. The inflection is labelled in green.
+
+```{r, eval=T, echo=F}
+ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
+  geom_hline(yintercept = knee, linetype="dashed",color="blue")+
+  geom_hline(yintercept = inflection, linetype="dashed",color="green")+
+  scale_x_continuous(trans = "log10")+
+  scale_y_continuous(trans = "log10")+
+  labs(x="cell barcode ranked by counts",
+       y="UMI counts of each cell barcode")+
+  theme_classic()
+```
+
+
+---
+## Detect empty droplets
+
+We can detect empty droplets with *DropletUtils::emptyDrops()*.
+- The p-value for each cell is performed by Monte Carlo simulation basing on the deviation of a given cell to the ambient RNA pool.
+
+
+```{r sec3_dropProc_remEmtpy_cal,include=FALSE,eval=TRUE}
+
+e.out <- emptyDrops(raw_mtx)
+e.out <- e.out[order(e.out$FDR),]
+head(e.out)
+
+```
+
+---
+## Detect empty droplets 
+
+The distribution of UMI counts per cell is often a bimodal distribution. The high-UMI group are likely droplets with a cell. In contrast, the droplets with low UMI are more likely empty droplets containing ambient RNAs.
+
+```{r, eval=F}
+
+ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
+  geom_vline(xintercept = knee, color="red",linetype="dashed")+
+  labs(x="UMI counts per cell",y="Frequency")+
+  scale_y_continuous(trans = "log10")+
+  scale_x_continuous(trans = "log10")+
+  theme_classic()
+```
+
+---
+## Detect empty droplets 
+
+The distribution of UMI counts per cell is often a bimodal distribution. The high-UMI group are likely droplets with a cell. In contrast, the droplets with low UMI are more likely empty droplets containing ambient RNAs.
+
+```{r, eval=T, echo=F}
+
+ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
+  geom_vline(xintercept = knee, color="red",linetype="dashed")+
+  labs(x="UMI counts per cell",y="Frequency")+
+  scale_y_continuous(trans = "log10")+
+  scale_x_continuous(trans = "log10")+
+  theme_classic()
+```
+
+---
+## Filter empty droplets
+
+In the DropletUtils manual, the FDR threshold is set to 0.001 
+in most cases. We can filter based on this cutoff. 
+
+```{R}
+table(e.out$FDR < 0.001)
+cell_sel <- rownames(e.out)[e.out$FDR < 0.001]
+filt_mtx <- raw_mtx[,colnames(raw_mtx) %in% cell_sel]
+```
+
+
+---
+## Ambient RNAs
+
+* The cell-free RNA molecules randomly spread in the solution. It can be enclosed into droplets during the steps of library preparation. So, it would be falsely increase the UMI counts of genes.
+
+* Ambient RNAs present two signature
+  + The majority are found in the empty droplets population.
+  + No specificity. This contamination can make a single cell look like it expresses two (or more) mutually exclusive marker genes.
+  
+* According to these two properties, we could estimate ambient RNA contamination rates and correct it. Here we will demonstrate how to correct ambient RNA contamination with DropletUtils and SoupX, respectively.
+
+
+---
+## Correct ambient RNAs
+
+Lets start by estimating our ambient RNA contamination. This is from DropletUtils.
+
+```{r sec3_dropProc_ambIDENT_DorpUtils,include=TRUE,eval=T}
+amb <- metadata(e.out)$ambient[,1]
+head(amb)
+```
+
+---
+## Correct ambient RNAs
+
+We can read back in our filtered PBMC data.
+
+```{r, eval=F, echo=F}
+load("data/seu_obj_raw.RData")
+seu <- seu_obj
+```
+
+```{r}
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
+```
+
+```{r, eval=T, echo=F}
+unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
+unlink("filtered_feature_bc_matrix/", recursive=TRUE)
+```
+
+---
+## Correct ambient RNAs
+
+Then filter out empty droplets.
+
+```{r, eval=T}
+
+filt_mtx_drop <- filt_mtx[rownames(filt_mtx) %in% names(amb),]
+seu <- CreateSeuratObject(filt_mtx_drop)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(filt_mtx_drop)
+```
+
+```{r, eval=T}
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+sce <- as.SingleCellExperiment(seu,assay = "RNA")
+```
+
+---
+## Correct ambient RNAs
+
+```{r}
+plotUMAP(sce, colour_by="seurat_clusters")
+```
+
+---
+## Correct ambient RNAs
+Lets put our uncorrected, filtered dataset in a list. 
+
+```{r}
+seu_list <- list()
+seu_list[["woCorr"]] <- seu
+```
+
+---
+## Correct ambient RNAs
+
+We can use the to *removeAmbience()* function to remove ambient RNAs. 
+
+```{r sec3_dropProc_ambProc_DropUtils,include=TRUE,eval=T}
+out <- removeAmbience(counts(sce), ambient=amb, groups=sce$seurat_clusters) 
+rownames(out) <- rownames(sce)
+colnames(out) <- colnames(sce)
+
+```
+
+---
+## Correct ambient RNAs
+
+Now that we have run a correction, we want to reprocess and cluster our data.
+
+```{r}
+seu_list[["withCorr"]] <- CreateSeuratObject(out)
+seu_list[["withCorr"]] <- data_proc(seu_list[["withCorr"]])
+seu_list[["withCorr"]] <- ScaleData(seu_list[["withCorr"]])
+seu_list[["withCorr"]] <- quick_clust(seu_list[["withCorr"]])
+```
+
+---
+## Evaluate with marker genes
+
+Lets compare to our marker genes. 
+
+```{r sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T}
+
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
+mark_gene
+
+```
+
+---
+## Evaluate with marker genes
+
+First lets look at the UMAP without ambient RNA correction. 
+
+```{R}
+DimPlot(seu_list$woCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+```
+
+---
+## Evaluate with marker genes
+
+Lets now compare to UMAP wit ambient RNA correction.
+
+```{r}
+DimPlot(seu_list$withCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+```
+
+---
+## Evaluate with marker genes
+
+Lets now look at a violin plot in the uncorrected data.
+
+```{R}
+VlnPlot(seu_list$woCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+---
+## Evaluate with marker genes
+
+And then again in the corrected.
+
+```{r}
+VlnPlot(seu_list$withCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu_list, out, sce)
+gc()
+```
+
+---
+## Ambient RNA and SoupX
+
+SoupX is an alternative tool for droplet processing, developed for ambient RNA detection and correction [link](https://github.com/constantAmateur/SoupX). It includes the following steps
+- Estimate ambient RNA expression in the empty droplets.
+- Estimate contamination rate by using the ambient RNA expression levels across clusters.
+- Correct ambient RNA contamination.
+
+---
+## Prepare essential files
+
+We need our filtered and unfiltered matrix. Plus our processed filtered Seurat object.
+
+```{r sec3_dropProc_SoupX_prep,include=TRUE,eval=T}
+
+clust <- setNames(seu$seurat_clusters, Cells(seu))
+seu_filt <- seu
+```
+
+---
+## Import Matrices
+Import our matrices into the SoupX channel object.
+
+```{r}
+library(SoupX)
+soupOBJ <- SoupChannel(raw_mtx, filt_mtx)
+soupOBJ <- setClusters(soupOBJ,clust)
+```
+
+
+---
+## Automatic estimates
+
+The *autoEstCont()* can be used to detect contamination. We can then export the correct counts with *adjustCount()*.
+
+```{r sec3_dropProc_SoupX_autoCor,include=TRUE,eval=T}
+soupOBJ <- autoEstCont(soupOBJ)
+
+autoCor_mtx <- adjustCounts(soupOBJ)
+
+```
+
+```{R, eval=F, echo=F}
+save(soupOBJ, file="../data/soup.RData")
+save(autoCor_mtx, file="../data/auto_soup.RData")
+```
+
+```{r}
+load("data/soup.RData")
+```
+
+```{r}
+load("data/auto_soup.RData")
+```
+
+---
+## Build a Seurat object
+
+We will now put our corrected matrix into a Seurat object.
+
+```{r}
+seu <- CreateSeuratObject(autoCor_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_autoCorr <- seu
+```
+
+
+---
+## Estimate contamination
+
+We can estimate contamination using known marker genes.
+```{r sec3_dropProc_SoupX_estCor,include=TRUE,eval=T}
+
+mark_list <- list("CD4 T-cell"=c("IL7R","CCR7","S100A4"),"CD8 T-cell"=c("CD8A"),"B-Cell"=c("MS4A1"),
+                  "Monocyte"=c("CD14","FCGR3A"),"DC"=c("FCER1A"),"NK"=c("NKG7","GNLY"),"Platelet"=c("PPBP"))
+
+use_toEst <- estimateNonExpressingCells(soupOBJ, nonExpressedGeneList = mark_list)
+soupOBJ <- calculateContaminationFraction(soupOBJ, mark_list, useToEst = use_toEst)
+rho <- unique(soupOBJ$metaData$rho)
+rho
+```
+
+---
+## Export matrix after correction
+
+```{r}
+soupOBJ <- setContaminationFraction(soupOBJ,rho,forceAccept=TRUE)
+estCor_mtx <- adjustCounts(soupOBJ)
+
+seu <- CreateSeuratObject(estCor_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_estCorr <- seu
+```
+
+---
+## Evaluate marker genes
+
+```{r sec3_dorpProc_SoupX_estCor_eval,include=TRUE,eval=T}
+message("markers")
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
+mark_gene
+#
+message("without correction")
+DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+#
+message("without correction")
+DimPlot(seu_autoCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+VlnPlot(seu_autoCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+#
+message("Estimate contamination with marker genes")
+DimPlot(seu_estCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+VlnPlot(seu_estCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+---
+## CellBender
+
+CellBender is a python toolkit developed to eliminate technical artifacts from scRNA-Seq data such as empty droplets and ambient RNAs [link](https://cellbender.readthedocs.io/en/latest/introduction/index.html). It is run from the command line. 
+
+In the current version, it contains remove-background module, which is applied to:
+  * Detect empty droplets and ambient RNAs from raw count matrix in CellRanger output
+  * To remove empty droplets and to correct the interference of ambient RNAs
+  
+* CellBender is based on machine-learning strategy. It's quite time-consuming. We can speed up the processing by using CUDA version of CellBender. 
+
+---
+## Command line of CellBender
+
+```{r sec3_dropProc_cbFilt_code,engine="bash",include=TREU,eval=F}
+input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
+output_h5=assign_the_h5_file_path_for_the_cellbender_corrected_matrix # essential
+expect_cell=expected_cell_number_can_be_find_in_cellranger_Web_Summary # essential
+droplet_num=the_total_number_of_droplets_assigned_while_sequencing # default 25,000
+fpr=threshols_of_FALSE_POSITIVE_RATE # default 0.01
+epochs=number_of_epochs_to_train # default 150
+num_train=number_of_times_to_attempt_to_train_the_model # default 1. would speed up while setting greater
+#
+cellbender remove-background --input $input_h5 --output $output_h5 --expected-cells $expect_cell --total-droplets-included $droplet_num --fpr $fpr --epochs $epochs --num-training-tries $num_train --cuda False
+```
+
+---
+## Cell Ranger vs. CellBender
+
+We have some processed results here from CellBender. We can compare this to our filtered matrix from Cell Ranger
+```{r sec3_dropProc_cbFilt_loadData,include=TRUE,eval=T}
+cbFilt_mtx <- Read10X_h5("data/cbFilt_PBMCv3_20230324_filtered.h5")
+dim(cbFilt_mtx)
+
+dim(filt_mtx)
+```
+
+---
+## Data processing
+```{r sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T}
+message("processing matrix from CellRanger")
+seu <- CreateSeuratObject(filt_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_filt <- seu
+#
+message("processing matrix from CellBender")
+seu <- CreateSeuratObject(cbFilt_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_cbFilt <- seu
+```
+
+---
+## Evaluate with marker gene exprssion
+```{r sec3_dorpProc_cbFilt_eval,include=TRUE,eval=T}
+mark_gene <- c("CD3E","CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","PPBP")
+mark_gene
+```
+
+
+---
+## Evaluate with marker gene exprssion
+
+```{r}
+DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+```
+
+---
+## Evaluate with marker gene exprssion
+
+```{r}
+DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+```
+
+---
+## Evaluate with marker gene exprssion
+
+```{r}
+VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+```
+
+
+---
+## Evaluate with marker gene exprssion
+
+```{r}
+VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(bcrank, uniq, e.out, amb, filt_mtx, seu, sce, seu_list, out, soupOBJ, clust, autoCor_mtx, seu_autoCorr, use_toEst, rho, estCor_mtx, seu_estCorr, seu_cbFilt, seu_filt)
+gc()
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Trajectory and Psuedotime analysis
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Trajectory and Psuedotime analysis
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Trajectory and pseudotime analysis
+- Many biological processes are link a dynamic changes in the cellular state e.g. immune cell activation.
+- Trajectory analysis is a way to postulate this kind dynamic changes in single-cell data.
+- According to the postulated trajectories, we can also estimate pseudotime of each cell included in a particular trajectory. 
+- Here, we demonstrate how to find out trajectories reflecting hematopoietic stem cell differentiation.
+
+---
+## Prepare the demo
+- In this practice, we are using the SMART-Seq data of mouse hematopoietic stem cells (HSCs) published Nestorowa et al., Blood(2016) [link](https://ashpublications.org/blood/article/128/8/e20/35749/A-single-cell-resolution-map-of-mouse).
+- We will provide the SingleCellExperiment 
+- The SingleCellExperiment (sce) object was downloaded and processed by following this vignette [link](http://bioconductor.org/books/3.17/OSCA.workflows/nestorowa-mouse-hsc-smart-seq2.html#ref-nestorowa2016singlecell).
+
+```{r sec3_trajAna_prep,include=TRUE,eval=T}
+sce <- readRDS("data/sceOBJ_Nestorowa_HSC.rds")
+sce
+```
+
+---
+## Estimate trajectories by fitting principle curves
+To find the trajectories we need to fit our high dimensional data onto a curve. This step is processed with the *slingshot* [link](https://bioconductor.org/packages/release/bioc/html/slingshot.html) package.
+
+To run slingshot we need:
+  * Our sce object: sce
+  * Clusters: sce$label
+  * Our choice of dimension reduction approach: *PCA*
+  * To reduce computational load the adjacent 100 cells are aggregated into single point (approx_points=100)
+  * To avoid connecting unrelated trajectories, OMEGA clustering is introduced (omega=TRUE). 
+  
+```{r sec3_trajAna_buildTRAJ,include=TRUE,eval=T}
+library(slingshot)
+sce.sling <- slingshot(sce,
+                       cluster=sce$label,
+                       reducedDim='PCA',
+                       approx_points=100,
+                       omega=TRUE)
+colData(sce.sling)[1,1:5]
+```
+
+---
+## Extract informations for each trajectory
+
+Slingshot has fitted principle curves. We now will embed these cruves in UMAP space *embedCurves()*. We can see the number o
+lineages detected at this point. 
+```{r sec3_trajAna_extTRAJ,include=TRUE,eval=T}
+embedded <- embedCurves(sce.sling, "UMAP")
+
+embedded@metadata$lineages
+```
+
+---
+## Estimate pseudotime
+
+Once we have lineages, we can then find the position of each cell along these trajectories. This is estimating the pseudotime. 
+
+
+```{R}
+pseudo.paths <- slingPseudotime(sce.sling)
+head(pseudo.paths,2)
+
+```
+
+It will be useful to combine these times, to find the shared time.
+
+```{r}
+avg_pseudoTime <- rowMeans(pseudo.paths, na.rm=TRUE)
+colData(sce.sling)$avg_pseudoTime <- avg_pseudoTime
+```
+
+---
+## Estimate pseudotime
+
+Once we have the average pseudotime we can always project these values on to our UMAP. 
+
+```{r}
+
+plotUMAP(sce.sling,colour_by="avg_pseudoTime")
+```
+
+---
+## Plotting principle curves
+The *slingCurves()* function can fetch essential information of each principle curve. The results are inside a list, with each principle curve in an element. For each principle curve, we can extract the UMAP data and the order of cells for plotting.
+
+```{r sec3_trajAna_plotPR,include=TRUE,eval=T}
+
+embedded_curve <- slingCurves(embedded)
+
+curve <- lapply(embedded_curve,function(x){
+  dat <- data.frame(x$s[x$ord,]) # UMAP axis and the order of cells
+  return(dat)})
+names(curve) <- c("curve1","curve2","curve3")
+
+head(curve$curve1)
+```
+
+---
+## Plotting principle curves
+
+We can now just add our curve information directly to our pseudotime UMAP plot using ggplot parameters *geom_path()*. 
+
+```{r}
+plotUMAP(sce.sling,colour_by="avg_pseudoTime")+
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2), color="blue")+
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2),  color="black")+
+  geom_path(data=curve$curve3,aes(x=UMAP1,y=UMAP2),  color="red")
+```
+
+---
+## Refine the estimations
+The results indicated that lineage 3 is an outlier. If we look back at our lineage information this contains cluster 7.
+
+```{r}
+embedded@metadata$lineages
+```
+
+---
+## Refine the estimations
+
+We can remove cluster 7 and re-evaluate trajectories again. First we rerun the pseudotime estimation. 
+
+```{r sec3_trajAna_refineTRAJ,include=TRUE,eval=T}
+sce2 <- sce[,colData(sce)$label != 7]
+sce.sling2 <- slingshot(sce2,cluster=sce2$label,reducedDim='PCA',approx_points=100,omega=TRUE)
+pseudo.paths <- slingPseudotime(sce.sling2)
+avg_pseudoTime <- rowMeans(pseudo.paths, na.rm=TRUE)
+colData(sce.sling2)$avg_pseudoTime <- avg_pseudoTime
+```
+
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(sce, sce2)
+gc()
+```
+
+---
+## Refine the estimations
+
+Next we extract out the princple curves again. 
+
+```{R}
+
+embedded <- embedCurves(sce.sling2, "UMAP")
+embedded_curve <- slingCurves(embedded)
+curve <- lapply(embedded_curve,function(x){
+  dat <- data.frame(x$s[x$ord,]) # UMAP axis and the order of cells
+  return(dat)})
+names(curve) <- c("curve1","curve2")
+```
+
+---
+## Refine the estimations
+
+```{r}
+plotUMAP(sce.sling2, colour_by="avg_pseudoTime") +
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2), color="blue") +
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2),  color="black")
+```
+
+---
+## Trajectory and pseudotime for each lineage
+
+So far we have visualized the lineages together. We will want to break this down and compare to clusters. First we will look at clusters. 
+
+```{r sec3_trajANA_trajSep,include=TRUE,eval=T}
+plotUMAP(sce.sling2, colour_by="label")
+```
+
+---
+## Trajectory and pseudotime for each lineage
+
+We can reveal which cluster belong to each cluster and lineage 1's trajectory. 
+
+```{R}
+embedded@metadata$lineages$Lineage1
+plotUMAP(sce.sling2,colour_by="slingPseudotime_1")+
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2))
+```
+
+---
+## Trajectory and pseudotime for each lineage
+
+We can reveal which cluster belong to each cluster and lineage 2's trajectory. 
+
+```{r}
+embedded@metadata$lineages$Lineage2
+plotUMAP(sce.sling2, colour_by="slingPseudotime_2")+
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2))
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(embedded, embedded_curve, curve)
+gc()
+```
+
+---
+## Identify driver genes for each lineage
+Driver genes were the genes whose expression level changes reflect the pseudotime changes. We can find these using *testPseudotime()* from TSCAN. Using this the gene expression and pseudotime are fitted with a non-linear model, followed by testing with ANOVA.
+
+We will start by just looking at lineage 1. 
+
+```{r sec3_trajANA_driveL1, include=TRUE,eval=T}
+library(TSCAN)
+res <- testPseudotime(sce.sling2, sce.sling2$slingPseudotime_1)
+```
+
+
+---
+## Identify driver genes for each lineage
+
+We can see the results. Often we will want to reorder it too prioritize the biggest changers.
+
+```{r}
+res$SYMBOL <- rownames(res)
+res <- res[order(-res$logFC),]
+head(res)
+
+```
+
+---
+## Identify driver genes for each lineage
+
+We can then categorize our data based on significance and FC.
+
+* Recommend FDR threshold: 0.05
+* The logFC reflects the trend of gene expression toward pseudotime. 
+  + logFC > 0, gene expression increased through increasing pseudotime [related to late stage]
+  + logFC < 0, gene expression decreased through increasing pseudotime [related to early stage]
+
+```{r}
+res$stat <- NA
+res$stat[res$logFC > 0 & res$FDR < 0.05] <- "late"
+res$stat[res$logFC < 0 & res$FDR < 0.05] <- "early"
+res$stat[is.na(res$stat)] <- "nc"
+res[1:2,]
+```
+
+---
+## Identify driver genes for each lineage
+
+We can quickly and easily see how many are upregulated/downregulated across the trajectory. 
+
+```{r}
+table(res$stat)
+
+```
+
+---
+## Top driver genes
+
+Using the order we can easily isolate the driver genes. Here we can see the top 5 early genes.
+
+```{r sec3_trajANA_driveL1_topEarly,include=TRUE,eval=T}
+
+sub <- res[res$stat=="early",]
+sub <- sub[order(sub$logFC),]
+top <- head(sub$SYMBOL,5)
+top
+```
+
+---
+## Plotting top driver genes
+
+With *plotExpression()* we can look at the expression of specific genes i.e. our top genes. We can see how each gene is expressed across all cells and psuedotime. 
+
+```{R}
+plotExpression(sce.sling2,
+               features = top, swap_rownames = "GENEID",
+               x="slingPseudotime_1", colour_by = "label")
+```
+
+---
+## Plotting top driver genes
+
+We can now repeat this for the top 5 late genes. 
+```{r sec3_trajANA_driveL1_topLate2,include=TRUE,eval=T}
+
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+```
+
+---
+## Plotting top driver genes
+
+We can now repeat this for the top 5 late genes. 
+```{r sec3_trajANA_driveL1_topLate,include=TRUE,eval=T, echo=F}
+
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+```
+
+---
+## Identify driver genes
+
+Now lets repeat this whole process for lineage 2. 
+
+```{r sec3_trajANA_driveL2,include=TRUE,eval=T}
+
+res <- testPseudotime(sce.sling2,sce.sling2$slingPseudotime_2)
+res$SYMBOL <- rownames(res)
+res <- res[order(-res$logFC),]
+res$stat <- NA
+res$stat[res$logFC > 0 & res$FDR < 0.05] <- "late"
+res$stat[res$logFC < 0 & res$FDR < 0.05] <- "early"
+res$stat[is.na(res$stat)] <- "nc"
+
+table(res$stat)
+```
+
+---
+## Plotting top driver genes
+
+```{r sec3_trajANA_driveL2_topEarly,include=TRUE,eval=T}
+sub <- res[res$stat=="early",]
+sub <- sub[order(sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+```
+
+
+## Plotting top driver genes
+```{r sec3_trajANA_driveL2_topLate,include=TRUE,eval=T}
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+```
+
+
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
 rm(sce.sling2)
@@ -906,5 +1831,3 @@ gc()
 
 
 ```
-
-
