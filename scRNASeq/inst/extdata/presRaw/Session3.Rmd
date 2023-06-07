@@ -137,7 +137,7 @@ load("data/seuOBJ_IFNB_splitByStim.RData")
 ```
 
 ---
-## Create some functions for quick analysis later
+## Create some functions
 We are going to try out a few merging approaches. We want to wrap some of our analysis steps into a function to simplify rerunning things.
 
 Normalization: 
@@ -152,7 +152,7 @@ data_proc <- function(seu){
 ```
 
 ---
-## Create some functions for quick analysis later
+## Create some functions
 
 Make clusters:
   * Scale data with *ScaleData()*
@@ -235,7 +235,7 @@ DimPlot(ifnb_merge, group.by = "seurat_annotations", pt.size = 0.2,split.by = "s
 ```
 
 ---
-## STIM/CTRL are not grouped together
+## STIM/CTRL don't group
 
 * This result indicates the difference between STIM and CTRL groups is huge.
 * Is this a true biological phenomena or is it a batch effect?
@@ -263,7 +263,7 @@ if(params$isSlides == "yes"){
 
 ```
 
-## Merge data with reciprocal PCA (RPCA)
+## Merge with reciprocal PCA
 Reciprocal PCA minimizes the batch effects while merging different data sets.
 
 This workflow is modified from canonical correlation analysis (CCA), which is widely used to merge batches.
@@ -295,6 +295,7 @@ ifnb_list <- lapply(ifnb_list,function(seu,feats){
   return(seu)},feats)
 ```
 
+
 ---
 ## Integrating data in RPCA merge
 
@@ -308,8 +309,10 @@ ifnb_merge <- IntegrateData(anchorset = anchors)
 ifnb_merge
 ```
 
+
+
 ---
-## Evaluating RPCA merge using clusters
+## Evaluating RPCA using clusters
 
 To evaluate how well the merge has worked we must check the clustering. Again we must scale, and then use our *quick_clust* function. 
 
@@ -325,7 +328,7 @@ DimPlot(ifnb_merge,group.by = "stim",pt.size = 0.2)
 ```
 
 ---
-## Evaluating RPCA merge using clusters
+## Evaluating RPCA using clusters
 
 We can now see that our two data sets overlay with each other.
 
@@ -339,7 +342,7 @@ DimPlot(ifnb_merge,group.by = "stim",pt.size = 0.2)
 ```
 
 ---
-## Evaluating RPCA merge using clusters
+## Evaluating RPCA using clusters
 
 We can check the numbers in each cluster. Broadly, there are similar numbers per cluster now. 
 
@@ -349,8 +352,9 @@ tbl <- table(ifnb_merge$stim, ifnb_merge$seurat_clusters)
 barplot(tbl,beside = T, main= "Cell numbers in each cluster of each group")
 ```
 
+
 ---
-## Evaluating RPCA merge using cell types
+## Evaluating RPCA using cell types
 
 We can also check the cell types. Using UMAPs we can split and compare across our conditions and cell types. 
 
@@ -360,7 +364,7 @@ DimPlot(ifnb_merge, group.by = "seurat_annotations", split.by= "stim", pt.size =
 ```
 
 ---
-## Evaluating RPCA merge using cell types
+## Evaluating RPCA using cell types
 
 Using heatmaps we can also check how specific each cluster is to each cell type.
 
@@ -396,11 +400,12 @@ if(params$isSlides == "yes"){
 ```
 
 
-## Merge data with Mutual Nearest Neighbors (MNN) correction
+## Merge data with MNN
 
-Mutual Nearest Neighbors approach uses paired cells instead of anchor genes to find the difference between batches. 
+Mutual Nearest Neighbors (MNN) approach uses paired cells instead of anchor genes to find the difference between batches. 
 
 The MNN correction was published by Marioni et al, Nature (2018). [link](https://www.nature.com/articles/nbt.4091)
+
 
 ---
 ## Steps for merging data with MNN
@@ -505,6 +510,7 @@ mnn_res$batch <- factor(mnn_res$batch)
 plotUMAP(mnn_res, colour_by="batch")
 ```
 
+
 ---
 ## Clustering data merged with MNN 
 
@@ -574,6 +580,15 @@ tbl <- table(mnn_res$cluster, mnn_res$cell_type)
 pheatmap(tbl,scale = "column")
 
 ```
+
+---
+## MNN vs RPCA
+
+Performance is dependent on experimental context. 
+
+Generally:
+* RPCA - More homogeneous   
+* MNN - More heterogeneous
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -646,6 +661,12 @@ gc()
 ```
 
 ---
+## An advanced scRNAseq workflow
+
+![overview](./imgs/advancedworkflow.png)
+
+
+---
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
@@ -676,12 +697,13 @@ To annotate the Single-cell data sets, we can evaluate the gene expression patte
 ---
 ## Prepare example datasets
 
-* The demo data, *panc8*,  was fetched by using SeuratData(). It contains single-cell RNA-Seq of human pancreatic islet sequenced with different techniques.
-* The demo data contains
-  + CELSeq dataset1 (*GSE81076*), as reference
-  + CELSeq dataset2 (*GSE85241*), as reference
-  + SMART-Seq2 (*E-MTAB-5061*), as reference
-  + Fluidigm C1 (*GSE86469*), as query
+The demo data, *panc8*,  was fetched by using SeuratData(). It contains single-cell RNA-Seq of human pancreatic islet sequenced with different techniques.
+
+The demo data contains
+  * CELSeq dataset1 (*GSE81076*), as reference
+  * CELSeq dataset2 (*GSE85241*), as reference
+  * SMART-Seq2 (*E-MTAB-5061*), as reference
+  * Fluidigm C1 (*GSE86469*), as query
   
 ```{r sec3_ctAnno_prepDemo_loadData,include=TRUE,eval=T}
 library(Seurat)
@@ -704,7 +726,7 @@ names(seu_list) <- c("celseq1", "celseq2", "smartseq", "fluidigmc1", "indrop")
 
 ---
 ## Prepare reference dataset
-Merge celseq1 and celseq2 data with RPCA
+For this we need a reference dataset and a query dataset. Merge celseq1 and celseq2 data with RPCA to make the reference.
 
 ```{r sec3_ctAnno_prepDemo_buildREF,include=TRUE,eval=T}
 
@@ -733,12 +755,14 @@ ref_panc <- quick_clust(ref_panc)
 ## Prepare reference dataset
 
 How does the data look?
+
 ```{R}
 DimPlot(ref_panc,group.by = "seurat_clusters",split.by = "tech",pt.size = 0.2,label=TRUE)
 ```
 
+
 ---
-## Gathering reference and query datasets
+## Reference and query datasets
 
 ```{r sec3_ctAnno_Seurat_gatherData,include=TRUE,eval=T}
 
@@ -821,8 +845,9 @@ rownames(mat) <- rownames(pred_res)
 pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE)
 ```
 
+
 ---
-## Import SingleR annotation into query
+## Import SingleR annotation
 
 Lastly we want to add our annotation back to our query dataset. 
 
@@ -849,6 +874,7 @@ SingleR annotation:
 table(panc_list$query$cellType_predBySingleR == panc_list$query$celltype)
 ```
 
+
 ---
 ## Seurat vs SingleR annotation
 
@@ -860,6 +886,14 @@ table(panc_list$query$cellType_predBySeurat == panc_list$query$cellType_predBySi
 tbl <- table(panc_list$query$cellType_predBySeurat,panc_list$query$cellType_predBySingleR)
 pheatmap::pheatmap(tbl,scale = "row")
 ```
+
+---
+## Seurat vs SingleR annotation
+
+This isn't always the case. This is good demonstration data. 
+
+* Seurat: Wins on speed
+* SingleR: More reliable and consistent
 
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
