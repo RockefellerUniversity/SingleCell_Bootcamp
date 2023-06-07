@@ -9,10 +9,10 @@ suppressPackageStartupMessages(require(scran))
 suppressPackageStartupMessages(require(scater))
 suppressPackageStartupMessages(require(scuttle))
 suppressPackageStartupMessages(require(scDblFinder))
-knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7)
+knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning = F, message=F)
 
 
-## ----sec3_loadPack,include=TRUE,eval=FALSE------------------------------------
+## ----sec3_loadPack,include=F,eval=FALSE---------------------------------------
 ## library(Seurat)
 ## library(scran)
 ## library(scater)
@@ -323,10 +323,6 @@ cellType <- lapply(sce_list,function(x){
 cell_type <- c(cellType$CTRL,cellType$STIM)
 mnn_res$cell_type <- cell_type[match(rownames(colData(mnn_res)),names(cell_type))]
 mnn_res$cell_type <- factor(mnn_res$cell_type)
-
-
-## -----------------------------------------------------------------------------
-plotUMAP(mnn_res,colour_by="cell_type")
 
 
 ## -----------------------------------------------------------------------------

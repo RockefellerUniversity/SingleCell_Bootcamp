@@ -287,6 +287,11 @@ ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
   theme_classic()
 
 
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+rm(dat, log_mat, sct_mat, plot1, plot2)
+gc()
+
+
 ## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
@@ -486,7 +491,7 @@ seu_obj[["doublet"]] <- doublet$doublet
 
 ## ---- fig.height=4,fig.width=7------------------------------------------------
 
-VlnPlot(seu_obj,group.by = "doublet",
+VlnPlot(seu_obj, group.by = "doublet",
         features = c("nCount_RNA","nFeature_RNA","doublet_score"),
         pt.size = 0)
 
@@ -764,13 +769,18 @@ DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLeg
 library(clustree)
 
 reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
-reso_res <- lapply(1:length(reso),function(x,seu_filt,reso){
+reso_res <- lapply(1:length(reso), function(x,seu_filt,reso){
   seu_filt <- FindClusters(seu_filt,resolution = reso[x])
   clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
-  return(clust)}, seu_filt,reso)
+  return(clust)}, seu_filt, reso)
 names(reso_res) <- paste0("k",1:length(reso))
+
+
+## ----include=TRUE,eval=T------------------------------------------------------
 k_tab <- do.call(cbind,reso_res)
 k_dat <- as.data.frame(k_tab)
+
+head(k_dat,2)
 
 
 ## ----clust_resoEval2,include=TRUE,eval=F--------------------------------------
@@ -782,7 +792,7 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 
 
 ## ----clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE----
-seu_filt <- FindClusters(seu_filt, resolution = 0.7)
+seu_filt <- FindClusters(seu_filt, resolution = 0.4)
 
 
 ## ---- fig.height=4,fig.width=7------------------------------------------------
@@ -887,18 +897,23 @@ avgExp_mat <- do.call(cbind, avgExp_byClust)
 pheatmap(avgExp_mat,scale = "row")
 
 
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+rm(avgExp_mat, avgExp_byClust, clust, mat, marker)
+gc()
+
+
 ## ----sec2_resEval_cellTypeAsign,include=TRUE,eval=T---------------------------
 
 seu_filt[["cellType_byClust"]] <- NA
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(5,8)] <- "B-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2,3)] <- "Naive CD4 T-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1)] <- "Memory CD4 T-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] <- "CD8 T-cells/NKs"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] <- "NKs"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9,10)] <- "FCER1A+ Monocytes"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(5)] <- "B-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1,4,6)] <- "Naive CD4 T-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] <- "Memory CD4 T-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] <- "CD8 T-cells/NKs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(8)] <- "NKs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2)] <- "FCGR3A+ Monocytes"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0)] <- "CD14+ Monocytes"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(11)] <- "Platelets"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(6)] <- "DCs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9)] <- "Platelets"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(10)] <- "DCs"
 seu_filt$cellType_byClust[is.na(seu_filt$cellType_byClust)] <- "Unspecified"
 
 
@@ -937,7 +952,7 @@ if(params$isSlides == "yes"){
 
 ## ----sec2_degCal,include=TRUE,eval=T------------------------------------------
 deg <- FindMarkers(seu_filt, group.by = "cellType_byClust",
-                   ident.1 = "CD14+ Monocytes",ident.2 = "FCER1A+ Monocytes",
+                   ident.1 = "CD14+ Monocytes",ident.2 = "FCGR3A+ Monocytes",
                    logfc.threshold = 0.25,
                    test.use = "wilcox",
                    min.pct = 0.1)
@@ -955,9 +970,9 @@ head(deg)
 ## ----sec2_degCal_volcano,include=TRUE,eval=T----------------------------------
 deg$sig <- NA
 deg$sig[deg$avg_log2FC >= 0.585 & deg$p_val_adj < 0.05] <- "CD14+"
-deg$sig[deg$avg_log2FC <=- 0.585 & deg$p_val_adj < 0.05] <- "FCER1A+"
+deg$sig[deg$avg_log2FC <=- 0.585 & deg$p_val_adj < 0.05] <- "FCGR3A+"
 deg$sig[is.na(deg$sig)] <- "nc"
-deg$sig <- factor(deg$sig, levels = c("CD14+","nc","FCER1A+"))
+deg$sig <- factor(deg$sig, levels = c("CD14+","nc","FCGR3A+"))
 
 table(deg$sig)
 
@@ -975,6 +990,14 @@ rm(seu_filt)
 rm(markers)
 rm(sce)
 rm(deg)
+rm(cellType_dat)
+rm(umap)
+rm(umap_tab)
+rm(meta)
+rm(clust_dat)
+
+unlink("umap_dat.csv")
+unlink("cellType_dat.csv")
 
 rm(clust)
 rm(mat)
@@ -989,5 +1012,6 @@ rm(log_avgExp )
 rm(sct_avgExp)
 gc()
 
+unlink("clust_dat.csv")
 
 

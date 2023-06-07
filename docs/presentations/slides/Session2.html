@@ -2885,6 +2885,8 @@ We can see there is very high similarity between the results.
 
 ![](Session2_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
 
+
+
 ---
 class: inverse, center, middle
 
@@ -2997,7 +2999,7 @@ ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_boxplot() + labs(x =
     y = "Score", fill = "Phase") + facet_wrap(~cat) + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-33-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-34-1.png)&lt;!-- --&gt;
 
 ---
 ## Cell cycle estimation by cyclone
@@ -3288,7 +3290,7 @@ ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_boxplot() + labs(x =
     y = "Score", fill = "Phase") + facet_wrap(~cat) + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-39-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-40-1.png)&lt;!-- --&gt;
 
 ---
 ## Compare the two strategies
@@ -3462,7 +3464,7 @@ VlnPlot(seu_obj, group.by = "doublet", features = c("nCount_RNA", "nFeature_RNA"
     "doublet_score"), pt.size = 0)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-50-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
 
 ---
 ## Assessing Doublets
@@ -3475,7 +3477,7 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", pt.s
     group.by = "doublet")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -3503,7 +3505,7 @@ VlnPlot(seu_obj, group.by = "dset", features = c("nCount_RNA", "nFeature_RNA", "
 
 If a bimodal distribution is identified, we need to check for any interference. We can see some evidence of bimodality in our dataset here.
 
-![](Session2_files/figure-html/unnamed-chunk-53-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-54-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluating interactions
@@ -3522,7 +3524,7 @@ Comparison between UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
 
-![](Session2_files/figure-html/unnamed-chunk-54-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-55-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluating interactions
@@ -3790,7 +3792,7 @@ ggplot(plot_df, aes(cumu, pct, label = rank, color = rank &gt; pc)) + geom_text(
 
 We can now look at our cutoff on our elbow plot. This seems to match the point where our data plateaus.
 
-![](Session2_files/figure-html/unnamed-chunk-64-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-65-1.png)&lt;!-- --&gt;
 
 ---
 ## Make non-linear dimensional reduction
@@ -3823,19 +3825,19 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 05:03:25 UMAP embedding parameters a = 0.9922 b = 1.112
+## 18:30:09 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 05:03:25 Read 9379 rows and found 19 numeric columns
+## 18:30:09 Read 9379 rows and found 19 numeric columns
 ```
 
 ```
-## 05:03:25 Using Annoy for neighbor search, n_neighbors = 30
+## 18:30:09 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 05:03:25 Building Annoy index with metric = cosine, n_trees = 50
+## 18:30:09 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -3848,13 +3850,13 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 05:03:26 Writing NN index file to temp file /tmp/Rtmp4BOVsC/file1a31218933f1
-## 05:03:26 Searching Annoy index using 1 thread, search_k = 3000
-## 05:03:30 Annoy recall = 100%
-## 05:03:31 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 05:03:32 Initializing from normalized Laplacian + noise (using irlba)
-## 05:03:32 Commencing optimization for 500 epochs, with 398570 positive edges
-## 05:03:46 Optimization finished
+## 18:30:11 Writing NN index file to temp file /tmp/RtmpgITm1f/file2a4814de5390
+## 18:30:11 Searching Annoy index using 1 thread, search_k = 3000
+## 18:30:15 Annoy recall = 100%
+## 18:30:16 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 18:30:18 Initializing from normalized Laplacian + noise (using irlba)
+## 18:30:19 Commencing optimization for 500 epochs, with 398570 positive edges
+## 18:30:33 Optimization finished
 ```
 
 ---
@@ -3867,7 +3869,7 @@ We can now draw the results of our UMAP, which clearly separates our cells intro
 DimPlot(seu_filt)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-65-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-66-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -3933,7 +3935,7 @@ Looking at the UMAP we can see good separation of clusters. But there may be roo
 DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-67-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
 
 ---
 ## Testing resolutions
@@ -4053,8 +4055,25 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 
 ```r
 names(reso_res) &lt;- paste0("k", 1:length(reso))
+```
+
+---
+## Testing resolutions
+
+To identify the best resolution for each dataset we iteratively test potential resolutions.
+
+
+```r
 k_tab &lt;- do.call(cbind, reso_res)
 k_dat &lt;- as.data.frame(k_tab)
+
+head(k_dat, 2)
+```
+
+```
+##                             k1 k2 k3 k4 k5 k6 k7 k8 k9 k10
+## PBMC_10k_AAACCCAAGGTAGTCG-1  2  2  2  4  4  2  2  2  2   3
+## PBMC_10k_AAACCCACAATCCAGT-1  1  1  1  5  2  7  3  7  7   7
 ```
 
 ---
@@ -4071,8 +4090,8 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ---
 ## Evaluate resolutions with clustree
 - The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
-* In this case, we use *resolution=0.7*
-![](Session2_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
+* In this case, we use *resolution=0.4*
+![](Session2_files/figure-html/unnamed-chunk-70-1.png)&lt;!-- --&gt;
 
 ---
 ## Clustering - optimized
@@ -4081,7 +4100,7 @@ Lets retry clustering with our improved resolution.
 
 
 ```r
-seu_filt &lt;- FindClusters(seu_filt, resolution = 0.7)
+seu_filt &lt;- FindClusters(seu_filt, resolution = 0.4)
 ```
 
 ```
@@ -4091,8 +4110,8 @@ seu_filt &lt;- FindClusters(seu_filt, resolution = 0.7)
 ## Number of edges: 320091
 ## 
 ## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.8790
-## Number of communities: 16
+## Maximum modularity in 10 random starts: 0.9108
+## Number of communities: 11
 ## Elapsed time: 1 seconds
 ```
 
@@ -4108,7 +4127,7 @@ DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + N
     ggtitle("Optimized Clusters")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-69-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-71-1.png)&lt;!-- --&gt;
 
 ---
 ## Clustering - default
@@ -4120,7 +4139,7 @@ DimPlot(seu_filt, group.by = "cluster_byDefault", label = TRUE, pt.size = 0.2) +
     NoLegend() + ggtitle("Default Clusters")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-70-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-72-1.png)&lt;!-- --&gt;
 
 ---
 ## A basic scRNAseq workflow
@@ -4193,7 +4212,7 @@ We can then use the *DoHeatmap()* from Seurat to plot just these genes.
 DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-73-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-75-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -4242,13 +4261,13 @@ known_marker &lt;- c("GNLY", "NKG7")
 FeaturePlot(seu_filt, features = known_marker)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-75-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-77-1.png)&lt;!-- --&gt;
 
 
 ---
 ## Match markers to clusters
 
-We can also check the expression of markers in each cluster. First we need to get our count data and our full list of markers.
+We can also check the expression of markers in each cluster. First, we need to get our count data and our full list of markers.
 
 ```r
 mat &lt;- GetAssayData(seu_filt, assay = "RNA", slot = "data")
@@ -4281,7 +4300,6 @@ avgExp_byClust &lt;- lapply(clust, function(clust, seu, known) {
 names(avgExp_byClust) &lt;- paste0("C", clust)
 ```
 
-
 ---
 ## Match markers to clusters
 
@@ -4294,7 +4312,8 @@ avgExp_mat &lt;- do.call(cbind, avgExp_byClust)
 pheatmap(avgExp_mat, scale = "row")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-77-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-79-1.png)&lt;!-- --&gt;
+
 
 ---
 ## Assign cell types by clusters
@@ -4304,15 +4323,15 @@ We can then manually annotate the clusters based on these markers. We do this ma
 
 ```r
 seu_filt[["cellType_byClust"]] &lt;- NA
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(5, 8)] &lt;- "B-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2, 3)] &lt;- "Naive CD4 T-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1)] &lt;- "Memory CD4 T-cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] &lt;- "CD8 T-cells/NKs"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] &lt;- "NKs"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9, 10)] &lt;- "FCER1A+ Monocytes"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(5)] &lt;- "B-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1, 4, 6)] &lt;- "Naive CD4 T-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] &lt;- "Memory CD4 T-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] &lt;- "CD8 T-cells/NKs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(8)] &lt;- "NKs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2)] &lt;- "FCGR3A+ Monocytes"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0)] &lt;- "CD14+ Monocytes"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(11)] &lt;- "Platelets"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(6)] &lt;- "DCs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9)] &lt;- "Platelets"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(10)] &lt;- "DCs"
 seu_filt$cellType_byClust[is.na(seu_filt$cellType_byClust)] &lt;- "Unspecified"
 ```
 
@@ -4328,11 +4347,11 @@ table(seu_filt$cellType_byClust)
 ```
 ## 
 ##            B-cells    CD14+ Monocytes    CD8 T-cells/NKs                DCs 
-##               1084               2115                696                472 
-##  FCER1A+ Monocytes Memory CD4 T-cells  Naive CD4 T-cells                NKs 
-##                748               1262               1820                424 
-##          Platelets        Unspecified 
-##                337                421
+##                824               2572                341                 29 
+##  FCGR3A+ Monocytes Memory CD4 T-cells  Naive CD4 T-cells                NKs 
+##               1118               1092               3159                161 
+##          Platelets 
+##                 83
 ```
 
 ---
@@ -4345,7 +4364,7 @@ DimPlot(seu_filt, group.by = c("seurat_clusters", "cellType_byClust"), label = T
     pt.size = 0.2) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-79-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-82-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -4370,7 +4389,7 @@ Here we will run the differential with default settings for logfc threshold, min
 
 ```r
 deg &lt;- FindMarkers(seu_filt, group.by = "cellType_byClust", ident.1 = "CD14+ Monocytes",
-    ident.2 = "FCER1A+ Monocytes", logfc.threshold = 0.25, test.use = "wilcox", min.pct = 0.1)
+    ident.2 = "FCGR3A+ Monocytes", logfc.threshold = 0.25, test.use = "wilcox", min.pct = 0.1)
 ```
 
 ---
@@ -4393,12 +4412,12 @@ head(deg)
 
 ```
 ##        p_val avg_log2FC pct.1 pct.2 p_val_adj Symbol
-## S100A9     0   7.241703 0.999 0.301         0 S100A9
-## LYZ        0   6.590494 0.998 0.225         0    LYZ
-## S100A8     0   6.527796 0.998 0.178         0 S100A8
-## VCAN       0   4.683644 0.995 0.024         0   VCAN
-## FOS        0   4.622406 0.991 0.158         0    FOS
-## FCN1       0   4.398565 0.998 0.052         0   FCN1
+## S100A9     0   7.284148 0.998 0.275         0 S100A9
+## LYZ        0   6.697938 0.997 0.203         0    LYZ
+## S100A8     0   6.506652 0.997 0.143         0 S100A8
+## CTSS       0   4.821312 0.997 0.378         0   CTSS
+## MNDA       0   4.591103 0.996 0.030         0   MNDA
+## VCAN       0   4.557196 0.985 0.021         0   VCAN
 ```
 
 ---
@@ -4410,17 +4429,17 @@ To visualize the global changes, we can use a Volcano plot. As always we must fi
 ```r
 deg$sig &lt;- NA
 deg$sig[deg$avg_log2FC &gt;= 0.585 &amp; deg$p_val_adj &lt; 0.05] &lt;- "CD14+"
-deg$sig[deg$avg_log2FC &lt;= -0.585 &amp; deg$p_val_adj &lt; 0.05] &lt;- "FCER1A+"
+deg$sig[deg$avg_log2FC &lt;= -0.585 &amp; deg$p_val_adj &lt; 0.05] &lt;- "FCGR3A+"
 deg$sig[is.na(deg$sig)] &lt;- "nc"
-deg$sig &lt;- factor(deg$sig, levels = c("CD14+", "nc", "FCER1A+"))
+deg$sig &lt;- factor(deg$sig, levels = c("CD14+", "nc", "FCGR3A+"))
 
 table(deg$sig)
 ```
 
 ```
 ## 
-##   CD14+      nc FCER1A+ 
-##     658    1803     378
+##   CD14+      nc FCGR3A+ 
+##     998    1894     288
 ```
 
 ---
@@ -4433,8 +4452,7 @@ ggplot(deg, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) + geom_poin
     y = "-log10_adjPV", color = "") + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-82-1.png)&lt;!-- --&gt;
-
+![](Session2_files/figure-html/unnamed-chunk-85-1.png)&lt;!-- --&gt;
 
 ---
 ## Customizing your differentials
@@ -4443,6 +4461,7 @@ Seurat has many different options for differentials. You can use these to fully 
 - Assign the groups we want to compare: *group_by*
 - If we want to get a unfiltered results: set *logfc.threshold = 0* and *min.pct = 0*
 - Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*
+
 
 
 
