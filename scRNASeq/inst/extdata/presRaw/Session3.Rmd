@@ -1857,3 +1857,122 @@ gc()
 
 
 ```
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# CITE-Seq 
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# CITE-Seq 
+
+---
+"    
+  )
+  
+}
+
+```
+
+## CITE-Seq
+
+The CITE-Seq method labels different types of cells or different samples with hashtag-labeled antibodies. Then, the cells can be pooled together into a single library and be sequencing at the same time. After sequencing, the cells can be separated by the different antibody hashtags.
+
+- Here, we will use a dataset from Seurat vignette [link](https://satijalab.org/seurat/articles/hashing_vignette.html)
+
+---
+## Load data
+```{r sec3_CITE_prep,include=TRUE,eval=T}
+
+rna.mat <- readRDS("data/pbmc_umi_mtx.rds")
+dim(rna.mat)
+
+hto.mat <- readRDS("data/pbmc_hto_mtx.rds")
+dim(hto.mat)
+rownames(hto.mat)
+```
+
+
+---
+## Prepare data
+
+```{r}
+seu_obj <- CreateSeuratObject(counts=rna.mat,project="citeSeq_demo")
+seu_obj[["HTO"]] <- CreateAssayObject(counts=hto.mat)
+seu_obj
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(hto.mat, rna.mat )
+gc()
+```
+
+---
+## Cluster with regular workflow
+```{r sec3_CITE_clust,include=TRUE,eval=T}
+
+DefaultAssay(seu_obj) <- "RNA"
+seu_obj <- data_proc(seu_obj)
+seu_obj <- ScaleData(seu_obj)
+```
+
+---
+## Cluster with regular workflow
+
+```{R}
+seu_obj <- quick_clust(seu_obj)
+DimPlot(seu_obj,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
+```
+
+---
+## Differentiate Hashtags
+
+- Normalize data with **centered log ratio (CLR)**
+- Demultiplex HTOs with *HTODemux()*
+- Threshold for positive call: *0.99 quantile*
+
+```{r sec3_CITE_hto,include=TRUE,eval=T}
+
+seu_obj <- NormalizeData(seu_obj, assay="HTO", normalization.method="CLR")
+seu_obj <- HTODemux(seu_obj, assay = "HTO", positive.quantile = 0.99)
+
+head(seu_obj,2)
+```
+
+---
+## Differentiate Hashtags
+
+```{r}
+table(seu_obj$HTO_classification.global)
+table(seu_obj$hash.ID)
+```
+
+
+---
+## Evaluate HTOs in Ridge plot
+```{r sec3_CITE_ridget,include=TRUE,eval=FALSE}
+RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
+          features = rownames(seu_obj[["HTO"]])[1:2],ncol = 2)
+```
+
+---
+## Evaluate HTOs in Ridge plot
+```{r sec3_CITE_ridget,include=TRUE,eval=FALSE}
+RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
+          features = rownames(seu_obj[["HTO"]])[3:4],ncol = 2)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu_obj )
+gc()
+```
