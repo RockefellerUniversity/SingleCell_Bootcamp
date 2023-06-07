@@ -29,7 +29,7 @@ suppressPackageStartupMessages(require(scran))
 suppressPackageStartupMessages(require(scater))
 suppressPackageStartupMessages(require(scuttle))
 suppressPackageStartupMessages(require(scDblFinder))
-knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7)
+knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning = F, message=F)
 ```
 
 ```{r sec3_loadPack,include=F,eval=FALSE}
@@ -47,7 +47,6 @@ library(DropletUtils)
 library(scuttle)
 ```
 
----
 ## An advanced scRNAseq workflow
 
 ![overview](./imgs/advancedworkflow.png)
@@ -278,7 +277,8 @@ This workflow is modified from canonical correlation analysis (CCA), which is wi
   5. Integrate data by using *IntegratedData()*
   6. Process *quick_cluster()* and evaluate results with UMAP
 
----  
+
+---
 ## Prepare for RPCA merge
 
 First, we prepare the data for integration. We will normalize the data sets separately. Than, we need to identify features for integration. This is similar to the VariableFeatures function we ran on a single dataset. Lastly we run scaling and PCA, using these features.
@@ -558,9 +558,6 @@ mnn_res$cell_type <- cell_type[match(rownames(colData(mnn_res)),names(cell_type)
 mnn_res$cell_type <- factor(mnn_res$cell_type)
 ```
 
-```{r}
-plotUMAP(mnn_res,colour_by="cell_type")
-```
 
 ---
 ## Evaluate with cell types
