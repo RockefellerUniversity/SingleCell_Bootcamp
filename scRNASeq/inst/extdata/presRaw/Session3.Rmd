@@ -32,14 +32,7 @@ suppressPackageStartupMessages(require(scDblFinder))
 knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7)
 ```
 
-
-## Outline
-
-
-
-``
-
-```{r sec3_loadPack,include=TRUE,eval=FALSE}
+```{r sec3_loadPack,include=F,eval=FALSE}
 library(Seurat)
 library(scran)
 library(scater)
@@ -54,10 +47,16 @@ library(DropletUtils)
 library(scuttle)
 ```
 
+---
+## An advanced scRNAseq workflow
+
+![overview](./imgs/advancedworkflow.png)
+
+---
 # Outlines
-- Merge multiple datasets
-- Droplet processing
-- Pseudotime analysis
+- Merge multiple data sets - 4 different approaches for this
+- Droplet processing - 3 different approaches for this
+- Pseudotime analysis with slingshot
 - CITE-seq data processing
 
 ---
