@@ -1338,10 +1338,18 @@ gc()
 ---
 ## Export matrix after correction
 
-```{r}
+```{r, eval=F}
 soupOBJ <- setContaminationFraction(soupOBJ,rho,forceAccept=TRUE)
 estCor_mtx <- adjustCounts(soupOBJ)
 
+```
+
+```{r, eval=F, echo=F}
+save(estCor_mtx, file="../data/estCor_mtx.RData")
+```
+
+```{r, eval=T, echo=F}
+load("data/estCor_mtx.RData")
 ```
 
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
