@@ -1043,7 +1043,7 @@ We can detect empty droplets with *DropletUtils::emptyDrops()*.
 - The p-value for each cell is performed by Monte Carlo simulation basing on the deviation of a given cell to the ambient RNA pool.
 
 
-```{r sec3_dropProc_remEmtpy_cal,include=FALSE,eval=TRUE}
+```{r sec3_dropProc_remEmtpy_cal,include=T,eval=TRUE}
 
 e.out <- emptyDrops(raw_mtx)
 e.out <- e.out[order(e.out$FDR),]
