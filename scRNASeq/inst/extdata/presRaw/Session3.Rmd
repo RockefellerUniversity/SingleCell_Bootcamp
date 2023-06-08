@@ -898,6 +898,10 @@ rm(panc8, seu_list, ref_list, feats, anchors, ref_panc, panc_list, seu, pred_res
 gc()
 ```
 
+---
+## An advanced scRNAseq workflow
+
+![overview](./imgs/advancedworkflow.png)
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1433,6 +1437,7 @@ dim(filt_mtx)
 
 ---
 ## Data processing
+
 ```{r sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T}
 message("processing matrix from CellRanger")
 seu <- CreateSeuratObject(filt_mtx)
@@ -1499,6 +1504,11 @@ VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0
 rm(bcrank, uniq, e.out, amb, filt_mtx, seu, sce, seu_list, out, soupOBJ, clust, autoCor_mtx, seu_autoCorr, use_toEst, rho, estCor_mtx, seu_estCorr, seu_cbFilt, seu_filt)
 gc()
 ```
+
+---
+## An advanced scRNAseq workflow
+
+![overview](./imgs/advancedworkflow.png)
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
