@@ -406,17 +406,25 @@ if(params$isSlides == "yes"){
 
 
 
-## ----sec3_ctAnno_prepDemo_loadData,include=TRUE,eval=T------------------------
-library(Seurat)
-library(SeuratData)
-InstallData("panc8")
-data("panc8")
-head(panc8,2)
+## ----sec3_ctAnno_prepDemo_loadData,include=TRUE,eval=F------------------------
+## library(Seurat)
+## library(SeuratData)
+## InstallData("panc8")
+## data("panc8")
+## 
+
+
+## ---- eval=F------------------------------------------------------------------
+## seu_list <- SplitObject(panc8, split.by = "tech")
+## names(seu_list) <- c("celseq1", "celseq2", "smartseq", "fluidigmc1", "indrop")
+
+
+## ---- eval=F, echo=F----------------------------------------------------------
+## save(seu_list, file="../data/panc8.RData")
 
 
 ## -----------------------------------------------------------------------------
-seu_list <- SplitObject(panc8, split.by = "tech")
-names(seu_list) <- c("celseq1", "celseq2", "smartseq", "fluidigmc1", "indrop")
+load("data/panc8.RData")
 
 
 ## ----sec3_ctAnno_prepDemo_buildREF,include=TRUE,eval=T------------------------
@@ -524,6 +532,636 @@ rm(panc8, seu_list, ref_list, feats, anchors, ref_panc, panc_list, seu, pred_res
 gc()
 
 
+## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Droplet processing
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Droplet processing
+
+---
+"    
+  )
+  
+}
+
+
+
+## ---- eval=T------------------------------------------------------------------
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
+
+
+## ---- eval=T------------------------------------------------------------------
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
+
+
+
+## ----sec3_dropProc_kneePlot_prep,include=TRUE, eval=T-------------------------
+library(DropletUtils)
+library(Seurat)
+
+raw_mtx <- Seurat::Read10X("raw_feature_bc_matrix")
+dim(raw_mtx)
+
+
+
+## -----------------------------------------------------------------------------
+bcrank <- barcodeRanks(raw_mtx)
+head(bcrank,2)
+
+
+## ----sec3_dropProc_kennPlot_press,include=TRUE,eval=T-------------------------
+
+uniq <- !duplicated(bcrank$rank)
+bcrank <- bcrank[uniq,]
+
+knee <- metadata(bcrank)$knee
+message(paste0("knee point: ",knee))
+inflection <- metadata(bcrank)$inflection
+message(paste0("inflection point: ",inflection))
+
+
+## ---- eval=F------------------------------------------------------------------
+## ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
+##   geom_hline(yintercept = knee, linetype="dashed",color="blue")+
+##   geom_hline(yintercept = inflection, linetype="dashed",color="green")+
+##   scale_x_continuous(trans = "log10")+
+##   scale_y_continuous(trans = "log10")+
+##   labs(x="cell barcode ranked by counts",
+##        y="UMI counts of each cell barcode")+
+##   theme_classic()
+
+
+## ---- eval=T, echo=F----------------------------------------------------------
+ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
+  geom_hline(yintercept = knee, linetype="dashed",color="blue")+
+  geom_hline(yintercept = inflection, linetype="dashed",color="green")+
+  scale_x_continuous(trans = "log10")+
+  scale_y_continuous(trans = "log10")+
+  labs(x="cell barcode ranked by counts",
+       y="UMI counts of each cell barcode")+
+  theme_classic()
+
+
+## ----sec3_dropProc_remEmtpy_cal,include=FALSE,eval=TRUE-----------------------
+
+e.out <- emptyDrops(raw_mtx)
+e.out <- e.out[order(e.out$FDR),]
+head(e.out)
+
+
+
+## ---- eval=F------------------------------------------------------------------
+## 
+## ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
+##   geom_vline(xintercept = knee, color="red",linetype="dashed")+
+##   labs(x="UMI counts per cell",y="Frequency")+
+##   scale_y_continuous(trans = "log10")+
+##   scale_x_continuous(trans = "log10")+
+##   theme_classic()
+
+
+## ---- eval=T, echo=F----------------------------------------------------------
+
+ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
+  geom_vline(xintercept = knee, color="red",linetype="dashed")+
+  labs(x="UMI counts per cell",y="Frequency")+
+  scale_y_continuous(trans = "log10")+
+  scale_x_continuous(trans = "log10")+
+  theme_classic()
+
+
+## -----------------------------------------------------------------------------
+table(e.out$FDR < 0.001)
+cell_sel <- rownames(e.out)[e.out$FDR < 0.001]
+filt_mtx <- raw_mtx[,colnames(raw_mtx) %in% cell_sel]
+
+
+## ----sec3_dropProc_ambIDENT_DorpUtils,include=TRUE,eval=T---------------------
+amb <- metadata(e.out)$ambient[,1]
+head(amb)
+
+
+## ---- eval=F, echo=F----------------------------------------------------------
+## load("data/seu_obj_raw.RData")
+## seu <- seu_obj
+
+
+## -----------------------------------------------------------------------------
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
+
+
+## ---- eval=T, echo=F----------------------------------------------------------
+unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
+unlink("filtered_feature_bc_matrix/", recursive=TRUE)
+
+
+## ---- eval=T------------------------------------------------------------------
+
+filt_mtx_drop <- filt_mtx[rownames(filt_mtx) %in% names(amb),]
+seu <- CreateSeuratObject(filt_mtx_drop)
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+rm(filt_mtx_drop)
+
+
+## ---- eval=T------------------------------------------------------------------
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+sce <- as.SingleCellExperiment(seu,assay = "RNA")
+
+
+## -----------------------------------------------------------------------------
+plotUMAP(sce, colour_by="seurat_clusters")
+
+
+## -----------------------------------------------------------------------------
+seu_list <- list()
+seu_list[["woCorr"]] <- seu
+
+
+## ----sec3_dropProc_ambProc_DropUtils,include=TRUE,eval=T----------------------
+out <- removeAmbience(counts(sce), ambient=amb, groups=sce$seurat_clusters) 
+rownames(out) <- rownames(sce)
+colnames(out) <- colnames(sce)
+
+
+
+## -----------------------------------------------------------------------------
+seu_list[["withCorr"]] <- CreateSeuratObject(out)
+seu_list[["withCorr"]] <- data_proc(seu_list[["withCorr"]])
+seu_list[["withCorr"]] <- ScaleData(seu_list[["withCorr"]])
+seu_list[["withCorr"]] <- quick_clust(seu_list[["withCorr"]])
+
+
+## ----sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T-----------------
+
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
+mark_gene
+
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_list$woCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_list$withCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_list$woCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_list$withCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+
+rm(seu_list, out, sce)
+gc()
+
+
+## ----sec3_dropProc_SoupX_prep,include=TRUE,eval=T-----------------------------
+
+clust <- setNames(seu$seurat_clusters, Cells(seu))
+seu_filt <- seu
+
+
+## -----------------------------------------------------------------------------
+library(SoupX)
+soupOBJ <- SoupChannel(raw_mtx, filt_mtx)
+soupOBJ <- setClusters(soupOBJ,clust)
+
+
+## ----sec3_dropProc_SoupX_autoCor,include=TRUE,eval=F--------------------------
+## soupOBJ <- autoEstCont(soupOBJ)
+## 
+## autoCor_mtx <- adjustCounts(soupOBJ)
+## 
+
+
+## ---- eval=F, echo=F----------------------------------------------------------
+## save(soupOBJ, file="../data/soup.RData")
+## save(autoCor_mtx, file="../data/auto_soup.RData")
+
+
+## -----------------------------------------------------------------------------
+load("data/soup.RData")
+
+
+## -----------------------------------------------------------------------------
+load("data/auto_soup.RData")
+
+
+## -----------------------------------------------------------------------------
+seu <- CreateSeuratObject(autoCor_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_autoCorr <- seu
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+rm(seu)
+gc()
+
+
+## ----sec3_dropProc_SoupX_estCor,include=TRUE,eval=T---------------------------
+
+mark_list <- list("CD4 T-cell"=c("IL7R","CCR7","S100A4"),"CD8 T-cell"=c("CD8A"),"B-Cell"=c("MS4A1"),
+                  "Monocyte"=c("CD14","FCGR3A"),"DC"=c("FCER1A"),"NK"=c("NKG7","GNLY"),"Platelet"=c("PPBP"))
+
+use_toEst <- estimateNonExpressingCells(soupOBJ, nonExpressedGeneList = mark_list)
+soupOBJ <- calculateContaminationFraction(soupOBJ, mark_list, useToEst = use_toEst)
+rho <- unique(soupOBJ$metaData$rho)
+rho
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+rm(use_toEst)
+gc()
+
+
+## ---- eval=F------------------------------------------------------------------
+## soupOBJ <- setContaminationFraction(soupOBJ,rho,forceAccept=TRUE)
+## estCor_mtx <- adjustCounts(soupOBJ)
+## 
+
+
+## ---- eval=F, echo=F----------------------------------------------------------
+## save(estCor_mtx, file="../data/estCor_mtx.RData")
+
+
+## ---- eval=T, echo=F----------------------------------------------------------
+load("data/estCor_mtx.RData")
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+rm(soupOBJ, rho)
+gc()
+
+
+## -----------------------------------------------------------------------------
+seu <- CreateSeuratObject(estCor_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_estCorr <- seu
+
+
+## ----sec3_dorpProc_SoupX_estCor_eval,include=TRUE,eval=T----------------------
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
+mark_gene
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_filt, features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## -----------------------------------------------------------------------------
+
+DimPlot(seu_autoCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_autoCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_estCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_estCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+rm(seu_estCorr, seu_autoCorr)
+gc()
+
+
+## input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
+
+## output_h5=assign_the_h5_file_path_for_the_cellbender_corrected_matrix # essential
+
+## expect_cell=expected_cell_number_can_be_find_in_cellranger_Web_Summary # essential
+
+## droplet_num=the_total_number_of_droplets_assigned_while_sequencing # default 25,000
+
+## fpr=threshols_of_FALSE_POSITIVE_RATE # default 0.01
+
+## epochs=number_of_epochs_to_train # default 150
+
+## num_train=number_of_times_to_attempt_to_train_the_model # default 1. would speed up while setting greater
+
+## #
+
+## cellbender remove-background --input $input_h5 --output $output_h5 --expected-cells $expect_cell --total-droplets-included $droplet_num --fpr $fpr --epochs $epochs --num-training-tries $num_train --cuda False
+
+
+## ----sec3_dropProc_cbFilt_loadData,include=TRUE,eval=T------------------------
+cbFilt_mtx <- Read10X_h5("data/cbFilt_PBMCv3_20230324_filtered.h5")
+dim(cbFilt_mtx)
+
+dim(filt_mtx)
+
+
+## ----sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T-----------------------
+message("processing matrix from CellRanger")
+seu <- CreateSeuratObject(filt_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_filt <- seu
+
+message("processing matrix from CellBender")
+seu <- CreateSeuratObject(cbFilt_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_cbFilt <- seu
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+
+rm(seu)
+gc()
+  
+
+
+## ----sec3_dorpProc_cbFilt_eval,include=TRUE,eval=T----------------------------
+mark_gene <- c("CD3E","CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","PPBP")
+mark_gene
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+
+rm(bcrank, uniq, e.out, amb, filt_mtx, seu, sce, seu_list, out, soupOBJ, clust, autoCor_mtx, seu_autoCorr, use_toEst, rho, estCor_mtx, seu_estCorr, seu_cbFilt, seu_filt)
+gc()
+
+
+## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Trajectory and Psuedotime analysis
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Trajectory and Psuedotime analysis
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----sec3_trajAna_prep,include=TRUE,eval=T------------------------------------
+sce <- readRDS("data/sceOBJ_Nestorowa_HSC.rds")
+sce
+
+
+## ----sec3_trajAna_buildTRAJ,include=TRUE,eval=T-------------------------------
+library(slingshot)
+sce.sling <- slingshot(sce,
+                       cluster=sce$label,
+                       reducedDim='PCA',
+                       approx_points=100,
+                       omega=TRUE)
+
+
+## -----------------------------------------------------------------------------
+colData(sce.sling)[1,1:5]
+
+
+## ----sec3_trajAna_extTRAJ,include=TRUE,eval=T---------------------------------
+embedded <- embedCurves(sce.sling, "UMAP")
+
+embedded@metadata$lineages
+
+
+## -----------------------------------------------------------------------------
+pseudo.paths <- slingPseudotime(sce.sling)
+head(pseudo.paths,2)
+
+
+
+## -----------------------------------------------------------------------------
+avg_pseudoTime <- rowMeans(pseudo.paths, na.rm=TRUE)
+colData(sce.sling)$avg_pseudoTime <- avg_pseudoTime
+
+
+## -----------------------------------------------------------------------------
+
+plotUMAP(sce.sling,colour_by="avg_pseudoTime")
+
+
+## ----sec3_trajAna_plotPR,include=TRUE,eval=T----------------------------------
+
+embedded_curve <- slingCurves(embedded)
+
+curve <- lapply(embedded_curve,function(x){
+  dat <- data.frame(x$s[x$ord,]) # UMAP axis and the order of cells
+  return(dat)})
+names(curve) <- c("curve1","curve2","curve3")
+
+head(curve$curve1)
+
+
+## -----------------------------------------------------------------------------
+plotUMAP(sce.sling,colour_by="avg_pseudoTime")+
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2), color="blue")+
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2),  color="black")+
+  geom_path(data=curve$curve3,aes(x=UMAP1,y=UMAP2),  color="red")
+
+
+## -----------------------------------------------------------------------------
+embedded@metadata$lineages
+
+
+## ----sec3_trajAna_refineTRAJ,include=TRUE,eval=T------------------------------
+sce2 <- sce[,colData(sce)$label != 7]
+sce.sling2 <- slingshot(sce2,cluster=sce2$label,reducedDim='PCA',approx_points=100,omega=TRUE)
+pseudo.paths <- slingPseudotime(sce.sling2)
+avg_pseudoTime <- rowMeans(pseudo.paths, na.rm=TRUE)
+colData(sce.sling2)$avg_pseudoTime <- avg_pseudoTime
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+
+rm(sce, sce2)
+gc()
+
+
+## -----------------------------------------------------------------------------
+
+embedded <- embedCurves(sce.sling2, "UMAP")
+embedded_curve <- slingCurves(embedded)
+curve <- lapply(embedded_curve,function(x){
+  dat <- data.frame(x$s[x$ord,]) # UMAP axis and the order of cells
+  return(dat)})
+names(curve) <- c("curve1","curve2")
+
+
+## -----------------------------------------------------------------------------
+plotUMAP(sce.sling2, colour_by="avg_pseudoTime") +
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2), color="blue") +
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2),  color="black")
+
+
+## ----sec3_trajANA_trajSep,include=TRUE,eval=T---------------------------------
+plotUMAP(sce.sling2, colour_by="label")
+
+
+## -----------------------------------------------------------------------------
+embedded@metadata$lineages$Lineage1
+plotUMAP(sce.sling2,colour_by="slingPseudotime_1")+
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2))
+
+
+## -----------------------------------------------------------------------------
+embedded@metadata$lineages$Lineage2
+plotUMAP(sce.sling2, colour_by="slingPseudotime_2")+
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2))
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+
+rm(embedded, embedded_curve, curve)
+gc()
+
+
+## ----sec3_trajANA_driveL1, include=TRUE,eval=T--------------------------------
+library(TSCAN)
+res <- testPseudotime(sce.sling2, sce.sling2$slingPseudotime_1)
+
+
+## -----------------------------------------------------------------------------
+res$SYMBOL <- rownames(res)
+res <- res[order(-res$logFC),]
+head(res)
+
+
+
+## -----------------------------------------------------------------------------
+res$stat <- NA
+res$stat[res$logFC > 0 & res$FDR < 0.05] <- "late"
+res$stat[res$logFC < 0 & res$FDR < 0.05] <- "early"
+res$stat[is.na(res$stat)] <- "nc"
+res[1:2,]
+
+
+## -----------------------------------------------------------------------------
+table(res$stat)
+
+
+
+## ----sec3_trajANA_driveL1_topEarly,eval=T-------------------------------------
+
+sub <- res[res$stat=="early",]
+sub <- sub[order(sub$logFC),]
+top <- head(sub$SYMBOL,5)
+top
+
+
+## -----------------------------------------------------------------------------
+plotExpression(sce.sling2,
+               features = top, swap_rownames = "GENEID",
+               x="slingPseudotime_1", colour_by = "label")
+
+
+## ----sec3_trajANA_driveL1_topLate2,include=TRUE,eval=T------------------------
+
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+
+
+## ----sec3_trajANA_driveL1_topLate,include=TRUE,eval=T, echo=F-----------------
+
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+
+
+## ----sec3_trajANA_driveL2,include=TRUE,eval=T---------------------------------
+
+res <- testPseudotime(sce.sling2,sce.sling2$slingPseudotime_2)
+res$SYMBOL <- rownames(res)
+res <- res[order(-res$logFC),]
+res$stat <- NA
+res$stat[res$logFC > 0 & res$FDR < 0.05] <- "late"
+res$stat[res$logFC < 0 & res$FDR < 0.05] <- "early"
+res$stat[is.na(res$stat)] <- "nc"
+
+table(res$stat)
+
+
+## ----sec3_trajANA_driveL2_topEarly,include=TRUE,eval=T------------------------
+sub <- res[res$stat=="early",]
+sub <- sub[order(sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+
+
+## ----sec3_trajANA_driveL2_topLate,include=TRUE,eval=T-------------------------
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+
+
 ## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
 
 rm(sce.sling2)
@@ -531,4 +1169,89 @@ rm(res, embedded, embedded_curve,sce2, pseudo.paths, avg_pseudoTime, curve, sce.
 gc()
 
 
+
+
+## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# CITE-Seq 
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# CITE-Seq 
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----sec3_CITE_prep,include=TRUE,eval=T---------------------------------------
+
+rna.mat <- readRDS("data/pbmc_umi_mtx.rds")
+dim(rna.mat)
+
+hto.mat <- readRDS("data/pbmc_hto_mtx.rds")
+dim(hto.mat)
+rownames(hto.mat)
+
+
+## -----------------------------------------------------------------------------
+seu_obj <- CreateSeuratObject(counts=rna.mat,project="citeSeq_demo")
+seu_obj[["HTO"]] <- CreateAssayObject(counts=hto.mat)
+seu_obj
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+
+rm(hto.mat, rna.mat )
+gc()
+
+
+## ----sec3_CITE_clust,include=TRUE,eval=T--------------------------------------
+
+DefaultAssay(seu_obj) <- "RNA"
+seu_obj <- data_proc(seu_obj)
+seu_obj <- ScaleData(seu_obj)
+
+
+## -----------------------------------------------------------------------------
+seu_obj <- quick_clust(seu_obj)
+DimPlot(seu_obj,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
+
+
+## ----sec3_CITE_hto,include=TRUE,eval=T----------------------------------------
+
+seu_obj <- NormalizeData(seu_obj, assay="HTO", normalization.method="CLR")
+seu_obj <- HTODemux(seu_obj, assay = "HTO", positive.quantile = 0.99)
+
+head(seu_obj,2)
+
+
+## -----------------------------------------------------------------------------
+table(seu_obj$HTO_classification.global)
+table(seu_obj$hash.ID)
+
+
+## ----sec3_CITE_ridget,include=TRUE,eval=T-------------------------------------
+RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
+          features = rownames(seu_obj[["HTO"]])[1:2],ncol = 2)
+
+
+## ----include=TRUE,eval=T------------------------------------------------------
+RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
+          features = rownames(seu_obj[["HTO"]])[3:4],ncol = 2)
+
+
+## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+
+rm(seu_obj )
+gc()
 
