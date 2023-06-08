@@ -702,23 +702,32 @@ The demo data contains
   * SMART-Seq2 (*E-MTAB-5061*), as reference
   * Fluidigm C1 (*GSE86469*), as query
   
-```{r sec3_ctAnno_prepDemo_loadData,include=TRUE,eval=T}
+As we did before we will split this dataset. We have also prepped this dataset for you, if you want to load the data object in directly.
+  
+```{r sec3_ctAnno_prepDemo_loadData,include=TRUE,eval=F}
 library(Seurat)
 library(SeuratData)
 InstallData("panc8")
 data("panc8")
-head(panc8,2)
-```
 
+```
 
 ---
 ## Prepare example datasets
 
 Split up the datasets by techniques using *SplitObject()*.
 
-```{R}
+```{R, eval=F}
 seu_list <- SplitObject(panc8, split.by = "tech")
 names(seu_list) <- c("celseq1", "celseq2", "smartseq", "fluidigmc1", "indrop")
+```
+
+```{r, eval=F, echo=F}
+save(seu_list, file="../data/panc8.RData")
+```
+
+```{r}
+load("data/panc8.RData")
 ```
 
 ---
