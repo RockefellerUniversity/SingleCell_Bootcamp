@@ -1280,7 +1280,7 @@ soupOBJ <- setClusters(soupOBJ,clust)
 
 The *autoEstCont()* can be used to detect contamination. We can then export the correct counts with *adjustCount()*.
 
-```{r sec3_dropProc_SoupX_autoCor,include=TRUE,eval=T}
+```{r sec3_dropProc_SoupX_autoCor,include=TRUE,eval=F}
 soupOBJ <- autoEstCont(soupOBJ)
 
 autoCor_mtx <- adjustCounts(soupOBJ)
@@ -1376,20 +1376,50 @@ seu_estCorr <- seu
 ## Evaluate marker genes
 
 ```{r sec3_dorpProc_SoupX_estCor_eval,include=TRUE,eval=T}
-message("markers")
 mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
 mark_gene
-#
-message("without correction")
+```
+
+---
+## Without Correction
+
+```{R}
 DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
-VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-#
-message("without correction")
+```
+
+---
+## Without Correction
+
+```{R}
+VlnPlot(seu_filt, features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+---
+## With Correction (auto)
+
+```{R}
+
 DimPlot(seu_autoCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+```
+
+---
+## With Correction (auto)
+
+```{R}
 VlnPlot(seu_autoCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-#
-message("Estimate contamination with marker genes")
+```
+
+---
+## With Correction (est)
+
+```{R}
 DimPlot(seu_estCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+```
+
+---
+## With Correction (est)
+
+```{R}
 VlnPlot(seu_estCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 ```
 
@@ -1568,6 +1598,12 @@ sce.sling <- slingshot(sce,
                        reducedDim='PCA',
                        approx_points=100,
                        omega=TRUE)
+```
+
+---
+## Estimate trajectories by fitting principle curves
+
+```{r}
 colData(sce.sling)[1,1:5]
 ```
 
@@ -1785,7 +1821,7 @@ table(res$stat)
 
 Using the order we can easily isolate the driver genes. Here we can see the top 5 early genes.
 
-```{r sec3_trajANA_driveL1_topEarly,include=TRUE,eval=T}
+```{r sec3_trajANA_driveL1_topEarly,eval=T}
 
 sub <- res[res$stat=="early",]
 sub <- sub[order(sub$logFC),]
@@ -1984,14 +2020,14 @@ table(seu_obj$hash.ID)
 
 ---
 ## Evaluate HTOs
-```{r sec3_CITE_ridget,include=TRUE,eval=FALSE}
+```{r sec3_CITE_ridget,include=TRUE,eval=T}
 RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
           features = rownames(seu_obj[["HTO"]])[1:2],ncol = 2)
 ```
 
 ---
 ## Evaluate HTOs
-```{r ,include=TRUE,eval=FALSE}
+```{r ,include=TRUE,eval=T}
 RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
           features = rownames(seu_obj[["HTO"]])[3:4],ncol = 2)
 ```
