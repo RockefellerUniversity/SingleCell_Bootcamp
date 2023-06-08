@@ -1408,7 +1408,7 @@ In the current version, it contains remove-background module, which is applied t
 ---
 ## Command line of CellBender
 
-```{r sec3_dropProc_cbFilt_code,engine="bash",include=TREU,eval=F}
+```{r sec3_dropProc_cbFilt_code,engine="bash",include=TRUE,eval=F}
 input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
 output_h5=assign_the_h5_file_path_for_the_cellbender_corrected_matrix # essential
 expect_cell=expected_cell_number_can_be_find_in_cellranger_Web_Summary # essential
@@ -1440,13 +1440,20 @@ seu <- data_proc(seu)
 seu <- ScaleData(seu)
 seu <- quick_clust(seu)
 seu_filt <- seu
-#
+
 message("processing matrix from CellBender")
 seu <- CreateSeuratObject(cbFilt_mtx)
 seu <- data_proc(seu)
 seu <- ScaleData(seu)
 seu <- quick_clust(seu)
 seu_cbFilt <- seu
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu)
+gc()
+  
 ```
 
 ---
