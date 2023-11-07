@@ -1,0 +1,2004 @@
+---
+title: "Single-cell RNA sequencing ~ Session 3<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+author: "Rockefeller University, Bioinformatics Resource Centre"
+date: "https://rockefelleruniversity.github.io/scRNA-seq/"
+output: 
+  xaringan::moon_reader:
+    css: ["default", "metropolisCustom.css", "metropolis-fontsCustom.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+  html_document:
+    toc: true # table of content true
+    toc_float: yes
+    depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: false  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+params:
+  isSlides: "yes"
+---
+
+
+```{r setup, include=FALSE}
+suppressPackageStartupMessages(require(knitr))
+suppressPackageStartupMessages(require(DropletUtils))
+suppressPackageStartupMessages(require(SingleCellExperiment))
+suppressPackageStartupMessages(require(scran))
+suppressPackageStartupMessages(require(scater))
+suppressPackageStartupMessages(require(scuttle))
+suppressPackageStartupMessages(require(scDblFinder))
+knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning = F, message=F)
+```
+
+```{r sec3_loadPack,include=F,eval=FALSE}
+library(Seurat)
+library(scran)
+library(scater)
+library(SeuratData)
+library(batchelor)
+library(ggplot2)
+library(pheatmap)
+library(slingshot)
+library(TSCAN)
+library(SoupX)
+library(DropletUtils)
+library(scuttle)
+```
+
+## An advanced scRNAseq workflow
+
+![overview](advancedworkflow.png)
+
+---
+# Outlines
+- Merge multiple data sets - 4 different approaches for this
+- Droplet processing - 3 different approaches for this
+- Pseudotime analysis with slingshot
+- CITE-seq data processing
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Merging Datasets
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Merging Datasets
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Merge multiple datasets
+We will discuss a number of approaches and methods we may need to use to merge datasets.
+
+- No corrections
+- Reciprocal Principle Component Analysis (RPCA)
+- Mutual Nearest Neighbors (MNN)
+- Harmony
+
+
+---
+## Example dataset
+
+We will be using the IFNB-Stimulated and Control PBMCs from Seurat Data. The easiest way to get this data is from their custom package *SeuratData* which is hosted on GitHub. 
+
+We will quickly show you how to get this data, but it isn't necessary to run these steps. 
+
+```{r, eval=F}
+devtools::install_github('satijalab/seurat-data')
+```
+
+```{r}
+library(Seurat)
+library(SeuratData)
+InstallData("ifnb")
+LoadData("ifnb")
+head(ifnb,2)
+```
+
+---
+## Example dataset
+
+This dataset is already loaded in as a Seurat object, and it is already merged. So we need to split it, so we can merge it ourselves! The groups are in the "stim" column of the metadata.
+
+```{r sec3_mergeData_fetchEG,include=TRUE, eval=F}
+table(ifnb$stim)
+ifnb_list <- Seurat::SplitObject(ifnb, split.by="stim")
+ifnb_list
+```
+
+```{r, echo=F, eval=F}
+save("ifnb_list",
+     file = "../data/seuOBJ_IFNB_splitByStim.RData")
+```
+
+---
+## Load in your dataset
+
+We have the ifnb_list save in an RData object, which you can load in. 
+
+```{r}
+load("../data/seuOBJ_IFNB_splitByStim.RData")
+
+```
+
+---
+## Create some functions
+We are going to try out a few merging approaches. We want to wrap some of our analysis steps into a function to simplify rerunning things.
+
+Normalization: 
+  * Log normalization with scale factor = 10,000
+  * Find Variable features with vst, select top 2000 variable features
+  
+```{r sec_mergeData_funcUsed_dataProc,include=TRUE}
+data_proc <- function(seu){
+  seu <- NormalizeData(seu,normalization.method="LogNormalize",scale.factor=10000)
+  seu <- FindVariableFeatures(seu,select.method="vst",nfeatures=2000)
+  return(seu)}
+```
+
+---
+## Create some functions
+
+Make clusters:
+  * Scale data with *ScaleData()*
+  * Principle Component Analysis by using *RunPCA()* with npcs=30 PCs
+  * Make non-linear dimensional reduction in UMAP by using *RunUMAP()* with dims=1:10
+  * Estimate Neighbors by using *FindNeighbors()* with dims=1:10
+  * Identify clusters with *FindClusters()* by using resolution=0.5
+  
+```{r sec3_mergeData_funcUsed_quickClust,include=TRUE}
+quick_clust <- function(seu){
+  set.seed(1001)
+  seu <- ScaleData(seu,verbose=FALSE)
+  seu <- RunPCA(seu,npcs=30,verbose=FALSE)
+  seu <- RunUMAP(seu, reduction = "pca", dims = 1:10,verbose=FALSE)
+  seu <- FindNeighbors(seu, reduction = "pca", dims = 1:10,verbose=FALSE)
+  seu <- FindClusters(seu, resolution = 0.5,verbose=FALSE)
+  return(seu)}
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Simple Merge
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Simple Merge
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Concatenate the datasets
+
+We can use *merge()* function to integrate our two data sets, as they are. We need to provide Group information and a name for the project as arguments. 
+
+```{r mergeData_woCor_merged,include=TRUE,eval=T}
+
+ifnb_merge <- merge(ifnb_list$CTRL, ifnb_list$STIM,
+                            add.cell.ids = c("CTRL","STIM"), project = "ifnb_seuMerge")
+head(ifnb_merge,2)
+```
+
+---
+## Process and make clusters
+We can use our processing and clustering functions to analyse our merged dataset. 
+
+```{r sec3_mergeData_woCorr_cluster,include=TRUE}
+ifnb_merge <- data_proc(ifnb_merge)
+ifnb_merge <- quick_clust(ifnb_merge)
+```
+
+---
+## UMAP
+
+Our UMAP shows our cells are distinct, depending on the condition. 
+
+```{r}
+DimPlot(ifnb_merge,group.by = "stim", pt.size = 0.2)
+```
+
+---
+## Evaluate with cell types
+A given cell type should often be clustered together. This pattern indicates the opposite. Different cell types are split into distinct groups depending on the sample.
+
+```{r sec3_mergeData_woCorr_eval,include=TRUE}
+
+DimPlot(ifnb_merge, group.by = "seurat_annotations", pt.size = 0.2,split.by = "stim")
+
+```
+
+---
+## STIM/CTRL don't group
+
+* This result indicates the difference between STIM and CTRL groups is huge.
+* Is this a true biological phenomena or is it a batch effect?
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Merge with reciprocal PCA
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Merge with reciprocal PCA
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Merge with reciprocal PCA
+Reciprocal PCA minimizes the batch effects while merging different data sets.
+
+This workflow is modified from canonical correlation analysis (CCA), which is widely used to merge batches.
+
+---
+## RPCA workflow
+
+  1. Normalize data sets. We can use our *data_proc()*. 
+  2. Select features for integration by using *SelectIntegrationFeatures()*.
+  3. Scale data and process PCA by using the features identified for integration
+  4. Identify Anchors for integration by using *FindIntegrationAnchors()*
+  5. Integrate data by using *IntegratedData()*
+  6. Process *quick_cluster()* and evaluate results with UMAP
+
+
+---
+## Prepare for RPCA merge
+
+First, we prepare the data for integration. We will normalize the data sets separately. Than, we need to identify features for integration. This is similar to the VariableFeatures function we ran on a single dataset. Lastly we run scaling and PCA, using these features.
+
+```{r sec3_mergeData_RPCA_prep,include=TRUE,eval=T}
+
+ifnb_list_rpca <- lapply(ifnb_list, data_proc)
+
+feats <- SelectIntegrationFeatures(ifnb_list_rpca)
+
+ifnb_list <- lapply(ifnb_list,function(seu,feats){
+  seu <- ScaleData(seu,features=feats,verbose=FALSE)
+  seu <- RunPCA(seu,features=feats,verbose=FALSE)
+  return(seu)},feats)
+```
+
+
+---
+## Integrating data in RPCA merge
+
+We can then identify anchors. These are the features through which we will integrate our data. Once we have these features, we can then integrate our data sets together.
+
+```{r sec3_mergeData_RPCA_int,include=TRUE,eval=T}
+anchors <- FindIntegrationAnchors(ifnb_list, anchor.features = feats, reduction = "rpca")
+
+ifnb_merge <- IntegrateData(anchorset = anchors)
+
+ifnb_merge
+```
+
+
+
+---
+## Evaluating RPCA using clusters
+
+To evaluate how well the merge has worked we must check the clustering. Again we must scale, and then use our *quick_clust* function. 
+
+We can now see that our two data sets overlay with each other.
+
+```{r sec3_mergeData_RPCA_cluster,include=TRUE,eval=F}
+
+ifnb_merge <- ScaleData(ifnb_merge)
+
+ifnb_merge <- quick_clust(ifnb_merge)
+
+DimPlot(ifnb_merge,group.by = "stim",pt.size = 0.2)
+```
+
+---
+## Evaluating RPCA using clusters
+
+We can now see that our two data sets overlay with each other.
+
+```{r sec3_mergeData_RPCA_cluster2,include=TRUE,eval=T, echo=F}
+
+ifnb_merge <- ScaleData(ifnb_merge)
+
+ifnb_merge <- quick_clust(ifnb_merge)
+
+DimPlot(ifnb_merge,group.by = "stim",pt.size = 0.2)
+```
+
+---
+## Evaluating RPCA using clusters
+
+We can check the numbers in each cluster. Broadly, there are similar numbers per cluster now. 
+
+```{R}
+tbl <- table(ifnb_merge$stim, ifnb_merge$seurat_clusters)
+
+barplot(tbl,beside = T, main= "Cell numbers in each cluster of each group")
+```
+
+
+---
+## Evaluating RPCA using cell types
+
+We can also check the cell types. Using UMAPs we can split and compare across our conditions and cell types. 
+
+```{r sec3_mergeData_RPCA_eval,include=TRUE,eval=T}
+
+DimPlot(ifnb_merge, group.by = "seurat_annotations", split.by= "stim", pt.size = 0.2)
+```
+
+---
+## Evaluating RPCA using cell types
+
+Using heatmaps we can also check how specific each cluster is to each cell type.
+
+```{R}
+library(pheatmap)
+
+tbl <- table(ifnb_merge$seurat_clusters,ifnb_merge$seurat_annotations)
+pheatmap(tbl, scale = "column")
+
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Merge data with MNN correction
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Merge data with MNN correction
+
+---
+"    
+  )
+  
+}
+
+```
+
+
+## Merge data with MNN
+
+Mutual Nearest Neighbors (MNN) approach uses paired cells instead of anchor genes to find the difference between batches. 
+
+The MNN correction was published by Marioni et al, Nature (2018). [link](https://www.nature.com/articles/nbt.4091)
+
+
+---
+## Steps for merging data with MNN
+
+1. Convert into SingleCellExperiment
+2. Identify features across samples
+3. Normalization
+4. Identify variables
+5. Merge data with MNN correction
+6. Build UMAP and clusters
+7. Evaluate with UMAP
+8. Evaluate composition of samples in each cluster
+
+---
+## Preparing to merge data with MNN 
+
+First we have to convert Seurat object to SingleCellExperiment object.
+
+```{r sec3_mergeData_MNN_prep,include=TRUE,eval=T}
+
+sce_list <- lapply(ifnb_list,function(seu){
+  sce <- as.SingleCellExperiment(seu,assay="RNA")
+  rowData(sce)$SYMBOL <- rownames(sce)
+  return(sce)})
+
+
+sce_list 
+```
+
+---
+## Preparing to merge data with MNN 
+
+As with RPCA we need to model and identify highly variable genes. For this we will use the scran functions *modelGeneVar()* and *getTopHVGs()*. We simply provide our SingleCellExperiment object.
+
+```{r}
+library(scran)
+dec_list <- lapply(sce_list, modelGeneVar)
+
+hvgc_list <-lapply(sce_list, getTopHVGs ,prop=0.1)
+```
+
+---
+## Preparing to merge data with MNN 
+
+Next we will find the features that are shared between samples. We must first define the shared "universe" of genes between our samples, and subset our variable genes to these. We can then combine the the variance to find variable features in both data sets. 
+
+```{r}
+universe <- intersect(rownames(sce_list$CTRL),rownames(sce_list$STIM))
+sce_list <- lapply(sce_list,function(sce,universe){
+  sce <- sce[universe,];return(sce)},universe)
+dec_list <- lapply(dec_list,function(dec,universe){
+  dec <- dec[universe,];return(dec)},universe)
+
+combined_dec <- combineVar(dec_list$CTRL, dec_list$STIM)
+chosen_hvgs <- combined_dec$bio > 0
+```
+
+---
+## Merge data with MNN
+We will use the batchelor package to run MNN with the *fastMNN()* function. 
+  * d: number of principles evaluated
+  * k: number of nearest neighbors to consider
+  * subset.row: subset genes. Here, we are using the top variable features
+
+  
+```{r sec3_mergeData_MNN_cor,include=TRUE,eval=T}
+library(batchelor)
+mnn_res <- fastMNN("CTRL"=sce_list$CTRL, "STIM"=sce_list$STIM,
+                   d=50, 
+                   k=20,
+                   subset.row=chosen_hvgs)
+mnn_res
+```
+
+---
+## Merge data with MNN
+
+The resulting SingleCellExperiment object contains the batch information. We can also retrieve a matrix of our dimension reduction results and corrected log counts with the *reducedDim()* and *assay()* functions. 
+
+```{R}
+table(mnn_res$batch)
+```
+
+```{r}
+reducedDim(mnn_res,"corrected")[1:2,]
+```
+
+```{r}
+assay(mnn_res,"reconstructed")[1:2,1:5]
+```
+
+---
+## UMAP of data merged with MNN 
+
+Make UMAP using the scater package.
+
+```{r sec3_dataMerge_MNN_cluster,include=TRUE,eval=T}
+library(scater)
+set.seed(1001)
+mnn_res <- runUMAP(mnn_res, dimred="corrected")
+mnn_res$batch <- factor(mnn_res$batch)
+plotUMAP(mnn_res, colour_by="batch")
+```
+
+
+---
+## Clustering data merged with MNN 
+
+We will cluster using SNN graph approach from scran as this is comptaible with our SingleCellExperiment object. 
+
+```{r}
+snn.gr <- buildSNNGraph(mnn_res,use.dimred="corrected")
+cluster_mnn <- igraph::cluster_louvain(snn.gr)$membership
+table(cluster_mnn)
+```
+
+---
+## Clustering data merged with MNN 
+
+Lets check the UMAP for our clustered results.
+
+```{R}
+mnn_res$cluster <- factor(cluster_mnn)
+plotUMAP(mnn_res,colour_by="cluster")
+```
+
+---
+## Clustering data merged with MNN 
+
+We can also check how many cells from each cluster belong to each group. With this approach you can see that there is a lot more group-specific clusters.
+
+```{r}
+
+tbl <- table(mnn_res$batch,mnn_res$cluster)
+barplot(tbl,beside = T, main= "Cell numbers in each cluster of each group")
+```
+
+---
+## Evaluate with cell types
+
+We must annotate our SingleCellExperiment object with different cell type information. We can then visualize the cell types on our UMAP. 
+
+```{r sec3_dataMerge_MNN_eval,include=TRUE,eval=T}
+
+cellType <- lapply(sce_list,function(x){
+  res <- setNames(as.character(colData(x)$seurat_annotations),colnames(x))
+  return(res)})
+cell_type <- c(cellType$CTRL,cellType$STIM)
+mnn_res$cell_type <- cell_type[match(rownames(colData(mnn_res)),names(cell_type))]
+mnn_res$cell_type <- factor(mnn_res$cell_type)
+```
+
+
+---
+## Evaluate with cell types
+
+```{r}
+
+plotUMAP(mnn_res,colour_by="cell_type")
+```
+
+---
+## Evaluate with cell types
+
+We can also  use a heatmap to look at the specificity of each cell type to each cluster. Most are cluster-specific.
+
+```{r}
+tbl <- table(mnn_res$cluster, mnn_res$cell_type)
+pheatmap(tbl,scale = "column")
+
+```
+
+---
+## MNN vs RPCA
+
+Performance is dependent on experimental context. 
+
+Generally:
+* RPCA - More homogeneous   
+* MNN - More heterogeneous
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Merge data with Harmony
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Merge data with Harmony
+
+---
+"    
+  )
+  
+}
+
+```
+
+
+## Harmony
+- Harmony is an R package for single-cell data integration [liike](https://www.nature.com/articles/s41592-019-0619-0).
+- The user manual of Harmony is also available [link](https://portals.broadinstitute.org/harmony/articles/quickstart.html).
+- There is also a python implementation of this package. 
+- Here, we will demonstrate how to integrate harmony into Seurat regular workflow.
+
+---
+## Prepare data for Harmony
+We can prepare for Harmony in much the same way as we prepare for the simple Seurat merge: merge, normalize, scale, PCA and UMAP.
+
+```{r sec3_mergedata_Harmony_samplePrep,include=TRUE,eval=T}
+
+seu_obj <- merge(ifnb_list$CTRL, ifnb_list$STIM)
+seu_obj <- data_proc(seu_obj)
+seu_obj <- ScaleData(seu_obj)
+seu_obj <- RunPCA(seu_obj)
+seu_obj <- RunUMAP(seu_obj, reduction = "pca", dims = 1:10, reduction.name = "umap")
+```
+
+---
+## Prepare data for Harmony
+
+As you can see we are back with our completely seperate groups. 
+
+```{r}
+DimPlot(seu_obj)
+```
+
+---
+## Merge data with Harmony
+
+We can use the *RunHarmony()* function to implement the Harmony correction. 
+
+```{r sec3_mergedata_Harmony_merge,include=TRUE,eval=FALSE}
+library(harmony)
+seu_obj <- RunHarmony(seu_obj, group.by.vars = "stim", assay.use= "RNA")
+seu_obj <- RunUMAP(seu_obj, reduction = "harmony", dims = 1:10, reduction.name = "umap_harmony")
+DimPlot(seu_obj, reduction = "umap_harmony")
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu_obj, ifnb, ifnb_list, ifnb_merge, ifnb_list_rpca, feats, anchors, sce_list, dec_list, hvgc_list, combined_dec, chosen_hvgs, mnn_res, snn.gr, cluster_mnn ,cellType )
+gc()
+```
+
+---
+## An advanced scRNAseq workflow
+
+![overview](advancedworkflow.png)
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Cell type annotation
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell type annotation
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Cell type annotation
+To annotate the Single-cell data sets, we can evaluate the gene expression pattern of well known cell-type specific marker genes and make a manual annotation, like we did in section II. Here, we will introduce two more strategies to make cell type annotations automatically:
+  1. Mapping and annotating query datasets with Seurat using a reference data set.  [link](https://satijalab.org/seurat/articles/integration_mapping.html)
+  2. Make annotation with SingleR [link](https://bioconductor.org/packages/release/bioc/html/SingleR.html)
+
+---
+## Prepare example datasets
+
+The demo data, *panc8*,  was fetched by using SeuratData(). It contains single-cell RNA-Seq of human pancreatic islet sequenced with different techniques.
+
+The demo data contains
+  * CELSeq dataset1 (*GSE81076*), as reference
+  * CELSeq dataset2 (*GSE85241*), as reference
+  * SMART-Seq2 (*E-MTAB-5061*), as reference
+  * Fluidigm C1 (*GSE86469*), as query
+  
+```{r sec3_ctAnno_prepDemo_loadData,include=TRUE,eval=T}
+library(Seurat)
+library(SeuratData)
+InstallData("panc8")
+data("panc8")
+head(panc8,2)
+```
+
+
+---
+## Prepare example datasets
+
+Split up the datasets by techniques using *SplitObject()*.
+
+```{R}
+seu_list <- SplitObject(panc8, split.by = "tech")
+names(seu_list) <- c("celseq1", "celseq2", "smartseq", "fluidigmc1", "indrop")
+```
+
+---
+## Prepare reference dataset
+For this we need a reference dataset and a query dataset. Merge celseq1 and celseq2 data with RPCA to make the reference.
+
+```{r sec3_ctAnno_prepDemo_buildREF,include=TRUE,eval=T}
+
+seu_list <- lapply(seu_list, data_proc)
+ref_list <- seu_list[c("celseq1","celseq2")]
+feats <- SelectIntegrationFeatures(ref_list)
+ref_list <- lapply(ref_list,function(seu,feats){
+  seu <- ScaleData(seu,features=feats,verbose=FALSE)
+  seu <- RunPCA(seu,features=feats,verbose=FALSE)
+  return(seu)},feats)
+```
+
+---
+## Prepare reference dataset
+Merge celseq1 and celseq2 data with RPCA
+
+```{r sec3_ctAnno_Seurat_RPCA,include=TRUE,eval=T}
+
+anchors <- FindIntegrationAnchors(ref_list,anchor.features = feats,reduction = "rpca")
+ref_panc <- IntegrateData(anchorset = anchors)
+ref_panc <- ScaleData(ref_panc)
+ref_panc <- quick_clust(ref_panc)
+```
+
+---
+## Prepare reference dataset
+
+How does the data look?
+
+```{R}
+DimPlot(ref_panc,group.by = "seurat_clusters",split.by = "tech",pt.size = 0.2,label=TRUE)
+```
+
+
+---
+## Reference and query datasets
+
+```{r sec3_ctAnno_Seurat_gatherData,include=TRUE,eval=T}
+
+panc_list <- list("ref"=ref_panc,"query"=seu_list$smartseq)
+feats <- SelectIntegrationFeatures(panc_list)
+panc_list <- lapply(panc_list,function(seu,feats){
+  seu <- ScaleData(seu,features=feats,verbose=FALSE)
+  seu <- RunPCA(seu,features=feats,verbose=FALSE)
+  return(seu)},feats)
+```
+
+---
+## Predict cell types for query
+
+Identify the anchors between reference and query data sets, using *FindTransferAnchors()*. These are essential to transfer information from our reference to our query. We can then transfer the cell type information. For each cell in query dataset, the score for each given cell type was estimated by the gene expression pattern of anchor genes using the *TransferData()* function. 
+
+```{r sec3_ctAnno_Seurat_tranferAnno,include=TRUE,eval=T}
+anchors <- FindTransferAnchors(reference = panc_list$ref,
+                               query=panc_list$query,
+                               dims=1:30,reference.reduction="pca")
+pred_res <- TransferData(anchorset = anchors,refdata=panc_list$ref$celltype)
+head(pred_res,2)
+```
+
+---
+## Predict cell types for query
+The cell type with highest score was assigned to the given cell. We can visualize this score with a heatmap. 
+
+```{r}
+mat <- as.matrix(pred_res[,-c(1,15)])
+colnames(mat) <- gsub("prediction.score.","",colnames(mat))
+pheatmap::pheatmap(mat,scale = "row",show_rownames = FALSE)
+```
+
+---
+## Load cell types into query
+
+```{r sec3_ctAnno_Seurat_pres,include=TRUE,eval=T}
+
+pred_cellType <- setNames(pred_res$predicted.id, rownames(pred_res))
+panc_list$query[["cellType_predBySeurat"]] <- pred_cellType[match(Cells(panc_list$query),
+                                                                  names(pred_cellType))]
+
+head(panc_list$query,2)
+
+table(panc_list$query$cellType_predBySeurat)
+```
+
+---
+## Annotation with SingleR
+[SingleR](https://bioconductor.org/packages/release/bioc/vignettes/SingleR/inst/doc/SingleR.html) is bioconductor package which can be used to predict annotations of a single-cell dataset.
+
+This package uses SingleCellExperiment objects, so we need to convert our Seurat object.
+
+```{r sec3_ctAnno_SingleR_pred,include=TRUE,eval=T}
+sce_list <- lapply(panc_list, function(seu){
+  sce <- as.SingleCellExperiment(seu, assay="RNA")
+  return(sce)})
+
+```
+
+---
+## Annotation with SingleR
+
+The score is generated comparing the expression levels of a cell in query dataset and the expression pattern of certain group (eg. cell types) in reference dataset. A cell would be assigned as the cell type which has highest score.
+
+```{R}
+library(SingleR)
+pred_res <- SingleR(ref = sce_list$ref, test = sce_list$query, labels = sce_list$ref$celltype)
+head(pred_res,2)
+```
+
+---
+## Annotation with SingleR
+By converting to a matrix, we can check the cell type scoring using a heatmap. 
+
+```{r}
+mat <- as.matrix(pred_res$scores)
+rownames(mat) <- rownames(pred_res)
+pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE)
+```
+
+
+---
+## Import SingleR annotation
+
+Lastly we want to add our annotation back to our query dataset. 
+
+```{r sec3_ctAnno_SingleR_import,include=TRUE,eval=T}
+cell_type <- setNames(pred_res$pruned.labels,rownames(pred_res))
+panc_list$query$cellType_predBySingleR <- cell_type[match(Cells(panc_list$query),names(cell_type))]
+head(panc_list$query,2)
+
+```
+
+
+---
+## Seurat vs SingleR annotation
+
+First we can compare this back to the original annotation. We will look for how many overlap.
+
+Seurat annotation:
+```{r}
+table(panc_list$query$cellType_predBySeurat == panc_list$query$celltype)
+```
+
+SingleR annotation:
+```{r}
+table(panc_list$query$cellType_predBySingleR == panc_list$query$celltype)
+```
+
+
+---
+## Seurat vs SingleR annotation
+
+Next we can compare our two annotations:
+
+```{R}
+
+table(panc_list$query$cellType_predBySeurat == panc_list$query$cellType_predBySingleR)
+tbl <- table(panc_list$query$cellType_predBySeurat,panc_list$query$cellType_predBySingleR)
+pheatmap::pheatmap(tbl,scale = "row")
+```
+
+---
+## Seurat vs SingleR annotation
+
+This isn't always the case. This is good demonstration data. 
+
+* Seurat: Wins on speed
+* SingleR: More reliable and consistent
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(panc8, seu_list, ref_list, feats, anchors, ref_panc, panc_list, seu, pred_res, mat, pred_cellType, sce_list, cell_type)
+gc()
+```
+
+---
+## An advanced scRNAseq workflow
+
+![overview](advancedworkflow.png)
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Droplet processing
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Droplet processing
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Droplet processing
+
+Often empty droplets can still make their way past Cell Ranger, or we may want to do custom filtering outside of Cell Ranger.
+
+Ambient RNAs from lysed cells can contaminate droplets and make empty droplets seem like they contain a cell. 
+
+We are revisiting the PBMC 10k data from 10X Genomics as an example to deal with these issues. This time we will use the raw matrix.
+
+
+---
+## Detect TRUE cells
+- The knee plot is available in the Web Summary from cellranger.
+- We can also draw the knee plot by using DropletUtils
+
+
+---
+## Grab dataset
+
+```{r, eval=T}
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
+```
+
+```{r, eval=T}
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
+
+```
+
+---
+## Load dataset
+
+We need to load in the dataset, but it is important not to set any filters yet. 
+
+```{r sec3_dropProc_kneePlot_prep,include=TRUE, eval=T}
+library(DropletUtils)
+library(Seurat)
+
+raw_mtx <- Seurat::Read10X("raw_feature_bc_matrix")
+dim(raw_mtx)
+
+```
+
+
+---
+## Load dataset
+
+Calculate the counts for each cell barcode and their rank.
+
+```{r}
+bcrank <- barcodeRanks(raw_mtx)
+head(bcrank,2)
+```
+
+---
+## Draw Knee plot
+
+To draw a custom knee plot we need to remove duplicated ranks and grab the knee and inflection points. 
+
+```{r sec3_dropProc_kennPlot_press,include=TRUE,eval=T}
+
+uniq <- !duplicated(bcrank$rank)
+bcrank <- bcrank[uniq,]
+
+knee <- metadata(bcrank)$knee
+message(paste0("knee point: ",knee))
+inflection <- metadata(bcrank)$inflection
+message(paste0("inflection point: ",inflection))
+```
+
+---
+## Draw Knee plot
+
+We can now draw our knee plot using *ggplot()*. 
+
+```{r, eval=F}
+ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
+  geom_hline(yintercept = knee, linetype="dashed",color="blue")+
+  geom_hline(yintercept = inflection, linetype="dashed",color="green")+
+  scale_x_continuous(trans = "log10")+
+  scale_y_continuous(trans = "log10")+
+  labs(x="cell barcode ranked by counts",
+       y="UMI counts of each cell barcode")+
+  theme_classic()
+```
+
+---
+## Draw Knee plot
+
+We can now draw our knee plot using *ggplot()*. The knee is labelled in blue. The inflection is labelled in green.
+
+```{r, eval=T, echo=F}
+ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
+  geom_hline(yintercept = knee, linetype="dashed",color="blue")+
+  geom_hline(yintercept = inflection, linetype="dashed",color="green")+
+  scale_x_continuous(trans = "log10")+
+  scale_y_continuous(trans = "log10")+
+  labs(x="cell barcode ranked by counts",
+       y="UMI counts of each cell barcode")+
+  theme_classic()
+```
+
+
+---
+## Detect empty droplets
+
+We can detect empty droplets with *DropletUtils::emptyDrops()*.
+- The p-value for each cell is performed by Monte Carlo simulation basing on the deviation of a given cell to the ambient RNA pool.
+
+
+```{r sec3_dropProc_remEmtpy_cal,include=FALSE,eval=TRUE}
+
+e.out <- emptyDrops(raw_mtx)
+e.out <- e.out[order(e.out$FDR),]
+head(e.out)
+
+```
+
+---
+## Detect empty droplets 
+
+The distribution of UMI counts per cell is often a bimodal distribution. The high-UMI group are likely droplets with a cell. In contrast, the droplets with low UMI are more likely empty droplets containing ambient RNAs.
+
+```{r, eval=F}
+
+ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
+  geom_vline(xintercept = knee, color="red",linetype="dashed")+
+  labs(x="UMI counts per cell",y="Frequency")+
+  scale_y_continuous(trans = "log10")+
+  scale_x_continuous(trans = "log10")+
+  theme_classic()
+```
+
+---
+## Detect empty droplets 
+
+The distribution of UMI counts per cell is often a bimodal distribution. The high-UMI group are likely droplets with a cell. In contrast, the droplets with low UMI are more likely empty droplets containing ambient RNAs.
+
+```{r, eval=T, echo=F}
+
+ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
+  geom_vline(xintercept = knee, color="red",linetype="dashed")+
+  labs(x="UMI counts per cell",y="Frequency")+
+  scale_y_continuous(trans = "log10")+
+  scale_x_continuous(trans = "log10")+
+  theme_classic()
+```
+
+---
+## Filter empty droplets
+
+In the DropletUtils manual, the FDR threshold is set to 0.001 
+in most cases. We can filter based on this cutoff. 
+
+```{R}
+table(e.out$FDR < 0.001)
+cell_sel <- rownames(e.out)[e.out$FDR < 0.001]
+filt_mtx <- raw_mtx[,colnames(raw_mtx) %in% cell_sel]
+```
+
+
+---
+## Ambient RNAs
+
+* The cell-free RNA molecules randomly spread in the solution. It can be enclosed into droplets during the steps of library preparation. So, it would be falsely increase the UMI counts of genes.
+
+* Ambient RNAs present two signature
+  + The majority are found in the empty droplets population.
+  + No specificity. This contamination can make a single cell look like it expresses two (or more) mutually exclusive marker genes.
+  
+* According to these two properties, we could estimate ambient RNA contamination rates and correct it. Here we will demonstrate how to correct ambient RNA contamination with DropletUtils and SoupX, respectively.
+
+
+---
+## Correct ambient RNAs
+
+Lets start by estimating our ambient RNA contamination. This is from DropletUtils.
+
+```{r sec3_dropProc_ambIDENT_DorpUtils,include=TRUE,eval=T}
+amb <- metadata(e.out)$ambient[,1]
+head(amb)
+```
+
+---
+## Correct ambient RNAs
+
+We can read back in our filtered PBMC data.
+
+```{r, eval=F, echo=F}
+load("../data/seu_obj_raw.RData")
+seu <- seu_obj
+```
+
+```{r}
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
+```
+
+```{r, eval=T, echo=F}
+unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
+unlink("filtered_feature_bc_matrix/", recursive=TRUE)
+```
+
+---
+## Correct ambient RNAs
+
+Then filter out empty droplets.
+
+```{r, eval=T}
+
+filt_mtx_drop <- filt_mtx[rownames(filt_mtx) %in% names(amb),]
+seu <- CreateSeuratObject(filt_mtx_drop)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(filt_mtx_drop)
+```
+
+```{r, eval=T}
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+sce <- as.SingleCellExperiment(seu,assay = "RNA")
+```
+
+---
+## Correct ambient RNAs
+
+```{r}
+plotUMAP(sce, colour_by="seurat_clusters")
+```
+
+---
+## Correct ambient RNAs
+Lets put our uncorrected, filtered dataset in a list. 
+
+```{r}
+seu_list <- list()
+seu_list[["woCorr"]] <- seu
+```
+
+---
+## Correct ambient RNAs
+
+We can use the to *removeAmbience()* function to remove ambient RNAs. 
+
+```{r sec3_dropProc_ambProc_DropUtils,include=TRUE,eval=T}
+out <- removeAmbience(counts(sce), ambient=amb, groups=sce$seurat_clusters) 
+rownames(out) <- rownames(sce)
+colnames(out) <- colnames(sce)
+
+```
+
+---
+## Correct ambient RNAs
+
+Now that we have run a correction, we want to reprocess and cluster our data.
+
+```{r}
+seu_list[["withCorr"]] <- CreateSeuratObject(out)
+seu_list[["withCorr"]] <- data_proc(seu_list[["withCorr"]])
+seu_list[["withCorr"]] <- ScaleData(seu_list[["withCorr"]])
+seu_list[["withCorr"]] <- quick_clust(seu_list[["withCorr"]])
+```
+
+---
+## Evaluate with marker genes
+
+Lets compare to our marker genes. 
+
+```{r sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T}
+
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
+mark_gene
+
+```
+
+---
+## Evaluate with marker genes
+
+First lets look at the UMAP without ambient RNA correction. 
+
+```{R}
+DimPlot(seu_list$woCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+```
+
+---
+## Evaluate with marker genes
+
+Lets now compare to UMAP wit ambient RNA correction.
+
+```{r}
+DimPlot(seu_list$withCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+```
+
+---
+## Evaluate with marker genes
+
+Lets now look at a violin plot in the uncorrected data.
+
+```{R}
+VlnPlot(seu_list$woCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+---
+## Evaluate with marker genes
+
+And then again in the corrected.
+
+```{r}
+VlnPlot(seu_list$withCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu_list, out, sce)
+gc()
+```
+
+---
+## Ambient RNA and SoupX
+
+SoupX is an alternative tool for droplet processing, developed for ambient RNA detection and correction [link](https://github.com/constantAmateur/SoupX). It includes the following steps
+- Estimate ambient RNA expression in the empty droplets.
+- Estimate contamination rate by using the ambient RNA expression levels across clusters.
+- Correct ambient RNA contamination.
+
+---
+## Prepare essential files
+
+We need our filtered and unfiltered matrix. Plus our processed filtered Seurat object.
+
+```{r sec3_dropProc_SoupX_prep,include=TRUE,eval=T}
+
+clust <- setNames(seu$seurat_clusters, Cells(seu))
+seu_filt <- seu
+```
+
+---
+## Import Matrices
+Import our matrices into the SoupX channel object.
+
+```{r}
+library(SoupX)
+soupOBJ <- SoupChannel(raw_mtx, filt_mtx)
+soupOBJ <- setClusters(soupOBJ,clust)
+```
+
+
+---
+## Automatic estimates
+
+The *autoEstCont()* can be used to detect contamination. We can then export the correct counts with *adjustCount()*.
+
+```{r sec3_dropProc_SoupX_autoCor,include=TRUE,eval=F}
+soupOBJ <- autoEstCont(soupOBJ)
+
+autoCor_mtx <- adjustCounts(soupOBJ)
+
+```
+
+```{R, eval=F, echo=F}
+save(soupOBJ, file="../../data/soup.RData")
+save(autoCor_mtx, file="../../data/auto_soup.RData")
+```
+
+```{r}
+load("../data/soup.RData")
+```
+
+```{r}
+load("../data/auto_soup.RData")
+```
+
+---
+## Build a Seurat object
+
+We will now put our corrected matrix into a Seurat object.
+
+```{r}
+seu <- CreateSeuratObject(autoCor_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_autoCorr <- seu
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(seu)
+gc()
+```
+
+
+---
+## Estimate contamination
+
+We can estimate contamination using known marker genes.
+```{r sec3_dropProc_SoupX_estCor,include=TRUE,eval=T}
+
+mark_list <- list("CD4 T-cell"=c("IL7R","CCR7","S100A4"),"CD8 T-cell"=c("CD8A"),"B-Cell"=c("MS4A1"),
+                  "Monocyte"=c("CD14","FCGR3A"),"DC"=c("FCER1A"),"NK"=c("NKG7","GNLY"),"Platelet"=c("PPBP"))
+
+use_toEst <- estimateNonExpressingCells(soupOBJ, nonExpressedGeneList = mark_list)
+soupOBJ <- calculateContaminationFraction(soupOBJ, mark_list, useToEst = use_toEst)
+rho <- unique(soupOBJ$metaData$rho)
+rho
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(use_toEst)
+gc()
+```
+
+---
+## Export matrix after correction
+
+```{r, eval=F}
+soupOBJ <- setContaminationFraction(soupOBJ,rho,forceAccept=TRUE)
+estCor_mtx <- adjustCounts(soupOBJ)
+
+```
+
+```{r, eval=F, echo=F}
+save(estCor_mtx, file="../../data/estCor_mtx.RData")
+```
+
+```{r, eval=T, echo=F}
+load("../data/estCor_mtx.RData")
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(soupOBJ, rho)
+gc()
+```
+
+---
+## Add exported matrix to Seurat
+
+```{r}
+seu <- CreateSeuratObject(estCor_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_estCorr <- seu
+```
+
+---
+## Evaluate marker genes
+
+```{r sec3_dorpProc_SoupX_estCor_eval,include=TRUE,eval=T}
+message("markers")
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
+mark_gene
+#
+message("without correction")
+DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+#
+message("without correction")
+DimPlot(seu_autoCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+VlnPlot(seu_autoCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+#
+message("Estimate contamination with marker genes")
+DimPlot(seu_estCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+VlnPlot(seu_estCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(seu_estCorr, seu_autoCorr)
+gc()
+```
+
+---
+## CellBender
+
+CellBender is a python toolkit developed to eliminate technical artifacts from scRNA-Seq data such as empty droplets and ambient RNAs [link](https://cellbender.readthedocs.io/en/latest/introduction/index.html). It is run from the command line. 
+
+In the current version, it contains remove-background module, which is applied to:
+  * Detect empty droplets and ambient RNAs from raw count matrix in CellRanger output
+  * To remove empty droplets and to correct the interference of ambient RNAs
+  
+* CellBender is based on machine-learning strategy. It's quite time-consuming. We can speed up the processing by using CUDA version of CellBender. 
+
+---
+## Command line of CellBender
+
+```{r sec3_dropProc_cbFilt_code,engine="bash",include=TRUE,eval=F}
+input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
+output_h5=assign_the_h5_file_path_for_the_cellbender_corrected_matrix # essential
+expect_cell=expected_cell_number_can_be_find_in_cellranger_Web_Summary # essential
+droplet_num=the_total_number_of_droplets_assigned_while_sequencing # default 25,000
+fpr=threshols_of_FALSE_POSITIVE_RATE # default 0.01
+epochs=number_of_epochs_to_train # default 150
+num_train=number_of_times_to_attempt_to_train_the_model # default 1. would speed up while setting greater
+#
+cellbender remove-background --input $input_h5 --output $output_h5 --expected-cells $expect_cell --total-droplets-included $droplet_num --fpr $fpr --epochs $epochs --num-training-tries $num_train --cuda False
+```
+
+---
+## Cell Ranger vs. CellBender
+
+We have some processed results here from CellBender. We can compare this to our filtered matrix from Cell Ranger
+```{r sec3_dropProc_cbFilt_loadData,include=TRUE,eval=T}
+cbFilt_mtx <- Read10X_h5("../data/cbFilt_PBMCv3_20230324_filtered.h5")
+dim(cbFilt_mtx)
+
+dim(filt_mtx)
+```
+
+---
+## Data processing
+
+```{r sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T}
+message("processing matrix from CellRanger")
+seu <- CreateSeuratObject(filt_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_filt <- seu
+
+message("processing matrix from CellBender")
+seu <- CreateSeuratObject(cbFilt_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_cbFilt <- seu
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu)
+gc()
+  
+```
+
+---
+## Evaluate with marker gene exprssion
+```{r sec3_dorpProc_cbFilt_eval,include=TRUE,eval=T}
+mark_gene <- c("CD3E","CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","PPBP")
+mark_gene
+```
+
+
+---
+## Evaluate with marker gene exprssion
+
+```{r}
+DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+```
+
+---
+## Evaluate with marker gene exprssion
+
+```{r}
+DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+```
+
+---
+## Evaluate with marker gene exprssion
+
+```{r}
+VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+```
+
+
+---
+## Evaluate with marker gene exprssion
+
+```{r}
+VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(bcrank, uniq, e.out, amb, filt_mtx, seu, sce, seu_list, out, soupOBJ, clust, autoCor_mtx, seu_autoCorr, use_toEst, rho, estCor_mtx, seu_estCorr, seu_cbFilt, seu_filt)
+gc()
+```
+
+---
+## An advanced scRNAseq workflow
+
+![overview](advancedworkflow.png)
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Trajectory and Psuedotime analysis
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Trajectory and Psuedotime analysis
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Trajectory and pseudotime analysis
+- Many biological processes are link a dynamic changes in the cellular state e.g. immune cell activation.
+- Trajectory analysis is a way to postulate this kind dynamic changes in single-cell data.
+- According to the postulated trajectories, we can also estimate pseudotime of each cell included in a particular trajectory. 
+- Here, we demonstrate how to find out trajectories reflecting hematopoietic stem cell differentiation.
+
+---
+## Prepare the demo
+- In this practice, we are using the SMART-Seq data of mouse hematopoietic stem cells (HSCs) published Nestorowa et al., Blood(2016) [link](https://ashpublications.org/blood/article/128/8/e20/35749/A-single-cell-resolution-map-of-mouse).
+- We will provide the SingleCellExperiment 
+- The SingleCellExperiment (sce) object was downloaded and processed by following this vignette [link](http://bioconductor.org/books/3.17/OSCA.workflows/nestorowa-mouse-hsc-smart-seq2.html#ref-nestorowa2016singlecell).
+
+```{r sec3_trajAna_prep,include=TRUE,eval=T}
+sce <- readRDS("../data/sceOBJ_Nestorowa_HSC.rds")
+sce
+```
+
+---
+## Estimate trajectories by fitting principle curves
+To find the trajectories we need to fit our high dimensional data onto a curve. This step is processed with the *slingshot* [link](https://bioconductor.org/packages/release/bioc/html/slingshot.html) package.
+
+To run slingshot we need:
+  * Our sce object: sce
+  * Clusters: sce$label
+  * Our choice of dimension reduction approach: *PCA*
+  * To reduce computational load the adjacent 100 cells are aggregated into single point (approx_points=100)
+  * To avoid connecting unrelated trajectories, OMEGA clustering is introduced (omega=TRUE). 
+  
+```{r sec3_trajAna_buildTRAJ,include=TRUE,eval=T}
+library(slingshot)
+sce.sling <- slingshot(sce,
+                       cluster=sce$label,
+                       reducedDim='PCA',
+                       approx_points=100,
+                       omega=TRUE)
+colData(sce.sling)[1,1:5]
+```
+
+---
+## Extract informations for each trajectory
+
+Slingshot has fitted principle curves. We now will embed these cruves in UMAP space *embedCurves()*. We can see the number o
+lineages detected at this point. 
+```{r sec3_trajAna_extTRAJ,include=TRUE,eval=T}
+embedded <- embedCurves(sce.sling, "UMAP")
+
+embedded@metadata$lineages
+```
+
+---
+## Estimate pseudotime
+
+Once we have lineages, we can then find the position of each cell along these trajectories. This is estimating the pseudotime. 
+
+
+```{R}
+pseudo.paths <- slingPseudotime(sce.sling)
+head(pseudo.paths,2)
+
+```
+
+It will be useful to combine these times, to find the shared time.
+
+```{r}
+avg_pseudoTime <- rowMeans(pseudo.paths, na.rm=TRUE)
+colData(sce.sling)$avg_pseudoTime <- avg_pseudoTime
+```
+
+---
+## Estimate pseudotime
+
+Once we have the average pseudotime we can always project these values on to our UMAP. 
+
+```{r}
+
+plotUMAP(sce.sling,colour_by="avg_pseudoTime")
+```
+
+---
+## Plotting principle curves
+The *slingCurves()* function can fetch essential information of each principle curve. The results are inside a list, with each principle curve in an element. For each principle curve, we can extract the UMAP data and the order of cells for plotting.
+
+```{r sec3_trajAna_plotPR,include=TRUE,eval=T}
+
+embedded_curve <- slingCurves(embedded)
+
+curve <- lapply(embedded_curve,function(x){
+  dat <- data.frame(x$s[x$ord,]) # UMAP axis and the order of cells
+  return(dat)})
+names(curve) <- c("curve1","curve2","curve3")
+
+head(curve$curve1)
+```
+
+---
+## Plotting principle curves
+
+We can now just add our curve information directly to our pseudotime UMAP plot using ggplot parameters *geom_path()*. 
+
+```{r}
+plotUMAP(sce.sling,colour_by="avg_pseudoTime")+
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2), color="blue")+
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2),  color="black")+
+  geom_path(data=curve$curve3,aes(x=UMAP1,y=UMAP2),  color="red")
+```
+
+---
+## Refine the estimations
+The results indicated that lineage 3 is an outlier. If we look back at our lineage information this contains cluster 7.
+
+```{r}
+embedded@metadata$lineages
+```
+
+---
+## Refine the estimations
+
+We can remove cluster 7 and re-evaluate trajectories again. First we rerun the pseudotime estimation. 
+
+```{r sec3_trajAna_refineTRAJ,include=TRUE,eval=T}
+sce2 <- sce[,colData(sce)$label != 7]
+sce.sling2 <- slingshot(sce2,cluster=sce2$label,reducedDim='PCA',approx_points=100,omega=TRUE)
+pseudo.paths <- slingPseudotime(sce.sling2)
+avg_pseudoTime <- rowMeans(pseudo.paths, na.rm=TRUE)
+colData(sce.sling2)$avg_pseudoTime <- avg_pseudoTime
+```
+
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(sce, sce2)
+gc()
+```
+
+---
+## Refine the estimations
+
+Next we extract out the princple curves again. 
+
+```{R}
+
+embedded <- embedCurves(sce.sling2, "UMAP")
+embedded_curve <- slingCurves(embedded)
+curve <- lapply(embedded_curve,function(x){
+  dat <- data.frame(x$s[x$ord,]) # UMAP axis and the order of cells
+  return(dat)})
+names(curve) <- c("curve1","curve2")
+```
+
+---
+## Refine the estimations
+
+```{r}
+plotUMAP(sce.sling2, colour_by="avg_pseudoTime") +
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2), color="blue") +
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2),  color="black")
+```
+
+---
+## Trajectory and pseudotime for each lineage
+
+So far we have visualized the lineages together. We will want to break this down and compare to clusters. First we will look at clusters. 
+
+```{r sec3_trajANA_trajSep,include=TRUE,eval=T}
+plotUMAP(sce.sling2, colour_by="label")
+```
+
+---
+## Trajectory and pseudotime for each lineage
+
+We can reveal which cluster belong to each cluster and lineage 1's trajectory. 
+
+```{R}
+embedded@metadata$lineages$Lineage1
+plotUMAP(sce.sling2,colour_by="slingPseudotime_1")+
+  geom_path(data=curve$curve1,aes(x=UMAP1,y=UMAP2))
+```
+
+---
+## Trajectory and pseudotime for each lineage
+
+We can reveal which cluster belong to each cluster and lineage 2's trajectory. 
+
+```{r}
+embedded@metadata$lineages$Lineage2
+plotUMAP(sce.sling2, colour_by="slingPseudotime_2")+
+  geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2))
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(embedded, embedded_curve, curve)
+gc()
+```
+
+---
+## Identify driver genes for each lineage
+Driver genes were the genes whose expression level changes reflect the pseudotime changes. We can find these using *testPseudotime()* from TSCAN. Using this the gene expression and pseudotime are fitted with a non-linear model, followed by testing with ANOVA.
+
+We will start by just looking at lineage 1. 
+
+```{r sec3_trajANA_driveL1, include=TRUE,eval=T}
+library(TSCAN)
+res <- testPseudotime(sce.sling2, sce.sling2$slingPseudotime_1)
+```
+
+
+---
+## Identify driver genes for each lineage
+
+We can see the results. Often we will want to reorder it too prioritize the biggest changers.
+
+```{r}
+res$SYMBOL <- rownames(res)
+res <- res[order(-res$logFC),]
+head(res)
+
+```
+
+---
+## Identify driver genes for each lineage
+
+We can then categorize our data based on significance and FC.
+
+* Recommend FDR threshold: 0.05
+* The logFC reflects the trend of gene expression toward pseudotime. 
+  + logFC > 0, gene expression increased through increasing pseudotime [related to late stage]
+  + logFC < 0, gene expression decreased through increasing pseudotime [related to early stage]
+
+```{r}
+res$stat <- NA
+res$stat[res$logFC > 0 & res$FDR < 0.05] <- "late"
+res$stat[res$logFC < 0 & res$FDR < 0.05] <- "early"
+res$stat[is.na(res$stat)] <- "nc"
+res[1:2,]
+```
+
+---
+## Identify driver genes for each lineage
+
+We can quickly and easily see how many are upregulated/downregulated across the trajectory. 
+
+```{r}
+table(res$stat)
+
+```
+
+---
+## Top driver genes
+
+Using the order we can easily isolate the driver genes. Here we can see the top 5 early genes.
+
+```{r sec3_trajANA_driveL1_topEarly,include=TRUE,eval=T}
+
+sub <- res[res$stat=="early",]
+sub <- sub[order(sub$logFC),]
+top <- head(sub$SYMBOL,5)
+top
+```
+
+---
+## Plotting top driver genes
+
+With *plotExpression()* we can look at the expression of specific genes i.e. our top genes. We can see how each gene is expressed across all cells and psuedotime. 
+
+```{R}
+plotExpression(sce.sling2,
+               features = top, swap_rownames = "GENEID",
+               x="slingPseudotime_1", colour_by = "label")
+```
+
+---
+## Plotting top driver genes
+
+We can now repeat this for the top 5 late genes. 
+```{r sec3_trajANA_driveL1_topLate2,include=TRUE,eval=T}
+
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+```
+
+---
+## Plotting top driver genes
+
+We can now repeat this for the top 5 late genes. 
+```{r sec3_trajANA_driveL1_topLate,include=TRUE,eval=T, echo=F}
+
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+```
+
+---
+## Identify driver genes
+
+Now lets repeat this whole process for lineage 2. 
+
+```{r sec3_trajANA_driveL2,include=TRUE,eval=T}
+
+res <- testPseudotime(sce.sling2,sce.sling2$slingPseudotime_2)
+res$SYMBOL <- rownames(res)
+res <- res[order(-res$logFC),]
+res$stat <- NA
+res$stat[res$logFC > 0 & res$FDR < 0.05] <- "late"
+res$stat[res$logFC < 0 & res$FDR < 0.05] <- "early"
+res$stat[is.na(res$stat)] <- "nc"
+
+table(res$stat)
+```
+
+---
+## Plotting top driver genes
+
+```{r sec3_trajANA_driveL2_topEarly,include=TRUE,eval=T}
+sub <- res[res$stat=="early",]
+sub <- sub[order(sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+```
+
+
+## Plotting top driver genes
+```{r sec3_trajANA_driveL2_topLate,include=TRUE,eval=T}
+sub <- res[res$stat=="late",]
+sub <- sub[order(-sub$logFC),]
+top <- head(sub$SYMBOL,5)
+plotExpression(sce.sling2,
+               features = top,swap_rownames = "GENEID",
+               x="slingPseudotime_1",colour_by = "label")
+```
+
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(sce.sling2)
+rm(res, embedded, embedded_curve,sce2, pseudo.paths, avg_pseudoTime, curve, sce.sling, sce, tbl, panc_list, cell_type, mat, pred_res,sce_list,pred_cellType,anchors,ref_panc,feats,ref_list,seu_list,panc8, seu_obj,mnn_res,cell_type,snn.gr,cluster_mnn,universe,sce_list,sce,dec_list,dec,combined_dec,chosen_hvgs,hvgc_list,anchors,ifnb_merge,ifnb_list,feats,ifnb_list_rpca ,ifnb)
+gc()
+
+
+```
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# CITE-Seq 
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# CITE-Seq 
+
+---
+"    
+  )
+  
+}
+
+```
+
+## CITE-Seq
+
+The CITE-Seq method labels different types of cells or different samples with hashtag-labeled antibodies. Then, the cells can be pooled together into a single library and be sequencing at the same time. After sequencing, the cells can be separated by the different antibody hashtags.
+
+- Here, we will use a dataset from Seurat vignette [link](https://satijalab.org/seurat/articles/hashing_vignette.html)
+
+---
+## Load data
+```{r sec3_CITE_prep,include=TRUE,eval=T}
+
+rna.mat <- readRDS("../data/pbmc_umi_mtx.rds")
+dim(rna.mat)
+
+hto.mat <- readRDS("../data/pbmc_hto_mtx.rds")
+dim(hto.mat)
+rownames(hto.mat)
+```
+
+
+---
+## Prepare data
+
+```{r}
+seu_obj <- CreateSeuratObject(counts=rna.mat,project="citeSeq_demo")
+seu_obj[["HTO"]] <- CreateAssayObject(counts=hto.mat)
+seu_obj
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(hto.mat, rna.mat )
+gc()
+```
+
+---
+## Cluster with regular workflow
+```{r sec3_CITE_clust,include=TRUE,eval=T}
+
+DefaultAssay(seu_obj) <- "RNA"
+seu_obj <- data_proc(seu_obj)
+seu_obj <- ScaleData(seu_obj)
+```
+
+---
+## Cluster with regular workflow
+
+```{R}
+seu_obj <- quick_clust(seu_obj)
+DimPlot(seu_obj,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
+```
+
+---
+## Differentiate Hashtags
+
+- Normalize data with **centered log ratio (CLR)**
+- Demultiplex HTOs with *HTODemux()*
+- Threshold for positive call: *0.99 quantile*
+
+```{r sec3_CITE_hto,include=TRUE,eval=T}
+
+seu_obj <- NormalizeData(seu_obj, assay="HTO", normalization.method="CLR")
+seu_obj <- HTODemux(seu_obj, assay = "HTO", positive.quantile = 0.99)
+
+head(seu_obj,2)
+```
+
+---
+## Differentiate Hashtags
+
+```{r}
+table(seu_obj$HTO_classification.global)
+table(seu_obj$hash.ID)
+```
+
+
+---
+## Evaluate HTOs
+```{r sec3_CITE_ridget,include=TRUE,eval=T}
+RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
+          features = rownames(seu_obj[["HTO"]])[1:2],ncol = 2)
+```
+
+---
+## Evaluate HTOs
+```{r ,include=TRUE,eval=T}
+RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
+          features = rownames(seu_obj[["HTO"]])[3:4],ncol = 2)
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu_obj )
+gc()
+```
+

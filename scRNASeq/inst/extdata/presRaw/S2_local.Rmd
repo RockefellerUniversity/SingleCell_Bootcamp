@@ -1,0 +1,1620 @@
+---
+title: "Single-cell RNA sequencing ~ Session 2"
+author: "Rockefeller University, Bioinformatics Resource Centre"
+date: "https://rockefelleruniversity.github.io/scRNA-seq/"
+output: 
+  xaringan::moon_reader:
+    css: ["default", "metropolisCustom.css", "metropolis-fontsCustom.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+  html_document:
+    toc: true # table of content true
+    toc_float: yes
+    depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: false  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+params:
+  isSlides: "yes"
+  
+---
+```{r setup, include=FALSE}
+suppressPackageStartupMessages(require(knitr))
+suppressPackageStartupMessages(require(Seurat))
+suppressPackageStartupMessages(require(dplyr))
+suppressPackageStartupMessages(require(bioMart))
+suppressPackageStartupMessages(require(SeuratWrappers))
+knitr::opts_chunk$set(echo = TRUE, tidy = T)
+```
+
+
+## A basic scRNAseq workflow
+- Load data into Seurat
+- Data normalization
+- Calculate mitochondrial contains
+- Estimate cell cycle phases
+- Evaluate Doublets with scrublet
+- QC plots
+- Dimension reduction
+- Clustering
+- Evaluate results ~ cell type specific clusters
+- Identify marker genes by clusters
+- Transfer UMAP and annotation from Seurat to LOUPE 
+
+---
+
+## Seurat
+* An R toolkit for single cell genomics [link](https://satijalab.org/seurat/index.html)
+* The workflow we used in this section was based on Seurat vignette [link](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html).
+* References
+  + **Seurat V4**, Hao, Hao et al., *Cell* (2021) [link](https://doi.org/10.1016/j.cell.2021.04.048)
+  + **Seurat V3**, Stuart, Butler et al., *Cell* (2019) [link](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
+  + **Seurat V2**, Butler, et al., *Nat Biotechnol* (2018) [link](https://doi.org/10.1038/nbt.4096)
+  + **Seurat V1**, Satija, Farrell, et al., *Nat Biotechnol* (2015) [link](https://doi.org/10.1038/nbt.3192)
+* Demo data used in this section was the **10k Human PBMC data** from *10X Genomics* [link](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high).
+
+---
+## What is this data?
+
+This is Human PBMC data from 10X genomics. We will be using the filtered dataset that has been produced by Cell Ranger. 
+
+```{r, warning=F, message=F, echo=F}
+library(RCurl)
+if(!url.exists("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")){stop("Download path broken")}
+
+```
+
+```{r, eval=F}
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+```
+
+```{r, eval=F}
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Cell Ranger to Seurat
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Ranger to Seurat
+
+
+---
+"    
+  )
+  
+}
+
+```
+
+
+## Load cellranger matrix into matrix
+
+```{r,include=F,echo=F,eval=TRUE}
+mtx_dir <- "filtered_feature_bc_matrix"
+
+```
+
+
+```{r load_data,include=TRUE,eval=F}
+library(Seurat)
+
+mtx <- Seurat::Read10X(mtx_dir)
+
+```
+
+```{r, eval=F, echo=F}
+a <- is(mtx)
+b <- head(mtx)
+save(a,b, file="../data/mtx_res.RData")
+```
+
+
+```{R, eval=F, echo=F}
+library(Seurat)
+load("../data/seurat_read.RData")
+```
+
+
+```{R, eval=T, echo=F}
+library(Seurat)
+load("../data/mtx_res.RData")
+```
+
+
+```{r, eval=F, echo=T}
+is(mtx)
+```
+
+```{r, eval=T, echo=F}
+a
+```
+
+
+```{r, eval=F, echo=T}
+head(mtx)
+```
+
+```{r, eval=T, echo=F}
+b
+```
+
+
+---
+## Load cellranger matrix (in .h5 format) into matrix
+As an alternative we can use *Read10X_h5* function to read cellranger matrix from an **.h5** file. This format is often used by python packages. 
+
+```{r load_h5,include=TRUE,eval=FALSE}
+h5_file <- "path to matrix h5 file"
+h5_file <- "~/Downloads/10k_PBMC_3p_nextgem_Chromium_Controller_molecule_info.h5"
+mtx <- Seurat::Read10X_h5(h5_file)
+```
+
+---
+## Create Seurat object from matrix 
+The matrix is loaded into Seurat object with **CreateSeurtObject()**
+
+Cut-offs:
+  + min_gene: minimum genes detected per cell: *cells with too few genes detected*
+  + min_cell: minimum cells a gene expressed in: *Remove genes expressed in too few cells*
+```{r load_CreateOBJ,include=TRUE,eval=TRUE}
+sample_id <- "PBMC_10k" # sample name
+min_gene <- 200
+min_cell <- 10 
+```
+
+```{r, eval=F}
+seu_obj <- Seurat::CreateSeuratObject(mtx, project=sample_id, min.cells=min_cell, min.features=min_gene)
+```
+
+```{r, eval=F, echo=F}
+save(seu_obj, file="../data/seu_obj_raw.RData")
+```
+
+```{R, eval=T, echo=F}
+load("../data/seu_obj_raw.RData")
+```
+
+---
+## Add sample names to Seurat object
+
+We typically add sample information as this will add clarity later when we think about multi-sample comparisons.
+
+You will notice throughout this workflow we will keep assigning back to the same Seurat object as we update and modify the object as we process our data. 
+
+```{R}
+seu_obj[["dset"]] <- sample_id # Create a category for sample
+seu_obj <- Seurat::RenameCells(seu_obj, add.cell.id=sample_id) # add sample name in front of cell barcode
+```
+
+---
+## The Seurat object
+
+We can look at the Seurat object to get information about the dataset. 
+
+```{r laod_CreatOBJ_pres,include=TRUE,eval=TRUE}
+seu_obj
+```
+
+```{R}
+head(seu_obj,2)
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Mitochondrial Proportion
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Mitochondrial Proportion
+
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Mitochondrial Proportion
+
+Like everything scRNAseq is imperfect. Often cellular debris makes its way into a droplet. 
+
+We can find a lot of these bad droplets by looking for a high percentage of mitochondrial counts.
+
+---
+## Estimate proportions of mitochondrial genes
+
+The *PercentageFeatureSet()* function can be used to estimate the percentage of all counts that belong to a set of features. These features can be given as a vector or as a pattern.
+
+If we give a vector we have to make sure the given genes are detected in the Seurat object. They may have been filtered out. 
+  
+```{R}
+mt_gene <- c("MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5","MT-ND6",
+             "MT-CO1","MT-CO2","MT-CO3","MT-ATP6","MT-ATP8","MT-CYB")
+mt_gene_det <- mt_gene[mt_gene %in% rownames(seu_obj)]
+seu_obj[["percent.mt"]] <- PercentageFeatureSet(seu_obj, features = mt_gene_det)
+summary(seu_obj$percent.mt)
+```
+
+---
+## Estimate proportions of mitochondrial genes
+
+We can also use regular expression pattern matching to define our feature sets. This is often easier, but may not be possible, depending on your organism.
+
+```{r load_estMT,include=TRUE,eval=TRUE}
+seu_obj[["percent.mt2"]] <- PercentageFeatureSet(seu_obj, pattern = "^MT-")
+summary(seu_obj$percent.mt2)
+
+```
+
+---
+## Estimate proportions of mitochondrial genes
+
+We can double check that this matches easily by comparing the percentages. 
+```{r, eval =F}
+library(ggplot2)
+dat <- data.frame(byPattern=seu_obj$percent.mt, byGene=seu_obj$percent.mt2,stringsAsFactors = FALSE)
+cor_val <- cor.test(dat$byPattern,dat$byGene,method = "spearman")
+ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
+  labs(x="% of MT, est by genes",y="% of MT,est by pattern",
+       subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+```
+
+---
+## Estimate proportions of mitochondrial genes
+
+```{r, echo =F, fig.height=4,fig.width=7}
+library(ggplot2)
+dat <- data.frame(byPattern=seu_obj$percent.mt, byGene=seu_obj$percent.mt2,stringsAsFactors = FALSE)
+cor_val <- cor.test(dat$byPattern,dat$byGene,method = "spearman")
+ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
+  labs(x="% of MT, est by genes",y="% of MT,est by pattern",
+       subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Normalization, feature selection, and data scaling
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Normalization, feature selection, and data scaling
+
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Normalization, feature selection, and data scaling
+
+* Normalization: Feature counts are normalized to total counts each cell
+* Feature selection: Identifies features that are highly variable
+* Data scaling: Scales and centers features in the dataset
+
+---
+## Normalization, feature selection, and data scaling
+
+There are 2 main approaches for this:
+- Log normalization [default]
+- SCTransform
+
+We often find the results of these are fairly consistent, but there is growing trend in publications towards SCTransform, instead of the Seurat default of using log normalization. 
+
+---
+## Log normalization
+To do this in Seurat we have 3 functions:
+  * log normalization with *NormalizeData()*
+  * Identify Variable Features with *FindVariableFeatures()*
+  * Scale Data with *ScaleData()*
+
+---
+## Log normalization - Normalization
+
+When using the *NormalizeData()* function we use the defaults for the normalization method and scale factor. 
+  
+```{r norm_log,include=TRUE,eval=TRUE}
+seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
+```
+
+---
+## Log normalization - Features
+
+Next we use *FindVariableFeatures()* with the default VST method. We can select the number features we want to identify. These will be the most variable. In this case we are taking 3000.  
+
+```{r}
+seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
+```
+
+---
+## Log normalization - Scaling
+
+Scales and center features in the dataset
+
+```{R}
+seu_obj <- ScaleData(seu_obj)
+```
+
+---
+## Highly Variable Features
+- Highly variable features were colored with *red*. 
+- Gene symbols of the top 10 highly variable features were labeled near by the spots
+
+```{r norm_plotHVF,include=TRUE, eval=F}
+top10 <- head(VariableFeatures(seu_obj), 10)
+
+plot1 <- VariableFeaturePlot(seu_obj)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot2
+```
+
+---
+## Highly Variable Features
+- Highly variable features were colored with *red*. 
+- Gene symbols of the top 10 highly variable features were labeled near by the spots
+
+```{r echo=F,fig.height=4,fig.width=7}
+top10 <- head(VariableFeatures(seu_obj), 10)
+
+plot1 <- VariableFeaturePlot(seu_obj)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot2
+```
+
+---
+## Normalization and scaling with SCTransform
+
+- SCTransform is a normalization based on negative binomial regression.
+- It is performed with **SCTransform()** function of Seurat.
+- This function equal to the combinations of NormalizaeData(), FindVariableFeatures(), and ScaleData().
+
+```{r norm_sct, include=TRUE, eval=F}
+seu_obj <- SCTransform(seu_obj, variable.features.n = 3000)
+seu_obj
+```
+
+```{r, eval=F, echo=F}
+SCT_assay <- seu_obj2@assays$SCT
+save(SCT_assay, file="../data/SCT_assay.RData")
+```
+
+```{r, eval=T, echo=F}
+load("../data/SCT_assay.RData")
+seu_obj@assays$SCT <- SCT_assay
+DefaultAssay(seu_obj) <- "SCT"
+seu_obj
+```
+
+
+---
+## Normalization and scaling with SCTransform
+
+The normalized data is stored in assay **SCT**. We can see this is now the active assay. Our log normalization is stored in the "RNA" assay. 
+
+```{r include=TRUE, eval=TRUE}
+seu_obj
+```
+
+---
+## log normalization vs SCTransform
+
+We can extract out the results of our normalized and scaled data with the *GetAssayData()* function. 
+
+```{r norm_comp,include=TRUE,eval=TRUE}
+log_mat <- GetAssayData(seu_obj,assay="RNA",slot="data")
+log_mat <- as.matrix(log_mat)
+log_avgExp <- rowMeans(log_mat)
+
+sct_mat <- GetAssayData(seu_obj,assay="SCT",slot="data")
+sct_mat <- as.matrix(sct_mat)
+sct_avgExp <- rowMeans(sct_mat)
+```
+
+---
+## log normalization vs SCTransform
+
+We can test the concordance with Spearman's correlation.
+
+```{R, eval=F}
+
+dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
+cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
+
+ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
+  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+```
+
+---
+## log normalization vs SCTransform
+
+We can see there is very high similarity between the results. 
+
+```{R, echo=F, fig.height=4,fig.width=7}
+dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
+cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
+
+ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
+  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Cell Cycle Phases
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Cycle Phases
+
+
+---
+"    
+  )
+  
+}
+
+```
+
+
+## Cell Cycle Phases
+
+The cell cycle can have a massive impact on gene expression variation across a population and is rarely a signature we are trying to find in our data. We can use several methods to regress out these signatures. But, before we do that we need to estimate the cell cycle phase of every cell. 
+
+---
+## Cell Cycle Phases
+In this step, we will introduce two methods to estimate cell cycle phase for each cell.
+- The CellCycleScoring function in *Seurat*
+- Cyclone function in *scran* 
+
+---
+## Cell Cycle and Seurat
+
+To estimate the cell cycle phase we need a list of genes that correspond to each cell cycle phase. Seurat does provide these in a list called *cc.genes*, which contains S-phase and G2/M-phase genes for humans. 
+
+```{r ccPhase_Seurat,include=TRUE,eval=TRUE}
+feat_s <- cc.genes$s.genes
+feat_g2m <- cc.genes$g2m.genes
+
+feat_s
+feat_g2m
+```
+
+---
+## Cell Cycle and Seurat
+
+The *CellCycleScoring()* function the scores each cell based on specific features for S-phase/G2M-phase. For a given cell with significant high S.Score or G2M.Score they are assigned as S/G2M. Cells with low both S.Score and G2M.Score were assigned as G1.
+
+This will *overestimate* cells in S-/G2M-phases in the tissues with low cell cycle i.e. neurons.
+
+We will be focusing on our log normalized results, so first we need to make that the active assay. 
+
+```{r ccPhase_plot_Seurat,include=TRUE,eval=TRUE}
+DefaultAssay(seu_obj) <- "RNA"
+seu_obj <- CellCycleScoring(seu_obj, s.features = feat_s, g2m.features = feat_g2m)
+
+```
+
+---
+## Cell cycle score vs phase
+
+To assess our assignment we can check the score given for each cell, against what phase it was assigned to. To do this we need to make a data frame of scores.
+
+```{r}
+
+dat_s <- data.frame(cell_id=Cells(seu_obj), cat="S_Score", Phase=seu_obj$Phase, score=seu_obj$S.Score)
+
+dat_g2m <- data.frame(cell_id=Cells(seu_obj), cat="G2M_Score", Phase=seu_obj$Phase, score=seu_obj$G2M.Score)
+
+dat <- rbind(dat_s, dat_g2m)
+dat$Phase <- factor(dat$Phase, levels = c("G1","S","G2M"))
+```
+
+---
+## Cell cycle score vs phase
+
+We can see in both S and G2/M scores are highest in cells with the corresponding assignment. 
+
+```{R ,fig.height=4,fig.width=7}
+
+ggplot(dat,aes(x=Phase, y=score, fill=Phase))+geom_boxplot()+
+  labs(x="",y="Score",fill="Phase")+
+  facet_wrap(~cat)+theme_classic()
+```
+
+---
+## Cell cycle estimation by cyclone
+
+An alternative approach is to use the *cyclone()* function in scran. This is **much slower** than *CellCycleScoring()* in Seurat. 
+
+The first step is to convert our Seurat object to a SinlgeCellExperiment object.
+
+```{r ccPhase_cyclon_prep,include=TRUE,eval=TRUE}
+library(scran)
+
+sce <- as.SingleCellExperiment(seu_obj,assay = "RNA")
+rowData(sce)$SYMBOL <- rownames(sce)
+sce
+```
+
+---
+## Cell cycle estimation by cyclone
+
+We also need a list of genes that correspond to each cycle stage. Cyclone does not just assume that unassigned cells are G1. Instead it uses G1-specific genes to actively assign cells to 3 groups, G1, S and G2/M.  
+
+Cyclone requires a list as an input. The first slot contains the names of each group of genes i.e. G1, S and G2/M. The remaining slots contain the relevant genes for each group.  
+
+We have the list here for you to load in. 
+
+```{R}
+
+load("../data/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData")
+ccGene_hs <- ccGene_mm_hs$human_symbol
+lapply(ccGene_hs, function(x){head(x,2)})
+```
+
+---
+## Running cyclone
+
+We just provide the the SinlgeCellExperiment object, the cell cycle gene list, and also a vector of all gene names.
+
+Remember! This is slow. We have a processed result you can also load in. 
+
+```{r ccPhase_cyclon_proc,include=TRUE,eval=FALSE}
+assignments <- cyclone(sce, ccGene_hs, gene.names=rowData(sce)$SYMBOL)
+
+```
+
+```{R, echo=F}
+#save(assignments, file="../data/cyclone.RData")
+```
+
+```{r, echo=T}
+
+load("../data/cyclone.RData")
+```
+
+---
+## Cyclone results
+
+Cyclone estimates the score for each phase in each cell. It will then assign the cell cycle phases by the highest score
+
+```{r}
+lapply(assignments, head)
+```
+
+---
+## Cyclone and Seurat
+
+We can take our Cyclone results and assign them back into our orignal Seurat object.
+
+```{r}
+seu_obj[["cyclon_Phase"]] <- assignments$phases
+seu_obj[["cyclon_G1Score"]] <- assignments$scores$G1
+seu_obj[["cyclon_SScore"]] <- assignments$scores$S
+seu_obj[["cyclon_G2MScore"]] <- assignments$scores$G2M
+```
+
+---
+## Cell cycle score vs phase
+
+Again, we assess our assignment by checking the score given for each cell, against what phase it was assigned to. We must first make a data frame of scores.
+
+
+```{r ccPhase_cyclon_boxPlot,include=TRUE,eval=T}
+dat_g1 <- data.frame(cell_id=Cells(seu_obj), cat="cyclon_G1Score", Phase=seu_obj$cyclon_Phase, score=seu_obj$cyclon_G1Score)
+
+dat_s <- data.frame(cell_id=Cells(seu_obj), cat="cyclon_SScore", Phase=seu_obj$cyclon_Phase, score=seu_obj$cyclon_SScore)
+
+dat_g2m <- data.frame(cell_id=Cells(seu_obj), cat="cyclon_G2MScore", Phase=seu_obj$cyclon_Phase, score=seu_obj$cyclon_G2MScore)
+
+dat <- rbind(dat_g1,dat_s,dat_g2m)
+
+dat$Phase <- factor(dat$Phase,levels = c("G1","S","G2M"))
+dat$cat <- factor(dat$cat,levels = c("cyclon_G1Score","cyclon_SScore","cyclon_G2MScore"))
+```
+
+---
+## Cell cycle score vs phase
+
+We can see in both S and G2/M scores are highest in cells with the corresponding assignment. 
+
+```{r,fig.height=4,fig.width=7}
+ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_boxplot()+
+  labs(x="",y="Score",fill="Phase")+
+  facet_wrap(~cat)+theme_classic()
+```
+
+---
+## Compare the two strategies
+
+Cell Cycle Phase determined by *Seurat::CellCycleScoring()*
+
+```{r}
+table(seu_obj$Phase)
+```
+
+Cell Cycle Phase determined by *scran::cyclone()*
+
+```{r}
+table(seu_obj$cyclon_Phase)
+```
+
+---
+## Compare the two strategies
+
+Compare the two method: *Seurat* in row and *scran* in column
+
+```{R}
+table(seu_obj$Phase,seu_obj$cyclon_Phase)
+```
+
+---
+## Compare the two strategies
+
+- *cyclone* assigned more cells to G1 phase. It is typically much more conservative. This is good for cells that have a low cycle rate i.e. Neurons. 
+- *cyclone* spends more time than *CellCycleScoring*.
+- It will likely be worth to process both methods and evaluate which results make more sense for your own dataset
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Detecting Doublets
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Detecting Doublets
+
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Detect doublets with Scrublet
+
+Doublets mean multiple cells clumped in the same single droplet. This is a problem:
+* A doublet may have many more UMIs and Genes in a single cell barcode than the overall population.
+* Multiple marker genes can be detected in doublets at the same time, even if they are mutually exclusive. 
+
+Scrublet is a tool to detect doublets. 
+* The GitHub [link](https://github.com/swolock/scrublet) 
+* Original Paper on bioRxiv [link](https://www.biorxiv.org/content/10.1101/357368v1)
+* It's based on python. But we can use reticulate to invoke scrublet in R.
+
+---
+## Installing Scrublet
+
+We can install the scrublet easily using the Herper package. This uses reticulate to manage miniconda, a repository of tools from which we can install scrublet. 
+
+```{r, eval=F}
+library(Herper)
+
+conda_install  <- install_CondaTools("scrublet", "scRNA", pathToMiniConda = "../mini")
+
+Sys.setenv('RETICULATE_PYTHON'=file.path(conda_install$pathToEnvBin, "python"))
+```
+
+---
+## Running scrublet
+
+First, we need the Seurat counts as an input for scrublet. 
+
+```{r det_doublet_est,include=TRUE,eval=F}
+
+mat <- GetAssayData(seu_obj, assay = "RNA", slot = "counts")
+mat <- as.matrix(mat)
+
+```
+
+---
+## Running scrublet
+
+As scrublet is a python tool, we use slightly different nomenclature to what we are used to for R functions.
+
+```{r, eval=F}
+# Loading the scrublet library
+scr <- import("scrublet")
+# Run scrublet
+scrub <- scr$Scrublet(t(mat))
+# Extract scrublet results
+doublet <- scrub$scrub_doublets()
+names(doublet) <- c("doublet_score","doublet")
+```
+
+
+```{r, eval=F, echo=F}
+#save(doublet,file = "../data/doublet.RData")
+
+```
+
+```{R, eval=T, echo=F}
+
+load("../data/doublet.RData")
+
+```
+
+---
+## Scrublet results
+
+Similar to the Cell Cycle scoring, we get a score and an assigment from scrublet. 
+
+**Doublet score**
+
+```{r}
+summary(doublet$doublet_score)
+```
+
+**Doublet Count**
+
+```{r}
+table(doublet$doublet)
+```
+
+---
+## Import Scrublet results into Seurat object
+
+
+```{r det_doublet_pres,include=TRUE,eval=TRUE}
+seu_obj[["doublet_score"]] <- doublet$doublet_score
+seu_obj[["doublet"]] <- doublet$doublet
+```
+
+---
+## Assessing Doublets
+
+UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TRUE) and singlets (FALSE).
+
+```{r, fig.height=4,fig.width=7}
+
+VlnPlot(seu_obj,group.by = "doublet",
+        features = c("nCount_RNA","nFeature_RNA","doublet_score"),
+        pt.size = 0)
+```
+
+---
+## Assessing Doublets
+
+UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TRUE) and singlets (FALSE).
+
+```{r, fig.height=4,fig.width=7}
+FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",pt.size = 0.1,group.by = "doublet")
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Quality Assessment
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Quality Assessment
+
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Distribution of particular variables in violin plot
+This kind of plot is applied to evaluate the variables:
+  + UMIs (*nCount_RNA*) per cell
+  + Genes detected (*nFeature_RNA*) per cell
+  + Ratio of UMIs of mitochondrial genes to nucleus genes (*percent.mt*)
+
+```{r qcPlot_vlnPlot_pres1,include=TRUE,eval=F}
+VlnPlot(seu_obj, group.by = "dset",
+        features = c("nCount_RNA", "nFeature_RNA", "percent.mt"),
+        pt.size = 0)
+```
+
+---
+## Distribution of particular variables in violin plot
+
+If a bimodal distribution is identified, we need to check for any interference. We can see some evidence of bimodality in our dataset here.
+
+```{r include=TRUE,echo=F, fig.height=4,fig.width=7}
+VlnPlot(seu_obj, group.by = "dset",
+        features = c("nCount_RNA", "nFeature_RNA", "percent.mt"),
+        pt.size = 0)
+```
+
+---
+## Evaluate the interactions between two variables with scatter plots
+Comparison between UMIs and genes detected per cell:
+  * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
+  * Doublets with high UMIs and high genes detected.
+
+```{r qcPlot_scatter_pres1,include=TRUE,eval=F}
+
+FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
+               group.by = "doublet")
+```
+
+---
+## Evaluate the interactions between two variables with scatter plots
+Comparison between UMIs and genes detected per cell:
+  * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
+  * Doublets with high UMIs and high genes detected.
+
+```{r ,include=TRUE,eval=T, echo=F, fig.height=4,fig.width=7}
+
+FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
+               group.by = "doublet")
+```
+
+---
+## Evaluate the interactions between two variables with scatter plots
+
+* Comparison between UMI counts and the percent of mitochondrial content
+* Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
+```{r ,include=TRUE,eval=F}
+FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
+```
+
+---
+## Evaluate the interactions between two variables with scatter plots
+
+* Comparison between UMI counts and the percent of mitochondrial content
+* Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
+```{r qcPlot_scatter_pres2,include=TRUE,eval=TRUE, echo=F, fig.height=4,fig.width=7}
+FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
+```
+
+
+---
+## Ridge plot
+
+* This plot would be applied to demonstrate a given variable and their corresponding score (e.g. doublet vs doublet_score).
+* It is applied to evaluate the difference between groups in the variable.
+* This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
+
+```{r ,include=TRUE,eval=F}
+RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
+```
+
+---
+## Ridge plot
+
+* This plot would be applied to demonstrate a given variable and their corresponding score (e.g. doublet vs doublet_score).
+* It is applied to evaluate the difference between groups in the variable.
+* This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
+
+```{r qcPlot_ridgePlot_pres,include=TRUE,eval=TRUE, echo=F, fig.height=4,fig.width=7}
+RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
+```
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Filtering debris and doublets
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Filtering debris and doublets
+
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Filtering doublets and cell debris
+
+Cell debris are with high percent.mt and low UMI counts. Generally, we set various cut-off on percent.mt:
+* In most scRNA cases, we set the *percent.mt > 10* (95% of overall population)
+* For several specific tissues with high oxygen consumption, like activated leukocytes or muscles, we set the *percent.mt > 25*.
+* For single-nuclei profiling, we should not get any UMIs originated from mitochondrial genes. We set the *percent.mt > 1*.
+
+The doublets detected by Scrublet shall also be removed at this step.
+
+---
+## Filtering doublets and cell debris
+
+How many cells will be removed:
+
+```{r filtCell_pres,include=TRUE,eval=TRUE}
+table(seu_obj$doublet=="TRUE" | seu_obj$percent.mt >= 10)
+```
+
+Filtering the cells:
+```{r, eval=F}
+seu_filt <- subset(seu_obj, subset=doublet=="FALSE" & 
+                     percent.mt < 10)
+
+```
+
+```{r, echo=F, eval=TRUE}
+#save(seu_filt,file="../data/seu_filt.RData")
+rm(doublet)
+rm(seu_obj)
+#load("../data/seu_filt.RData")
+```
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Regress out confounders
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Regress out confounders
+
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Variance and confounders
+
+Though we have filtered out the most extreme problem cells we will lkely still have confounders in our dataset. These are unexpected variables contribute to a high percent of the variances.
+
+- The *vars.to.regress* argument in *ScaleData()* allows us account for confounders.
+- For SCTransform data, we can use the same parameter in SCTransform().
+- Common potential confounders: percent.mt, doublet_score, cell cycle scores
+
+```{r filtCell_scaleData,include=TRUE,eval=F}
+pot_conf <- c("percent.mt","doublet_score","cyclon_G1Score","cyclon_SScore","cyclon_G2MScore","cyclon_Phase")
+seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
+seu_filt <- SCTransform(seu_filt, vars.to.regress = pot_conf)
+```
+
+
+```{R, eval=F, echo=F}
+#save(seu_filt, sce, file="../data/SCT2.RData")
+save(seu_filt, file="../data/SCT2.RData")
+#saveRDS(seu_filt, file="../data/SCT2.rds")
+#save(sce, file="../data/sce.RData")
+
+```
+
+```{R,sceload, eval=T, echo=F}
+#load("../data/sce.RData")
+```
+
+```{R,sctload, eval=T, echo=F}
+load("../data/SCT2.RData")
+#seu_filt <- load("../data/SCT2.rds")
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Dimension Reduction
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html>
+
+---
+"
+  )
+}else{
+  cat("# Dimension Reduction
+
+
+---
+"
+  )
+
+}
+
+```
+
+## Dimension Reduction
+
+scRNAseq is highly dimensional data. To be able to tackle our data with approaches like clustering we need to simplify it down with dimension reduction. There are several steps:
+
+- Perform linear dimensional reduction with Principle Component Analysis (PCA)
+- Determine dimensionality with Elbow plot
+- Process non-linear dimensional reduction with UMAP
+- Need to select major PCs for the following clustering
+
+---
+## Linear dimensional reduction
+Perform PCA with *RunPCA()* function in Seurat. Set Principle components to 30.
+
+```{r dimRed_pca,include=TRUE,eval=T}
+set.seed(1001)
+DefaultAssay(seu_filt) <- "RNA"
+seu_filt <- RunPCA(seu_filt, assay = "RNA", npcs = 50)
+
+```
+
+---
+## Evaluate dimensionality with elbow plot
+
+Typically we want to balance having enough/not too many groups with the most variance explained by the groups, to get the most parsimonious results. We use elbow plots to find an inflection point.
+
+```{r dimRed_elbow,include=TRUE,eval=TRUE, fig.height=4,fig.width=7}
+ElbowPlot(seu_filt, ndims = 50, reduction = "pca")
+```
+
+---
+## Evaluate dimensionality computationally
+
+We can use cutoffs to derive this computationally based on:
+  * How low variation is.
+  * How much variation has already been described.
+  * The rate of change in variation between PCs.
+
+```{r dimRed_elbow2,include=TRUE,eval=T}
+library(dplyr)
+# Determine percent of variation associated with each PC
+pct <- seu_filt[["pca"]]@stdev / sum(seu_filt[["pca"]]@stdev) * 100
+# Calculate cumulative percents for each PC
+cumu <- cumsum(pct)
+```
+
+---
+## Evaluate dimensionality computationally
+
+We can use cutoffs to derive this computationally based on:
+  * How low variation is.
+  * How much variation has already been described.
+  * The rate of change in variation between PCs.
+
+```{r include=TRUE,eval=T}
+# Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
+co1 <- which(cumu > 90 & pct < 5)[1]
+# Determine the difference between variation of PC and subsequent PC, last point where change of % of variation is more than 0.1%.
+co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1), decreasing = T)[1] + 1
+pc <- min(co1, co2)
+
+pc
+
+```
+
+---
+## Evaluate dimensionality cutoffs with elbow plot
+
+We can now look at our cutoff on our elbow plot.
+
+```{r dimRed_elbow2_rep,include=TRUE,eval=F}
+plot_df <- data.frame(pct = pct, cumu = cumu,rank = 1:length(pct))
+
+ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pc)) + geom_text() +
+  geom_vline(xintercept = 90, color = "grey") +
+  geom_hline(yintercept = min(pct[pct > 5]), color = "grey") +
+  theme_bw()
+```
+
+---
+## Evaluate dimensionality cutoffs with elbow plot
+
+We can now look at our cutoff on our elbow plot. This seems to match the point where our data plateaus.
+
+```{r,eval=T, echo=F, fig.height=4,fig.width=7}
+plot_df <- data.frame(pct = pct, cumu = cumu,rank = 1:length(pct))
+
+ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pc)) + geom_text() +
+  geom_vline(xintercept = 90, color = "grey") +
+  geom_hline(yintercept = min(pct[pct > 5]), color = "grey") +
+  theme_bw()
+```
+
+---
+## Make non-linear dimensional reduction
+* Estimate neighbors with **FindNeighors()** function in *Seurat*
+  + reduction method: *PCA*
+  + use dimensions from 1 to the PCs detected by elbow plot
+* Make non-linear dimensional reduction with UMAP
+
+```{r dimRed_UMAP,include=TRUE,eval=T}
+seu_filt <- FindNeighbors(seu_filt,dims = 1:pc,reduction = "pca")
+
+seu_filt <- RunUMAP(seu_filt,dims = 1:pc,reduction = "pca")
+```
+
+---
+## UMAP
+
+We can now draw the results of our UMAP, which clearly separates our cells intro different groups. But this doesn't mean anything until we cluster.
+
+```{r,  fig.height=4,fig.width=7}
+DimPlot(seu_filt)
+
+```
+
+
+---
+## Why UMAPs?
+
+We will be making a lot of UMAPs going forward. 
+
+Relatively new approach (2018) and is generally used more than tSNE now. Though it sometimes faces criticism we find it does a good job on most data sets. 
+
+For a detailed explanation and discussion of dimension reduction approaches here are some resources:
+
+[Data Science blog post](https://towardsdatascience.com/dimensionality-reduction-for-data-visualization-pca-vs-tsne-vs-umap-be4aa7b1cb29)
+
+
+[Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Clustering
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html>
+
+---
+"
+  )
+}else{
+  cat("# Clustering
+
+
+---
+"
+  )
+
+}
+
+```
+
+## Clustering
+- The cells are clustered based on UMAP by using *FindClusters()* function in Seurat.
+- The clustering is differentiated by **original Louvain algorithm**.
+- To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
+
+---
+## Identify clusters with default Louvain algorithm
+
+We will have a quick look first at how to run the clustering, using the *FindClusters()* function. We just need to provide our Seurat object and a resolution.
+
+```{r clust_default,include=TRUE,eval=T}
+seu_filt <- FindClusters(seu_filt, resolution = 0.5)
+seu_filt[["cluster_byDefault"]] <- seu_filt$seurat_clusters
+```
+
+---
+## Identify clusters with default Louvain algorithm
+Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
+
+```{r, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend()
+
+
+```
+
+---
+## Testing resolutions
+
+To identify the best resolution for each dataset we iteratively test potential resolutions.
+
+```{r clust_resoEval,include=TRUE,eval=T}
+library(clustree)
+
+reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+reso_res <- lapply(1:length(reso),function(x,seu_filt,reso){
+  seu_filt <- FindClusters(seu_filt,resolution = reso[x])
+  clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
+  return(clust)}, seu_filt,reso)
+names(reso_res) <- paste0("k",1:length(reso))
+k_tab <- do.call(cbind,reso_res)
+k_dat <- as.data.frame(k_tab)
+```
+
+---
+## Evaluate resolutions with clustree
+- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
+- To identify the better resolution
+  + less cross talks between lineages
+  + more clusters identified
+```{r clust_resoEval2,include=TRUE,eval=F}
+clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+```
+
+---
+## Evaluate resolutions with clustree
+- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
+* In this case, we use *resolution=0.7*
+```{r include=TRUE,eval=T, echo=F, warning=FALSE, fig.height=4,fig.width=7}
+clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+```
+
+---
+## Clustering - optimized
+
+Lets retry clustering with our improved resolution. 
+
+```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
+seu_filt <- FindClusters(seu_filt, resolution = 0.7)
+```
+
+---
+## Clustering - optimized
+
+We can see that we have slightly more clusters. We can now compare back to the original clustering, and there are some clearly defined clusters, which weren't there before.
+
+
+```{r, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend() + ggtitle("Optimized Clusters")
+```
+
+---
+## Clustering - default
+
+We can see that we have slightly more clusters. We can now compare back to the original clustering, and see that cluster 12 is clearly defined now, where it wasn't before.
+```{r ,include=TRUE,eval=T, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2)+NoLegend() + ggtitle("Default Clusters")
+```
+
+---
+## Identify cluster-specific marker genes
+
+Once we have defined clusters, we want to know what distinguishes them. We can identify marker genes for each cluster by using *Seurat::FindAllMarker()*.
+
+In this case we are selecting only positive markers (only.pos=TRUE), genes that are found in 0.25 of cells and have a logFC 0.25 difference.
+
+
+```{r markGene_cal,include=TRUE,eval=FALSE}
+markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
+                          min.pct = 0.25, logfc.threshold = 0.25)
+```
+
+```{r, eval=T, echo=F}
+#save(markers, file="../data/markers.RData")
+load("../data/markers.RData")
+```
+
+```{r}
+head(markers)
+```
+
+---
+## Identify cluster-specific marker genes
+
+We can review the results with a heatmap. We will first select the top 2 genes for each cluster by log2FC.
+```{r top2Mark,include=TRUE,eval=T}
+top_genes <- markers %>% group_by(cluster) %>%
+  slice_max(n = 2, order_by = avg_log2FC)
+head(top_genes)
+
+```
+
+---
+
+## Identify cluster-specific marker genes
+
+We can then use the *DoHeatmap()* from Seurat to plot just these genes.
+
+```{r, fig.height=4,fig.width=7}
+DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Evaluate known marker genes expression
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html>
+
+---
+"
+  )
+}else{
+  cat("# Evaluate known marker genes expression
+
+
+---
+"
+  )
+
+}
+
+```
+
+
+## Known marker genes in PBMC data
+* T-cells
+  + Naive CD4 T-cell: IL7R, and CCR7
+  + Memory CD4 T-cell: IL7R,S100A4
+  + CD8 T-cell: CD8A
+* B-cells: MS4A1
+* Monocytes
+  + CD14+ Monocyte: CD14,LYZ
+  + FCGR3A+ Monocyte: FCGR3A,MS4A7
+* Dendritic cells (DCs): FCER1A,CST3
+* Nature Killer cells (NKs): GNLY,NKG7
+* Platelets: PPBP
+
+---
+## Evaluate marker gene expressions
+
+We can use the *FeaturePlot()* function to look at the expression of speicfic genes i.e. Naive CD4 T-cell
+
+```{r resEval_knownMarker_allMark,include=TRUE,eval=T,fig.height=4,fig.width=7}
+known_marker <- c("IL7R","CCR7")
+FeaturePlot(seu_filt, features = known_marker)
+```
+
+---
+## Evaluate marker gene expressions
+
+Here is another example with NK cells.
+
+```{r include=TRUE,eval=T,fig.height=4,fig.width=7}
+known_marker <- c("GNLY","NKG7")
+FeaturePlot(seu_filt, features = known_marker)
+```
+
+
+---
+## Match marker gene expresion by clusters
+
+We can also check the expression of markers in each cluster. First we need to get our count data and our full list of markers.
+```{r resEval_knowMarker_heatmap,include=TRUE,eval=T}
+mat <- GetAssayData(seu_filt,assay = "RNA",slot = "data")
+mat <- mat[known_marker,]
+mat <- as.matrix(mat)
+
+known_marker <- c("IL7R","CCR7","S100A4","CD8A",
+                                   "MS4A1",
+                                   "CD14","LYZ","FCGR3A","MS4A7",
+                                   "FCER1A","CST3",
+                                   "GNLY","NKG7","PPBP")
+
+```
+
+---
+## Match marker gene expresion by clusters
+
+Next we need to extract out the counts per cluster for our genes of interest. Here we use an lapply to iterate over every cluster, extracting counts and getting the average for each gene of interest.
+
+```{r}
+clust <- unique(seu_filt$seurat_clusters)
+clust <- as.character(clust)
+
+avgExp_byClust <- lapply(clust,function(clust, seu, known){
+  sub <- subset(seu, subset=seurat_clusters==clust)
+  mat <- GetAssayData(sub,assay="RNA",slot = "data")
+  mat <- mat[known,]
+  mat <- as.matrix(mat)
+  avg <- rowMeans(mat)
+  return(avg)}, seu_filt, known_marker)
+
+names(avgExp_byClust) <- paste0("C",clust)
+
+```
+
+
+---
+## Match marker gene expresion by clusters
+
+Finally we get to draw a heatmap with *pheatmap()*. We need a matrix for this, so we first stick our results from each cluster together.
+
+```{r,fig.height=4,fig.width=7}
+library(pheatmap)
+avgExp_mat <- do.call(cbind, avgExp_byClust)
+pheatmap(avgExp_mat,scale = "row")
+```
+
+---
+## Assign cell types by clusters
+
+We can then manually annotate the clusters based on these markers. We do this manually based on the average expression of markers in the cluster. We will show you how to automate this later. 
+
+```{r sec2_resEval_cellTypeAsign,include=TRUE,eval=T}
+
+seu_filt[["cellType_byClust"]] <- NA
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(5,8)] <- "B-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2,3)] <- "Naive CD4 T-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1)] <- "Memory CD4 T-cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] <- "CD8 T-cells/NKs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] <- "NKs"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9,10)] <- "FCER1A+ Monocytes"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0)] <- "CD14+ Monocytes"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(11)] <- "Platelets"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(6)] <- "DCs"
+seu_filt$cellType_byClust[is.na(seu_filt$cellType_byClust)] <- "Unspecified"
+```
+
+---
+## Assign cell types by clusters
+
+Cell numbers in each cell type
+```{r}
+
+table(seu_filt$cellType_byClust)
+```
+
+---
+## Assign cell types by clusters
+
+We can also display seurat clusters and cell types in UMAP.
+```{r,fig.height=4,fig.width=7}
+
+DimPlot(seu_filt, group.by = c("seurat_clusters","cellType_byClust"),label = TRUE,pt.size = 0.2)+NoLegend()
+```
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Differential gene expression between cell types
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html>
+
+---
+"
+  )
+}else{
+  cat("# Differential gene expression between cell types
+
+
+---
+"
+  )
+
+}
+
+```
+
+## Differential gene expression between cell types
+
+DEGs are identified using *Seurat::FindMarkers()*. We will use monocytes as an example, comparing *CD14+ Monocytes* to *FCER1A+ Monocytes*.
+
+---
+## Running Differentials
+
+Here we will run the differential with default settings for logfc threshold, minimum percent of cells and statistical test.
+
+```{r sec2_degCal,include=TRUE,eval=T}
+deg <- FindMarkers(seu_filt, group.by = "cellType_byClust",
+                   ident.1 = "CD14+ Monocytes",ident.2 = "FCER1A+ Monocytes",
+                   logfc.threshold = 0.25,
+                   test.use = "wilcox",
+                   min.pct = 0.1)
+
+
+```
+
+
+---
+## Results intepretation
+
+We can then do a quick order to be able sort our results by the largest fold change.
+
+- avg_log2FC: average log2_expression of ident.1 - average log2 expression of ident.2
+- pct.1: percent of cells with a given gene expression (expression level > 0) in ident.1
+- pct.2: percent of cells with a given gene expression (expression level > 0) in ident.2
+- p_val: p value estimated by using wilcox method
+- p_val_adj: adjust p value calculated with FDR
+
+```{r}
+deg$Symbol <- rownames(deg)
+deg <- deg[order(-deg$avg_log2FC),]
+head(deg)
+
+```
+
+---
+## Volcano Plot
+
+To visualize the global changes, we can use a Volcano plot. As always we must first prepare our dataframe for plotting. In this case we can categorize our genes into groups based on significance and fold change: l2FC 0.585 (which is 1.5x) and padj 0.05.
+
+```{r sec2_degCal_volcano,include=TRUE,eval=T}
+deg$sig <- NA
+deg$sig[deg$avg_log2FC >= 0.585 & deg$p_val_adj < 0.05] <- "CD14+"
+deg$sig[deg$avg_log2FC <=- 0.585 & deg$p_val_adj < 0.05] <- "FCER1A+"
+deg$sig[is.na(deg$sig)] <- "nc"
+deg$sig <- factor(deg$sig, levels = c("CD14+","nc","FCER1A+"))
+
+table(deg$sig)
+```
+
+---
+## Volcano Plot
+
+```{r,fig.height=4,fig.width=7}
+ggplot(deg, aes(x=avg_log2FC, y=-log10(p_val_adj), color=sig)) + geom_point() +
+  scale_color_manual(values = c("red", "grey", "blue")) +
+  labs(x="log2_Fold-Changes", y="-log10_adjPV", color="") +
+  theme_classic()
+```
+
+---
+## Customizing your differentials
+Seurat has many different options for differentials. You can use these to fully customize your analysis.
+
+- Assign the groups we want to compare: *group_by*
+- If we want to get a unfiltered results: set *logfc.threshold = 0* and *min.pct = 0*
+- Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*
+
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(seu_filt)
+rm(markers)
+rm(sce)
+gc()
+
+
+```

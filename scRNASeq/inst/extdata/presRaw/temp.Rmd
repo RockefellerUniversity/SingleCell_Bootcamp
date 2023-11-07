@@ -1,0 +1,75 @@
+
+---
+## Customizing your differentials
+Seurat has many different options for differentials. You can use these to fully customize your analysis.
+
+- Assign the groups we want to compare: *group_by*
+- If we want to get a unfiltered results: set *logfc.threshold = 0* and *min.pct = 0*
+- Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*
+
+
+---
+## Export clusters and annotations
+
+```{r}
+meta <- seu_filt@meta.data
+clust_dat <- data.frame(Barcode=Cells(seu_filt),cluster=meta$seurat_clusters)
+clust_dat$Barcode <- gsub("PBMC_10k_","",clust_dat$Barcode)
+head(clust_dat)
+
+write.table(clust_dat,file = "clust_dat.csv",
+            sep=",",quote = FALSE,row.names = FALSE)
+
+cellType_dat <- data.frame(Barcode=Cells(seu_filt),cellType=meta$cellType_byClust)
+cellType_dat$Barcode <- gsub("PBMC_10k_","",cellType_dat$Barcode)
+head(cellType_dat)
+
+write.table(cellType_dat,file = "cellType_dat.csv",
+            sep=",",quote = FALSE,row.names = FALSE)
+```
+
+---
+## Export Seurat results into Cloupe file
+We can export the UMAP and annotations of Seurat object and import them into cloupe file.
+* Embedding is applied to extract dimension reduction (eg. PCA, UMAP, tSNE) into matrix
+  + This data frame include: Barcode, X (UMAP_1), and Y (UMAP_2)
+  + Need to match Barcode to the barcode in cloupe file
+  + Store in a csv format
+
+```{r}
+umap <- Embeddings(seu_filt,reduction = "umap")
+head(umap,2)
+
+umap_tab <- data.frame(Barcode=rownames(umap),
+                       "X coordinate"=umap[,1],Y=umap[,2])
+umap_tab$Barcode <- gsub("PBMC_10k_","",umap_tab$Barcode)
+head(umap_tab,2)
+
+write.table(umap_tab,file = "umap_dat.csv",
+            sep=",",quote = FALSE,row.names = FALSE)
+```
+
+
+---
+## Export clusters and annotations
+
+```{r}
+meta <- seu_filt@meta.data
+clust_dat <- data.frame(Barcode=Cells(seu_filt),cluster=meta$seurat_clusters)
+clust_dat$Barcode <- gsub("PBMC_10k_","",clust_dat$Barcode)
+head(clust_dat)
+
+write.table(clust_dat,file = "clust_dat.csv",
+            sep=",",quote = FALSE,row.names = FALSE)
+
+cellType_dat <- data.frame(Barcode=Cells(seu_filt),cellType=meta$cellType_byClust)
+cellType_dat$Barcode <- gsub("PBMC_10k_","",cellType_dat$Barcode)
+head(cellType_dat)
+
+write.table(cellType_dat,file = "cellType_dat.csv",
+            sep=",",quote = FALSE,row.names = FALSE)
+```
+
+
+
+
