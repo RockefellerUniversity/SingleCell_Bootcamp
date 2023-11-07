@@ -59,8 +59,6 @@ if(params$isSlides == "yes"){
 
 ---
 
-
-
 ## Sequencing
 
 The emergence of high-throughput sequencing technologies such as 454 (Roche) and Solexa (Illumina) sequencing allowed for the highly parallel short read sequencing of DNA molecules.

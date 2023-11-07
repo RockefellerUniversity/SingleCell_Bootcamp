@@ -1485,15 +1485,15 @@ FeaturePlot(seu_filt, features = known_marker)
 
 We can also check the expression of markers in each cluster. First, we need to get our count data and our full list of markers.
 ```{r resEval_knowMarker_heatmap,include=TRUE,eval=T}
-mat <- GetAssayData(seu_filt,assay = "RNA",slot = "data")
-mat <- mat[known_marker,]
-mat <- as.matrix(mat)
-
 known_marker <- c("IL7R","CCR7","S100A4","CD8A",
                                    "MS4A1",
                                    "CD14","LYZ","FCGR3A","MS4A7",
                                    "FCER1A","CST3",
                                    "GNLY","NKG7","PPBP")
+
+mat <- GetAssayData(seu_filt,assay = "RNA",slot = "data")
+mat <- mat[known_marker,]
+mat <- as.matrix(mat)
 
 ```
 

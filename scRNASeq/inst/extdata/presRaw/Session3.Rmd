@@ -1301,11 +1301,11 @@ save(soupOBJ, file="../data/soup.RData")
 save(autoCor_mtx, file="../data/auto_soup.RData")
 ```
 
-```{r}
+```{R, eval=T, echo=F}
 load("data/soup.RData")
 ```
 
-```{r}
+```{R, eval=T, echo=F}
 load("data/auto_soup.RData")
 ```
 
@@ -1440,7 +1440,7 @@ gc()
 ---
 ## CellBender
 
-CellBender is a python toolkit developed to eliminate technical artifacts from scRNA-Seq data such as empty droplets and ambient RNAs [link](https://cellbender.readthedocs.io/en/latest/introduction/index.html). It is run from the command line. 
+CellBender is a python toolkit developed to eliminate technical artifacts from scRNA-Seq data such as empty droplets and ambient RNAs [link](https://cellbender.readthedocs.io/en/latest/introduction/index.html). It is run from within python. 
 
 In the current version, it contains remove-background module, which is applied to:
   * Detect empty droplets and ambient RNAs from raw count matrix in CellRanger output
@@ -1449,7 +1449,7 @@ In the current version, it contains remove-background module, which is applied t
 * CellBender is based on machine-learning strategy. It's quite time-consuming. We can speed up the processing by using CUDA version of CellBender. 
 
 ---
-## Command line of CellBender
+## CellBender in python
 
 ```{r sec3_dropProc_cbFilt_code,engine="bash",include=TRUE,eval=F}
 input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
