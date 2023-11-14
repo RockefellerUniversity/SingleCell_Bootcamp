@@ -104,6 +104,15 @@ untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz
 
 ```
 
+
+We can check the contents of the directory with the `dir()` command. We should see our our unpacked directory `filtered_feature_bc_matrix` and the original tar.gz file.
+
+```{r, eval=F}
+dir()
+
+```
+
+
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
@@ -131,7 +140,7 @@ if(params$isSlides == "yes"){
 
 ## Load cellranger matrix into matrix
 
-```{r,include=F,echo=F,eval=TRUE}
+```{r,include=F,echo=T,eval=TRUE}
 mtx_dir <- "filtered_feature_bc_matrix"
 
 ```
@@ -772,11 +781,20 @@ Scrublet is a tool to detect doublets.
 We can install the scrublet easily using the Herper package. This uses reticulate to manage miniconda, a repository of tools from which we can install scrublet. 
 
 ```{r, eval=F}
-library(Herper)
+# library(Herper)
+# 
+# conda_install  <- install_CondaTools("scrublet", "scRNA", pathToMiniConda = "../mini")
+# 
+# Sys.setenv('RETICULATE_PYTHON'=file.path(conda_install$pathToEnvBin, "python"))
+```
 
-conda_install  <- install_CondaTools("scrublet", "scRNA", pathToMiniConda = "../mini")
 
-Sys.setenv('RETICULATE_PYTHON'=file.path(conda_install$pathToEnvBin, "python"))
+```{r}
+library(reticulate)
+reticulate::py_install("scrublet")
+
+scr <- reticulate::import("scrublet")
+
 ```
 
 ---
@@ -1302,7 +1320,7 @@ DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLeg
 ---
 ## Testing resolutions
 
-To identify the best resolution for each dataset we iteratively test potential resolutions.
+To identify the best resolution for each dataset we iteratively test potential resolutions using clustree.
 
 ```{r clust_resoEval,include=TRUE,eval=T}
 library(clustree)
@@ -1313,6 +1331,12 @@ reso_res <- lapply(1:length(reso), function(x,seu_filt,reso){
   clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
   return(clust)}, seu_filt, reso)
 names(reso_res) <- paste0("k",1:length(reso))
+```
+
+Some newer Macs have issues with *clustree*. Installing *tweenr* directly should help. 
+
+```{r}
+remotes::install_github("thomasp85/tweenr")
 ```
 
 ---

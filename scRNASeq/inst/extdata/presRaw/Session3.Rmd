@@ -98,7 +98,7 @@ We will be using the IFNB-Stimulated and Control PBMCs from Seurat Data. The eas
 We will quickly show you how to get this data, but it isn't necessary to run these steps. 
 
 ```{r, eval=F}
-devtools::install_github('satijalab/seurat-data')
+remotes::install_github('satijalab/seurat-data')
 ```
 
 ```{r}
@@ -125,10 +125,18 @@ save("ifnb_list",
      file = "data/seuOBJ_IFNB_splitByStim.RData")
 ```
 
+At this point you could save your data object for later using the *save()* or *saveRDS()* function.
+
+```{r}
+
+save("ifnb_list",
+     file = "data/seuOBJ_IFNB_splitByStim.RData")
+```
+
 ---
 ## Load in your dataset
 
-We have the ifnb_list save in an RData object, which you can load in. 
+We have the ifnb_list saved in an RData object, which you can load in. 
 
 ```{r}
 load("data/seuOBJ_IFNB_splitByStim.RData")
@@ -1043,7 +1051,7 @@ We can detect empty droplets with *DropletUtils::emptyDrops()*.
 - The p-value for each cell is performed by Monte Carlo simulation basing on the deviation of a given cell to the ambient RNA pool.
 
 
-```{r sec3_dropProc_remEmtpy_cal,include=T,eval=TRUE}
+```{r sec3_dropProc_remEmtpy_cal, eval=TRUE}
 
 e.out <- emptyDrops(raw_mtx)
 e.out <- e.out[order(e.out$FDR),]
@@ -1446,8 +1454,7 @@ In the current version, it contains remove-background module, which is applied t
   * Detect empty droplets and ambient RNAs from raw count matrix in CellRanger output
   * To remove empty droplets and to correct the interference of ambient RNAs
   
-* CellBender is based on machine-learning strategy. It's quite time-consuming. We can speed up the processing by using CUDA version of CellBender. 
-
+* CellBender is based on machine-learning strategy. It's quite time-consuming. We can speed up the processing by using CUDA version of CellBender. However, this means you will need access to a GPU. 
 ---
 ## CellBender in python
 
@@ -1466,7 +1473,8 @@ cellbender remove-background --input $input_h5 --output $output_h5 --expected-ce
 ---
 ## Cell Ranger vs. CellBender
 
-We have some processed results here from CellBender. We can compare this to our filtered matrix from Cell Ranger
+We have some processed results here from CellBender. We can compare this to our filtered matrix from Cell Ranger.
+
 ```{r sec3_dropProc_cbFilt_loadData,include=TRUE,eval=T}
 cbFilt_mtx <- Read10X_h5("data/cbFilt_PBMCv3_20230324_filtered.h5")
 dim(cbFilt_mtx)
