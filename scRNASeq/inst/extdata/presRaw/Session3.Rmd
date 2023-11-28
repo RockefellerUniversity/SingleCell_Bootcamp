@@ -2054,3 +2054,197 @@ RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
 rm(seu_obj )
 gc()
 ```
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# SMART-Seq 
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# SMART-Seq 
+
+---
+"    
+  )
+  
+}
+
+```
+
+## SMART-seq - a 10X alternative
+
+[Schema](https://user-images.githubusercontent.com/40051862/112074504-abfcda80-8b33-11eb-86d7-45215fd1291a.png)
+
+---
+## SMART-seq - a 10X alternative
+
+* Pros
+  + Full-length coverage of transcripts
+  + Increased depth
+  + Differential transcript usage
+  
+* Cons
+  + Much more expensive
+  + More complicate bench work
+  
+* Applications
+  + Generic clustering
+  + Differential gene expression
+  + Alternative splicing
+
+---
+## Demo data
+
+- Single-cell quantification of a broad RNA spectrum reveals uniqure noncoding patterns associated with cell types and states. Isaknova A, Neff N, and Quake SR, PNAS (2021). [link](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8713755/)
+
+- Counting matrix of mouse embryo data was download from [GEO GSE151334](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE151334).
+
+- Data process workflow was recorded on GitHub. [link](https://github.com/aisakova/smart-seq-total/tree/master)
+
+---
+## Alignment and counting
+
+* The SMART-Seq data pre-processing is quite similar to bulk RNA-seq, including **align to reference genome** and **counting**. There are two strategy to process from FQ files.
+  + Align to reference genome by using **STAR** and then make counting with **featureCounts** [like this demo data].
+  + Pseudo-alignment and counting by using **salmon** and then gathering counting matrix with **tximport**.
+  
+* Details of the two methods can be found in the BRC training cource. Please refer to this [link](https://rockefelleruniversity.github.io/RU_RNAseq/).
+
+---
+## Read count matrix (in tsv file) into matrix
+
+```{r SMARTSeq_loadMTX,include=TRUE,eval=TRUE}
+mtx <- read.delim("data/GSE151334_counts.mouse.tsv.gz")
+mtx[1:2,1:5]
+```
+
+---
+## Load matrix into Seurat object
+
+```{r SMARTSeq_loadSeu,include=TRUE,eval=TRUE}
+library(Seurat)
+seu <- CreateSeuratObject(mtx,project="GSE151334",min.cells=3,min.features=300)
+seu[["percent.mt"]] <- PercentageFeatureSet(seu,pattern = "^mt-")
+seu <- SCTransform(seu,variable.features.n = 2000)
+# seu[["cellType"]] <- gsub("(.*)_(.*)_(.*)_(.*)_(.*)","\\1_\\2",Cells(seu))
+# seu[["date"]] <- gsub("(.*)_(.*)_(.*)_(.*)_(.*)","\\3",Cells(seu))
+```
+
+---
+## Access doublets
+
+```{r SMARTSeq_doublet,include=TRUE,eval=TRUE}
+library(reticulate)
+# py_path <- "//Users/mattpaul/myMiniconda/bin/python3"
+# Sys.setenv(RETICULATE_PYTHON=py_path)
+
+mat <- GetAssayData(seu,assay = "RNA",slot = "counts")
+mat <- as.matrix(mat)
+scr <- reticulate::import("scrublet")
+scrub <- scr$Scrublet(t(mat))
+doublet <- scrub$scrub_doublets()
+names(doublet) <- c("doublet_score","doublet")
+seu[["doublet_score"]] <- doublet$doublet_score
+seu[["doublet"]] <- doublet$doublet
+```
+
+---
+## Estimate cell cycle phases
+
+```{r SMARTSeq_estCC,include=TRUE,eval=TRUE,echo=FALSE}
+
+cc_ge <- read.delim("data/mouse_regev_lab_cell_cycle_genes.txt",header = FALSE,stringsAsFactors = FALSE)
+ccGene_list <- list("S"=cc_ge$V1[1:43],"G2M"=cc_ge$V1[44:length(cc_ge)])
+seu <- CellCycleScoring(seu,ccGene_list$S,ccGene_list$G2M)
+```
+
+---
+## Data normalization and quick clustering
+
+```{r SMARTSeq_norm,include=TRUE,eval=TRUE}
+set.seed(42)
+seu <- RunPCA(seu,npcs = 50,verbose = FALSE)
+seu <- FindNeighbors(seu,dims = 1:15,reduction = "pca")
+seu <- RunUMAP(seu,dims = 1:15,reduction = "pca")
+seu <- FindClusters(seu,resolution = 0.5)
+saveRDS(seu,"seuOBJ_mouseEB_ori.rds")
+```
+
+---
+## Quality accessment
+
+```{r SMARTSeq_quickClust,include=TRUE,eval=TRUE}
+library(ggplot2)
+message("Violin plot")
+VlnPlot(seu,
+        features = c("nCount_RNA","nFeature_RNA","percent.mt","doublet_score","S.Score","G2M.Score"),
+        group.by = "seurat_clusters")
+#
+message("Feature scatters")
+FeatureScatter(seu,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",group.by = "seurat_clusters")
+FeatureScatter(seu,feature1 = "nCount_RNA",feature2 = "percent.mt",group.by = "seurat_clusters") + geom_hline(yintercept = 10,color="black",linetype="dashed")
+#
+message("cell deris or doublets")
+table(seu$doublet=="TRUE" | seu$percent.mt > 10)
+```
+
+---
+## Filtering low quality cells
+
+```{r SMARTSeq_filt_quickClust,include=TRUE,eval=TRUE}
+set.seed(1001)
+seu <- subset(seu,subset=percent.mt <= 10 & doublet == "FALSE")
+seu <- SCTransform(seu,variable.features.n = 2000,vars.to.regress = c("percent.mt"))
+seu <- RunPCA(seu,npcs = 50,verbose = FALSE)
+seu <- RunUMAP(seu,dims = 1:15,reduction = "pca")
+seu <- FindNeighbors(seu,dims = 1:15,reduction = "pca")
+seu <- FindClusters(seu,resolution = 0.5)
+#
+DimPlot(seu,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
+```
+
+---
+## Marker genes by clusters
+
+```{r SMARTseq_findMark,include=TRUE,eval=TRUE}
+markers <- FindAllMarkers(seu,only.pos = TRUE,min.pct = 0.25,
+                          logfc.threshold = 0.25)
+library(dplyr)
+top_genes <- markers %>% group_by(cluster) %>%
+  slice_max(n=5,order_by=avg_log2FC) 
+#
+DoHeatmap(seu,features=c(top_genes$gene))
+```
+
+
+---
+## Add annotation by using known marker genes
+
+```{r SMARTSeq_markExp,include=TRUE,eval=TRUE}
+VlnPlot(seu,features = c("Nanog","Pou5f1",
+                         "Pax6","Stau2",
+                         "Dlk1","Postn",
+                         "Epcam","Gata6"),
+        ncol = 2,
+        pt.size = 0)
+#
+seu[["layers"]] <- NA
+seu$layers[seu$seurat_clusters %in% c(0,4,5)] <- "primary_ES"
+seu$layers[seu$seurat_clusters %in% c(2,3,10,11,12)] <- "ectoderm"
+seu$layers[seu$seurat_clusters %in% c(1,9)] <- "mesoderm"
+seu$layers[seu$seurat_clusters %in% c(6,7,8)] <- "endoderm"
+#
+DimPlot(seu,group.by = "layers",pt.size = 0.2)
+```
+
+
+
+
