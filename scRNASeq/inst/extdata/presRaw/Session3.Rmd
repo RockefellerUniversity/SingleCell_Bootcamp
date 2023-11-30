@@ -147,7 +147,7 @@ save("ifnb_list",
 
 At this point you could save your data object for later using the *save()* or *saveRDS()* function.
 
-```{r}
+```{r, eval=F}
 
 save("ifnb_list",
      file = "data/seuOBJ_IFNB_splitByStim.RData")
