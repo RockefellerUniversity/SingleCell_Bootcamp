@@ -99,6 +99,7 @@ We will quickly show you how to get this data, but it isn't necessary to run the
 
 ```{r, eval=F}
 remotes::install_github('satijalab/seurat-data')
+
 ```
 
 ```{r}
@@ -107,6 +108,25 @@ library(SeuratData)
 InstallData("ifnb")
 LoadData("ifnb")
 head(ifnb,2)
+```
+```{r, echo=F, eval=F}
+write.csv(head(ifnb,2),"data/ifnb_head.csv")
+
+```
+
+```{r, echo=F, eval=T}
+
+ifnb_test <- read.csv("data/ifnb_head.csv",row.names=1)
+ifnb_test
+```
+
+```{r, echo=F, eval=F}
+
+# Download: https://seurat.nygenome.org/src/contrib/ifnb.SeuratData_3.0.0.tar.gz
+install.packages("~/Downloads/ifnb.SeuratData_3.0.0.tar.gz", repos = NULL, type = "source") 
+library(ifnb.SeuratData)
+ifnb<-LoadData("ifnb")
+
 ```
 
 ---
