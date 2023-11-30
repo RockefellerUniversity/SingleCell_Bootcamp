@@ -109,6 +109,7 @@ InstallData("ifnb")
 LoadData("ifnb")
 head(ifnb,2)
 ```
+
 ```{r, echo=F, eval=F}
 write.csv(head(ifnb,2),"data/ifnb_head.csv")
 
@@ -237,6 +238,10 @@ head(ifnb_merge,2)
 ## Process and make clusters
 We can use our processing and clustering functions to analyse our merged dataset. 
 
+```{r, eval=F, echo=F}
+remotes::install_version("Matrix", version = "1.6-1.1")
+```
+
 ```{r sec3_mergeData_woCorr_cluster,include=TRUE}
 ifnb_merge <- data_proc(ifnb_merge)
 ifnb_merge <- quick_clust(ifnb_merge)
@@ -311,7 +316,7 @@ This workflow is modified from canonical correlation analysis (CCA), which is wi
 
 First, we prepare the data for integration. We will normalize the data sets separately. Than, we need to identify features for integration. This is similar to the VariableFeatures function we ran on a single dataset. Lastly we run scaling and PCA, using these features.
 
-```{r sec3_mergeData_RPCA_prep,include=TRUE,eval=T}
+```{r sec3_mergeData_RPCA_prep,include=TRUE,eval=F}
 
 ifnb_list_rpca <- lapply(ifnb_list, data_proc)
 
@@ -323,6 +328,17 @@ ifnb_list <- lapply(ifnb_list,function(seu,feats){
   return(seu)},feats)
 ```
 
+```{R, eval=F, echo=F}
+saveRDS(ifnb_list, "data/ifnb_list.rds")
+
+
+```
+
+```{R, eval=T, echo=F}
+ifnb_list <- readRDS("data/ifnb_list.rds")
+
+
+```
 
 ---
 ## Integrating data in RPCA merge
