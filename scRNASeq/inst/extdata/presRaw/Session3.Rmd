@@ -102,7 +102,7 @@ remotes::install_github('satijalab/seurat-data')
 
 ```
 
-```{r}
+```{r, eval=F}
 library(Seurat)
 library(SeuratData)
 InstallData("ifnb")
@@ -115,7 +115,7 @@ write.csv(head(ifnb,2),"data/ifnb_head.csv")
 ```
 
 ```{r, echo=F, eval=T}
-
+library(Seurat)
 ifnb_test <- read.csv("data/ifnb_head.csv",row.names=1)
 ifnb_test
 ```
