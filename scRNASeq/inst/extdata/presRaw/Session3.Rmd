@@ -2116,7 +2116,7 @@ if(params$isSlides == "yes"){
   + Align to reference genome by using **STAR** and then make counting with **featureCounts** [like this demo data].
   + Pseudo-alignment and counting by using **salmon** and then gathering counting matrix with **tximport**.
   
-* Details of the two methods can be found in the BRC training cource. Please refer to this [link](https://rockefelleruniversity.github.io/RU_RNAseq/).
+* Details of the two methods can be found in the BRC training course. Please refer to this [link](https://rockefelleruniversity.github.io/RU_RNAseq/).
 
 ---
 ## Read count matrix (in tsv file) into matrix
@@ -2129,11 +2129,19 @@ mtx[1:2,1:5]
 ---
 ## Load matrix into Seurat object
 
+Once we have loaded the matrix, we can create a Seurat object. After this point we will be following a similar workflow to the 10X data. Here we start by finidng the mitochondrial content. 
+
 ```{r SMARTSeq_loadSeu,include=TRUE,eval=TRUE}
 library(Seurat)
 seu <- CreateSeuratObject(mtx,project="GSE151334",min.cells=3,min.features=300)
 seu[["percent.mt"]] <- PercentageFeatureSet(seu,pattern = "^mt-")
 seu <- SCTransform(seu,variable.features.n = 2000)
+
+```
+
+
+```{R, echo=F, eval=F}
+
 # seu[["cellType"]] <- gsub("(.*)_(.*)_(.*)_(.*)_(.*)","\\1_\\2",Cells(seu))
 # seu[["date"]] <- gsub("(.*)_(.*)_(.*)_(.*)_(.*)","\\3",Cells(seu))
 ```
@@ -2141,10 +2149,16 @@ seu <- SCTransform(seu,variable.features.n = 2000)
 ---
 ## Access doublets
 
-```{r SMARTSeq_doublet,include=TRUE,eval=TRUE}
+```{r, echo=F, eval=F}
 library(reticulate)
 # py_path <- "//Users/mattpaul/myMiniconda/bin/python3"
 # Sys.setenv(RETICULATE_PYTHON=py_path)
+```
+
+```{r SMARTSeq_doublet,include=TRUE,eval=F}
+library(reticulate)
+reticulate::py_install("scrublet")
+scr <- reticulate::import("scrublet")
 
 mat <- GetAssayData(seu,assay = "RNA",slot = "counts")
 mat <- as.matrix(mat)
@@ -2159,7 +2173,9 @@ seu[["doublet"]] <- doublet$doublet
 ---
 ## Estimate cell cycle phases
 
-```{r SMARTSeq_estCC,include=TRUE,eval=TRUE,echo=FALSE}
+Lets read in annotated cell cycle genes from the Regev lab. This list of genes was curated by the authors of Seurat, and is a subset of the genes used in the original Cell Cycle paper.
+
+```{r SMARTSeq_estCC,include=TRUE,eval=F,echo=FALSE}
 
 cc_ge <- read.delim("data/mouse_regev_lab_cell_cycle_genes.txt",header = FALSE,stringsAsFactors = FALSE)
 ccGene_list <- list("S"=cc_ge$V1[1:43],"G2M"=cc_ge$V1[44:length(cc_ge)])
@@ -2169,30 +2185,62 @@ seu <- CellCycleScoring(seu,ccGene_list$S,ccGene_list$G2M)
 ---
 ## Data normalization and quick clustering
 
-```{r SMARTSeq_norm,include=TRUE,eval=TRUE}
+```{r SMARTSeq_norm,include=TRUE,eval=F}
 set.seed(42)
 seu <- RunPCA(seu,npcs = 50,verbose = FALSE)
 seu <- FindNeighbors(seu,dims = 1:15,reduction = "pca")
 seu <- RunUMAP(seu,dims = 1:15,reduction = "pca")
 seu <- FindClusters(seu,resolution = 0.5)
-saveRDS(seu,"seuOBJ_mouseEB_ori.rds")
+
+```
+
+
+```{r, echo=F, eval=F}
+saveRDS(seu,"data/seuOBJ_mouseEB_ori.rds"")
+
+```
+
+```{r, echo=F, eval=T}
+seu <- readRDS(seu,"data/seuOBJ_mouseEB_ori.rds")
+
 ```
 
 ---
-## Quality accessment
+## Quality assessment
+
+We can see here that this is a highly variable dataset. We can also see that there are some cells with high mitochondrial content in some samples. We will filter these out later.
+
 
 ```{r SMARTSeq_quickClust,include=TRUE,eval=TRUE}
 library(ggplot2)
-message("Violin plot")
 VlnPlot(seu,
         features = c("nCount_RNA","nFeature_RNA","percent.mt","doublet_score","S.Score","G2M.Score"),
         group.by = "seurat_clusters")
-#
-message("Feature scatters")
+```
+
+
+---
+## Quality assessment
+
+```{r}
 FeatureScatter(seu,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",group.by = "seurat_clusters")
+```
+
+
+
+---
+## Quality assessment
+
+Another view of our high mitochondrial content. 
+
+```{r}
 FeatureScatter(seu,feature1 = "nCount_RNA",feature2 = "percent.mt",group.by = "seurat_clusters") + geom_hline(yintercept = 10,color="black",linetype="dashed")
-#
-message("cell deris or doublets")
+```
+
+---
+## Quality assessment
+
+```{R}
 table(seu$doublet=="TRUE" | seu$percent.mt > 10)
 ```
 
@@ -2200,27 +2248,52 @@ table(seu$doublet=="TRUE" | seu$percent.mt > 10)
 ## Filtering low quality cells
 
 ```{r SMARTSeq_filt_quickClust,include=TRUE,eval=TRUE}
-set.seed(1001)
+set.seed(42)
 seu <- subset(seu,subset=percent.mt <= 10 & doublet == "FALSE")
 seu <- SCTransform(seu,variable.features.n = 2000,vars.to.regress = c("percent.mt"))
 seu <- RunPCA(seu,npcs = 50,verbose = FALSE)
 seu <- RunUMAP(seu,dims = 1:15,reduction = "pca")
 seu <- FindNeighbors(seu,dims = 1:15,reduction = "pca")
 seu <- FindClusters(seu,resolution = 0.5)
-#
+
+```
+
+---
+## Filtering low quality cells
+
+```{r}
 DimPlot(seu,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
 ```
 
 ---
 ## Marker genes by clusters
 
-```{r SMARTseq_findMark,include=TRUE,eval=TRUE}
+```{r SMARTseq_findMark,include=TRUE,eval=F}
 markers <- FindAllMarkers(seu,only.pos = TRUE,min.pct = 0.25,
                           logfc.threshold = 0.25)
 library(dplyr)
 top_genes <- markers %>% group_by(cluster) %>%
   slice_max(n=5,order_by=avg_log2FC) 
-#
+```
+
+```{r, eval=F, echo=F}
+
+write.csv(top_genes,"data/top_genes.csv")
+```
+
+```{r, echo=F}
+top_genes <- read.csv("data/top_genes.csv")
+```
+
+
+
+
+
+---
+## Marker genes by clusters
+  
+```{r}
+
 DoHeatmap(seu,features=c(top_genes$gene))
 ```
 
@@ -2228,20 +2301,60 @@ DoHeatmap(seu,features=c(top_genes$gene))
 ---
 ## Add annotation by using known marker genes
 
+
 ```{r SMARTSeq_markExp,include=TRUE,eval=TRUE}
-VlnPlot(seu,features = c("Nanog","Pou5f1",
-                         "Pax6","Stau2",
-                         "Dlk1","Postn",
-                         "Epcam","Gata6"),
+VlnPlot(seu,features = c("Nanog","Pou5f1"),
         ncol = 2,
         pt.size = 0)
-#
+```
+
+---
+## Add annotation by using known marker genes
+
+
+```{r SMARTSeq_markExp,include=TRUE,eval=TRUE}
+VlnPlot(seu,features = c("Pax6","Stau2"),
+        ncol = 2,
+        pt.size = 0)
+```
+
+
+---
+## Add annotation by using known marker genes
+
+```{r SMARTSeq_markExp,include=TRUE,eval=TRUE}
+VlnPlot(seu,features = c("Epcam","Gata6"),
+         ncol = 2,
+         pt.size = 0)
+```
+
+
+---
+## Add annotation by using known marker genes
+
+```{r SMARTSeq_markExp,include=TRUE,eval=TRUE}
+VlnPlot(seu,features = c("Dlk1","Postn"),
+         ncol = 2,
+         pt.size = 0)
+```
+
+
+
+---
+## Add annotation by using known marker genes
+
+```{R}
 seu[["layers"]] <- NA
 seu$layers[seu$seurat_clusters %in% c(0,4,5)] <- "primary_ES"
 seu$layers[seu$seurat_clusters %in% c(2,3,10,11,12)] <- "ectoderm"
 seu$layers[seu$seurat_clusters %in% c(1,9)] <- "mesoderm"
 seu$layers[seu$seurat_clusters %in% c(6,7,8)] <- "endoderm"
-#
+```
+
+---
+## Add annotation by using known marker genes
+
+```{r}
 DimPlot(seu,group.by = "layers",pt.size = 0.2)
 ```
 

@@ -35,6 +35,7 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T)
 
 ---
 ## A basic scRNAseq workflow
+
 - Load data into Seurat
 - Data normalization with Seurat
 - Calculate mitochondrial content
@@ -45,6 +46,7 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T)
 - Clustering with Seurat
 - Evaluate results - cell type specific clusters
 - Identify marker genes by clusters
+- Loupe Browser
 
 ---
 ## Seurat
@@ -111,7 +113,6 @@ We can check the contents of the directory with the `dir()` command. We should s
 dir()
 
 ```
-
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -207,6 +208,7 @@ The matrix is loaded into Seurat object with **CreateSeurtObject()**
 Cut-offs:
   + min_gene: minimum genes detected per cell: *cells with too few genes detected*
   + min_cell: minimum cells a gene expressed in: *Remove genes expressed in too few cells*
+  
 ```{r load_CreateOBJ,include=TRUE,eval=TRUE}
 sample_id <- "PBMC_10k" # sample name
 min_gene <- 200
@@ -364,15 +366,6 @@ if(params$isSlides == "yes"){
 * Data scaling: Scales and centers features in the dataset
 
 ---
-## To scaled data
-
-There are 2 main approaches for this:
-- Log normalization [default]
-- SCTransform
-
-We often find the results of these are fairly consistent, but there is growing trend in publications towards SCTransform, instead of the Seurat default of using log normalization. 
-
----
 ## Log normalization
 To do this in Seurat we have 3 functions:
   * log normalization with *NormalizeData()*
@@ -430,89 +423,6 @@ top10 <- head(VariableFeatures(seu_obj), 10)
 plot1 <- VariableFeaturePlot(seu_obj)
 plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
 plot2
-```
-
----
-## SCTransform
-
-- SCTransform is a normalization based on negative binomial regression.
-- It is performed with **SCTransform()** function of Seurat.
-- This function equal to the combinations of NormalizeData(), FindVariableFeatures(), and ScaleData().
-
-```{r norm_sct, include=TRUE, eval=F}
-seu_obj <- SCTransform(seu_obj, variable.features.n = 3000)
-seu_obj
-```
-
-```{r, eval=F, echo=F}
-SCT_assay <- seu_obj2@assays$SCT
-save(SCT_assay, file="data/SCT_assay.RData")
-```
-
-```{r, eval=T, echo=F}
-load("data/SCT_assay.RData")
-seu_obj@assays$SCT <- SCT_assay
-DefaultAssay(seu_obj) <- "SCT"
-seu_obj
-```
-
-
----
-## SCTransform
-
-The normalized data is stored in assay **SCT**. We can see this is now the active assay. Our log normalization is stored in the "RNA" assay. 
-
-```{r include=TRUE, eval=TRUE}
-seu_obj
-```
-
----
-## log normalization vs SCTransform
-
-We can extract out the results of our normalized and scaled data with the *GetAssayData()* function. 
-
-```{r norm_comp,include=TRUE,eval=TRUE}
-log_mat <- GetAssayData(seu_obj,assay="RNA",slot="data")
-log_mat <- as.matrix(log_mat)
-log_avgExp <- rowMeans(log_mat)
-
-sct_mat <- GetAssayData(seu_obj,assay="SCT",slot="data")
-sct_mat <- as.matrix(sct_mat)
-sct_avgExp <- rowMeans(sct_mat)
-```
-
----
-## log normalization vs SCTransform
-
-We can test the concordance with Spearman's correlation.
-
-```{R, eval=F}
-
-dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
-cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
-
-ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
-  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
-  theme_classic()
-```
-
----
-## log normalization vs SCTransform
-
-We can see there is very high similarity between the results. 
-
-```{R, echo=F, fig.height=4,fig.width=7}
-dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
-cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
-
-ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
-  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
-  theme_classic()
-```
-
-```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
-rm(dat, log_mat, sct_mat, plot1, plot2)
-gc()
 ```
 
 ---
@@ -639,7 +549,7 @@ lapply(ccGene_hs, function(x){head(x,2)})
 ---
 ## Running cyclone
 
-We just provide the the SinlgeCellExperiment object, the cell cycle gene list, and also a vector of all gene names.
+We just provide the the SingleCellExperiment object, the cell cycle gene list, and also a vector of all gene names.
 
 Remember! This is slow. We have a processed result you can also load in. 
 
@@ -780,7 +690,7 @@ Scrublet is a tool to detect doublets.
 
 We can install the scrublet easily using the Herper package. This uses reticulate to manage miniconda, a repository of tools from which we can install scrublet. 
 
-```{r, eval=F}
+```{r, eval=F, echo=FALSE}
 # library(Herper)
 # 
 # conda_install  <- install_CondaTools("scrublet", "scRNA", pathToMiniConda = "../mini")
@@ -789,7 +699,7 @@ We can install the scrublet easily using the Herper package. This uses reticulat
 ```
 
 
-```{r}
+```{r,eval=F}
 library(reticulate)
 reticulate::py_install("scrublet")
 
@@ -908,6 +818,7 @@ if(params$isSlides == "yes"){
 ```
 
 ## Distribution of variables in violin plot
+
 We can use violin plots to check the distribution of specific variables such as:
   + UMIs (*nCount_RNA*) per cell
   + Genes detected (*nFeature_RNA*) per cell
@@ -1082,13 +993,12 @@ if(params$isSlides == "yes"){
 Though we have filtered out the most extreme problem cells we will likely still have confounders in our dataset. These are unexpected variables contribute to a high percent of the variances.
 
 - The *vars.to.regress* argument in *ScaleData()* allows us account for confounders.
-- For SCTransform data, we can use the same parameter in SCTransform().
-- Common potential confounders: percent.mt, doublet_score, cell cycle scores
+- Common potential confounders: percent.mt, doublet_score, cell cycle scores.
 
 ```{r filtCell_scaleData,include=TRUE,eval=F}
 pot_conf <- c("percent.mt","doublet_score","cyclon_G1Score","cyclon_SScore","cyclon_G2MScore","cyclon_Phase")
 seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
-seu_filt <- SCTransform(seu_filt, vars.to.regress = pot_conf)
+
 ```
 
 
@@ -1335,7 +1245,7 @@ names(reso_res) <- paste0("k",1:length(reso))
 
 Some newer Macs have issues with *clustree*. Installing *tweenr* directly should help. 
 
-```{r}
+```{r, eval=F}
 remotes::install_github("thomasp85/tweenr")
 ```
 
@@ -1357,6 +1267,7 @@ head(k_dat,2)
 - To identify the better resolution
   + less cross talks between lineages
   + more clusters identified
+  
 ```{r clust_resoEval2,include=TRUE,eval=F}
 clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ```
@@ -1365,6 +1276,7 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ## Evaluate resolutions with clustree
 - The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
 * In this case, we use *resolution=0.4*
+
 ```{r include=TRUE,eval=T, echo=F, warning=FALSE, fig.height=4,fig.width=7}
 clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ```
@@ -1385,7 +1297,7 @@ We can see that we have slightly more clusters. We can now compare back to the o
 
 
 ```{r, fig.height=4,fig.width=7}
-DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend() + ggtitle("Optimized Clusters")
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
 ```
 
 ---
@@ -1393,7 +1305,7 @@ DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLeg
 
 We can see that we have slightly more clusters. We can now compare back to the original clustering, and see that cluster 12 is clearly defined now, where it wasn't before.
 ```{r ,include=TRUE,eval=T, fig.height=4,fig.width=7}
-DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2)+NoLegend() + ggtitle("Default Clusters")
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
 ```
 
 ---
@@ -1557,6 +1469,7 @@ pheatmap(avgExp_mat,scale = "row")
 rm(avgExp_mat, avgExp_byClust, clust, mat, marker)
 gc()
 ```
+
 ---
 ## Assign cell types by clusters
 
@@ -1735,7 +1648,7 @@ We have based our workflow on the [Seurat vignettes](https://satijalab.org/seura
 UMAPS:
 * [Data Science blog post](https://towardsdatascience.com/dimensionality-reduction-for-data-visualization-pca-vs-tsne-vs-umap-be4aa7b1cb29)
 * [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
-
+* [Limitations](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011288)
 
 
 
