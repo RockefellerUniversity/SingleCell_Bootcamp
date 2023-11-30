@@ -2312,7 +2312,7 @@ VlnPlot(seu,features = c("Nanog","Pou5f1"),
 ## Add annotation by using known marker genes
 
 
-```{r SMARTSeq_markExp,include=TRUE,eval=TRUE}
+```{r SMARTSeq_markExp2,include=TRUE,eval=TRUE}
 VlnPlot(seu,features = c("Pax6","Stau2"),
         ncol = 2,
         pt.size = 0)
@@ -2322,7 +2322,7 @@ VlnPlot(seu,features = c("Pax6","Stau2"),
 ---
 ## Add annotation by using known marker genes
 
-```{r SMARTSeq_markExp,include=TRUE,eval=TRUE}
+```{r SMARTSeq_markExp3,include=TRUE,eval=TRUE}
 VlnPlot(seu,features = c("Epcam","Gata6"),
          ncol = 2,
          pt.size = 0)
@@ -2332,7 +2332,7 @@ VlnPlot(seu,features = c("Epcam","Gata6"),
 ---
 ## Add annotation by using known marker genes
 
-```{r SMARTSeq_markExp,include=TRUE,eval=TRUE}
+```{r SMARTSeq_markExp4,include=TRUE,eval=TRUE}
 VlnPlot(seu,features = c("Dlk1","Postn"),
          ncol = 2,
          pt.size = 0)
