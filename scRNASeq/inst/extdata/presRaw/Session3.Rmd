@@ -697,7 +697,7 @@ DimPlot(seu_obj, reduction = "umap_harmony")
 
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
-rm(seu_obj, ifnb, ifnb_list, ifnb_merge, ifnb_list_rpca, feats, anchors, sce_list, dec_list, hvgc_list, combined_dec, chosen_hvgs, mnn_res, snn.gr, cluster_mnn ,cellType )
+rm(seu_obj, ifnb, ifnb_list, ifnb_merge, ifnb_list_rpca, anchors, sce_list, dec_list, hvgc_list, combined_dec, chosen_hvgs, mnn_res, snn.gr, cluster_mnn ,cellType )
 gc()
 ```
 
@@ -947,7 +947,7 @@ This isn't always the case. This is good demonstration data.
 
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
-rm(panc8, seu_list, ref_list, feats, anchors, ref_panc, panc_list, seu, pred_res, mat, pred_cellType, sce_list, cell_type)
+rm(panc8, seu_list, ref_list, anchors, ref_panc, panc_list, seu, pred_res, mat, pred_cellType, sce_list, cell_type)
 gc()
 ```
 
