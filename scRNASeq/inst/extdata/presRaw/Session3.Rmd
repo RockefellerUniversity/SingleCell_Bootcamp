@@ -330,13 +330,13 @@ ifnb_list <- lapply(ifnb_list,function(seu,feats){
 
 ```{R, eval=F, echo=F}
 saveRDS(ifnb_list, "data/ifnb_list.rds")
-
+saveRDS(feats, "data/feats.rds")
 
 ```
 
 ```{R, eval=T, echo=F}
 ifnb_list <- readRDS("data/ifnb_list.rds")
-
+feats <- readRDS("data/feats.rds")
 
 ```
 
