@@ -191,7 +191,7 @@ Make clusters:
   
 ```{r sec3_mergeData_funcUsed_quickClust,include=TRUE}
 quick_clust <- function(seu){
-  set.seed(1001)
+  set.seed(42)
   seu <- ScaleData(seu,verbose=FALSE)
   seu <- RunPCA(seu,npcs=30,verbose=FALSE)
   seu <- RunUMAP(seu, reduction = "pca", dims = 1:10,verbose=FALSE)
