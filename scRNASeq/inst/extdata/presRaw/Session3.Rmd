@@ -124,7 +124,7 @@ ifnb_test
 ```{r, echo=F, eval=F}
 
 # Download: https://seurat.nygenome.org/src/contrib/ifnb.SeuratData_3.0.0.tar.gz
-install.packages("~/Downloads/ifnb.SeuratData_3.0.0.tar.gz", repos = NULL, type = "source") 
+install.packages("~/Downloads/ifnb.SeuratData_3.0.2.tar.gz", repos = NULL, type = "source") 
 library(ifnb.SeuratData)
 ifnb<-LoadData("ifnb")
 
@@ -756,12 +756,22 @@ data("panc8")
 
 ```
 
+```{r, echo=F, eval=F}
+
+# Download: https://seurat.nygenome.org/src/contrib/panc8.SeuratData_3.0.2.tar.gz
+install.packages("~/Downloads/panc8.SeuratData_3.0.2.tar.gz", repos = NULL, type = "source") 
+library(panc8.SeuratData)
+panc8 <- LoadData("panc8")
+UpdateSeuratObject(panc8)
+```
+
 ---
 ## Prepare example datasets
 
 Split up the datasets by techniques using *SplitObject()*.
 
 ```{R, eval=F}
+panc8 <- UpdateSeuratObject(panc8)
 seu_list <- SplitObject(panc8, split.by = "tech")
 names(seu_list) <- c("celseq1", "celseq2", "smartseq", "fluidigmc1", "indrop")
 ```
@@ -2004,6 +2014,7 @@ The CITE-Seq method labels different types of cells or different samples with ha
 
 ---
 ## Load data
+
 ```{r sec3_CITE_prep,include=TRUE,eval=T}
 
 rna.mat <- readRDS("data/pbmc_umi_mtx.rds")
