@@ -777,7 +777,7 @@ names(seu_list) <- c("celseq1", "celseq2", "smartseq", "fluidigmc1", "indrop")
 ```
 
 ```{r, eval=F, echo=F}
-save(seu_list, file="../data/panc8.RData")
+save(seu_list, file="data/panc8.RData")
 ```
 
 ```{r}
