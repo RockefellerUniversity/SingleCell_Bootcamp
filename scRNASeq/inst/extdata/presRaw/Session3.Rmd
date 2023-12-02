@@ -57,6 +57,7 @@ library(scuttle)
 - Droplet processing - 3 different approaches for this
 - Pseudotime analysis with slingshot
 - CITE-seq data processing
+- SMART-seq processing
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
