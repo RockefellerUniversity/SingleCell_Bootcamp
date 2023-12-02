@@ -2187,7 +2187,6 @@ seu <- SCTransform(seu,variable.features.n = 2000)
 
 ```
 
-
 ```{R, echo=F, eval=F}
 
 # seu[["cellType"]] <- gsub("(.*)_(.*)_(.*)_(.*)_(.*)","\\1_\\2",Cells(seu))
@@ -2195,7 +2194,7 @@ seu <- SCTransform(seu,variable.features.n = 2000)
 ```
 
 ---
-## Access doublets
+## Assess doublets
 
 ```{r, echo=F, eval=F}
 library(reticulate)
@@ -2249,7 +2248,7 @@ saveRDS(seu,"data/seuOBJ_mouseEB_ori.rds"")
 ```
 
 ```{r, echo=F, eval=T}
-seu <- readRDS(seu,"data/seuOBJ_mouseEB_ori.rds")
+seu <- readRDS("data/seuOBJ_mouseEB_ori.rds")
 
 ```
 
