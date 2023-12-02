@@ -10,22 +10,27 @@ suppressPackageStartupMessages(require(SeuratWrappers))
 knitr::opts_chunk$set(echo = TRUE, tidy = T)
 
 
-## ---- warning=F, message=F, echo=F--------------------------------------------
+## ----warning=F, message=F, echo=F---------------------------------------------
 library(RCurl)
 if(!url.exists("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")){stop("Download path broken")}
 
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
 ## download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
 ## untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
 ## 
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----eval=F-------------------------------------------------------------------
+## dir()
+## 
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -48,7 +53,7 @@ if(params$isSlides == "yes"){
 
 
 
-## ----include=F,echo=F,eval=TRUE-----------------------------------------------
+## ----include=F,echo=T,eval=TRUE-----------------------------------------------
 mtx_dir <- "filtered_feature_bc_matrix"
 
 
@@ -60,35 +65,35 @@ mtx_dir <- "filtered_feature_bc_matrix"
 ## 
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
+## ----eval=F, echo=F-----------------------------------------------------------
 ## a <- is(mtx)
 ## b <- head(mtx)
 ## save(a,b, file="data/mtx_res.RData")
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
+## ----eval=F, echo=F-----------------------------------------------------------
 ## library(Seurat)
 ## load("data/seurat_read.RData")
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 library(Seurat)
 load("data/mtx_res.RData")
 
 
-## ---- eval=F, echo=T----------------------------------------------------------
+## ----eval=F, echo=T-----------------------------------------------------------
 ## is(mtx)
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 a
 
 
-## ---- eval=F, echo=T----------------------------------------------------------
+## ----eval=F, echo=T-----------------------------------------------------------
 ## head(mtx)
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 b
 
 
@@ -104,15 +109,15 @@ min_gene <- 200
 min_cell <- 10 
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
 ## seu_obj <- Seurat::CreateSeuratObject(mtx, project=sample_id, min.cells=min_cell, min.features=min_gene)
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
+## ----eval=F, echo=F-----------------------------------------------------------
 ## save(seu_obj, file="data/seu_obj_raw.RData")
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 load("data/seu_obj_raw.RData")
 
 
@@ -129,7 +134,7 @@ seu_obj
 head(seu_obj,2)
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -166,7 +171,7 @@ summary(seu_obj$percent.mt2)
 
 
 
-## ---- eval =F-----------------------------------------------------------------
+## ----eval =F------------------------------------------------------------------
 ## library(ggplot2)
 ## dat <- data.frame(byPattern=seu_obj$percent.mt, byGene=seu_obj$percent.mt2,stringsAsFactors = FALSE)
 ## cor_val <- cor.test(dat$byPattern,dat$byGene,method = "spearman")
@@ -176,7 +181,7 @@ summary(seu_obj$percent.mt2)
 ##   theme_classic()
 
 
-## ---- echo =F, fig.height=4,fig.width=7---------------------------------------
+## ----echo =F, fig.height=4,fig.width=7----------------------------------------
 library(ggplot2)
 dat <- data.frame(byPattern=seu_obj$percent.mt, byGene=seu_obj$percent.mt2,stringsAsFactors = FALSE)
 cor_val <- cor.test(dat$byPattern,dat$byGene,method = "spearman")
@@ -186,7 +191,7 @@ ggplot(dat,aes(x=byPattern,y=byGene))+geom_point()+geom_smooth()+
   theme_classic()
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -237,62 +242,7 @@ plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
 plot2
 
 
-## ----norm_sct, include=TRUE, eval=F-------------------------------------------
-## seu_obj <- SCTransform(seu_obj, variable.features.n = 3000)
-## seu_obj
-
-
-## ---- eval=F, echo=F----------------------------------------------------------
-## SCT_assay <- seu_obj2@assays$SCT
-## save(SCT_assay, file="data/SCT_assay.RData")
-
-
-## ---- eval=T, echo=F----------------------------------------------------------
-load("data/SCT_assay.RData")
-seu_obj@assays$SCT <- SCT_assay
-DefaultAssay(seu_obj) <- "SCT"
-seu_obj
-
-
-## ----include=TRUE, eval=TRUE--------------------------------------------------
-seu_obj
-
-
-## ----norm_comp,include=TRUE,eval=TRUE-----------------------------------------
-log_mat <- GetAssayData(seu_obj,assay="RNA",slot="data")
-log_mat <- as.matrix(log_mat)
-log_avgExp <- rowMeans(log_mat)
-
-sct_mat <- GetAssayData(seu_obj,assay="SCT",slot="data")
-sct_mat <- as.matrix(sct_mat)
-sct_avgExp <- rowMeans(sct_mat)
-
-
-## ---- eval=F------------------------------------------------------------------
-## 
-## dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
-## cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
-## 
-## ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
-##   labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
-##   theme_classic()
-
-
-## ---- echo=F, fig.height=4,fig.width=7----------------------------------------
-dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
-cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
-
-ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
-  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
-  theme_classic()
-
-
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
-rm(dat, log_mat, sct_mat, plot1, plot2)
-gc()
-
-
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -366,11 +316,11 @@ lapply(ccGene_hs, function(x){head(x,2)})
 ## 
 
 
-## ---- echo=F------------------------------------------------------------------
+## ----echo=F-------------------------------------------------------------------
 #save(assignments, file="data/cyclone.RData")
 
 
-## ---- echo=T------------------------------------------------------------------
+## ----echo=T-------------------------------------------------------------------
 
 load("data/cyclone.RData")
 
@@ -417,7 +367,7 @@ table(seu_obj$cyclon_Phase)
 table(seu_obj$Phase,seu_obj$cyclon_Phase)
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -440,12 +390,20 @@ if(params$isSlides == "yes"){
 
 
 
-## ---- eval=F------------------------------------------------------------------
-## library(Herper)
+## ----eval=F, echo=FALSE-------------------------------------------------------
+## # library(Herper)
+## #
+## # conda_install  <- install_CondaTools("scrublet", "scRNA", pathToMiniConda = "../mini")
+## #
+## # Sys.setenv('RETICULATE_PYTHON'=file.path(conda_install$pathToEnvBin, "python"))
+
+
+## ----eval=F-------------------------------------------------------------------
+## library(reticulate)
+## reticulate::py_install("scrublet")
 ## 
-## conda_install  <- install_CondaTools("scrublet", "scRNA", pathToMiniConda = "../mini")
+## scr <- reticulate::import("scrublet")
 ## 
-## Sys.setenv('RETICULATE_PYTHON'=file.path(conda_install$pathToEnvBin, "python"))
 
 
 ## ----det_doublet_est,include=TRUE,eval=F--------------------------------------
@@ -455,7 +413,7 @@ if(params$isSlides == "yes"){
 ## 
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
 ## # Loading the scrublet library
 ## scr <- import("scrublet")
 ## # Run scrublet
@@ -465,12 +423,12 @@ if(params$isSlides == "yes"){
 ## names(doublet) <- c("doublet_score","doublet")
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
+## ----eval=F, echo=F-----------------------------------------------------------
 ## #save(doublet,file = "data/doublet.RData")
 ## 
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 
 load("data/doublet.RData")
 
@@ -489,18 +447,18 @@ seu_obj[["doublet_score"]] <- doublet$doublet_score
 seu_obj[["doublet"]] <- doublet$doublet
 
 
-## ---- fig.height=4,fig.width=7------------------------------------------------
+## ----fig.height=4,fig.width=7-------------------------------------------------
 
 VlnPlot(seu_obj, group.by = "doublet",
         features = c("nCount_RNA","nFeature_RNA","doublet_score"),
         pt.size = 0)
 
 
-## ---- fig.height=4,fig.width=7------------------------------------------------
+## ----fig.height=4,fig.width=7-------------------------------------------------
 FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",pt.size = 0.1,group.by = "doublet")
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -563,7 +521,7 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -590,20 +548,20 @@ if(params$isSlides == "yes"){
 table(seu_obj$doublet=="TRUE" | seu_obj$percent.mt >= 10)
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
 ## seu_filt <- subset(seu_obj, subset=doublet=="FALSE" &
 ##                      percent.mt < 10)
 ## 
 
 
-## ---- echo=F, eval=TRUE-------------------------------------------------------
+## ----echo=F, eval=TRUE--------------------------------------------------------
 #save(seu_filt,file="data/seu_filt.RData")
 rm(doublet)
 rm(seu_obj)
 #load("data/seu_filt.RData")
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -629,10 +587,10 @@ if(params$isSlides == "yes"){
 ## ----filtCell_scaleData,include=TRUE,eval=F-----------------------------------
 ## pot_conf <- c("percent.mt","doublet_score","cyclon_G1Score","cyclon_SScore","cyclon_G2MScore","cyclon_Phase")
 ## seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
-## seu_filt <- SCTransform(seu_filt, vars.to.regress = pot_conf)
+## 
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
+## ----eval=F, echo=F-----------------------------------------------------------
 ## #save(seu_filt, sce, file="data/SCT2.RData")
 ## save(seu_filt, file="data/SCT2.RData")
 ## #saveRDS(seu_filt, file="data/SCT2.rds")
@@ -649,7 +607,7 @@ load("data/SCT2.RData")
 #seu_filt <- load("data/SCT2.rds")
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -726,12 +684,12 @@ seu_filt <- FindNeighbors(seu_filt,dims = 1:pc,reduction = "pca")
 seu_filt <- RunUMAP(seu_filt,dims = 1:pc,reduction = "pca")
 
 
-## ---- fig.height=4,fig.width=7------------------------------------------------
+## ----fig.height=4,fig.width=7-------------------------------------------------
 DimPlot(seu_filt)
 
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -759,7 +717,7 @@ seu_filt <- FindClusters(seu_filt, resolution = 0.5)
 seu_filt[["cluster_byDefault"]] <- seu_filt$seurat_clusters
 
 
-## ---- fig.height=4,fig.width=7------------------------------------------------
+## ----fig.height=4,fig.width=7-------------------------------------------------
 DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend()
 
 
@@ -774,6 +732,10 @@ reso_res <- lapply(1:length(reso), function(x,seu_filt,reso){
   clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
   return(clust)}, seu_filt, reso)
 names(reso_res) <- paste0("k",1:length(reso))
+
+
+## ----eval=F-------------------------------------------------------------------
+## remotes::install_github("thomasp85/tweenr")
 
 
 ## ----include=TRUE,eval=T------------------------------------------------------
@@ -795,12 +757,12 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 seu_filt <- FindClusters(seu_filt, resolution = 0.4)
 
 
-## ---- fig.height=4,fig.width=7------------------------------------------------
-DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend() + ggtitle("Optimized Clusters")
+## ----fig.height=4,fig.width=7-------------------------------------------------
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
 
 
 ## ----include=TRUE,eval=T, fig.height=4,fig.width=7----------------------------
-DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2)+NoLegend() + ggtitle("Default Clusters")
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
 
 
 ## ----markGene_cal,include=TRUE,eval=FALSE-------------------------------------
@@ -808,7 +770,7 @@ DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2)+NoL
 ##                           min.pct = 0.25, logfc.threshold = 0.25)
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 #save(markers, file="data/markers.RData")
 load("data/markers.RData")
 
@@ -824,12 +786,12 @@ head(top_genes)
 
 
 
-## ---- fig.height=4,fig.width=7------------------------------------------------
+## ----fig.height=4,fig.width=7-------------------------------------------------
 
 DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -863,15 +825,15 @@ FeaturePlot(seu_filt, features = known_marker)
 
 
 ## ----resEval_knowMarker_heatmap,include=TRUE,eval=T---------------------------
-mat <- GetAssayData(seu_filt,assay = "RNA",slot = "data")
-mat <- mat[known_marker,]
-mat <- as.matrix(mat)
-
 known_marker <- c("IL7R","CCR7","S100A4","CD8A",
                                    "MS4A1",
                                    "CD14","LYZ","FCGR3A","MS4A7",
                                    "FCER1A","CST3",
                                    "GNLY","NKG7","PPBP")
+
+mat <- GetAssayData(seu_filt,assay = "RNA",slot = "data")
+mat <- mat[known_marker,]
+mat <- as.matrix(mat)
 
 
 
@@ -897,7 +859,7 @@ avgExp_mat <- do.call(cbind, avgExp_byClust)
 pheatmap(avgExp_mat,scale = "row")
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 rm(avgExp_mat, avgExp_byClust, clust, mat, marker)
 gc()
 
@@ -927,7 +889,7 @@ table(seu_filt$cellType_byClust)
 DimPlot(seu_filt, group.by = c("seurat_clusters","cellType_byClust"),label = TRUE,pt.size = 0.2)+NoLegend()
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -984,7 +946,7 @@ ggplot(deg, aes(x=avg_log2FC, y=-log10(p_val_adj), color=sig)) + geom_point() +
   theme_classic()
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(seu_filt)
 rm(markers)

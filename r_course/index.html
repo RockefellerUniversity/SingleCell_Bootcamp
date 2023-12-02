@@ -14,7 +14,7 @@
 
 <title>scRNAseq</title>
 
-<script src="site_libs/header-attrs-2.22/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.25/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -426,7 +426,7 @@ class="email">brc@rockefeller.edu</a></h4>
 <p><br></p>
 <div id="course-integrity" class="section level3">
 <h3>Course Integrity</h3>
-<p><strong>This course is compiled automatically on <em>2023-06-08</em>
+<p><strong>This course is compiled automatically on <em>2023-12-02</em>
 </strong> <br> <a
 href="https://github.com/RockefellerUniversity/SingleCell_Bootcamp/actions?query=workflow%3compilation-check"><img src="https://github.com/RockefellerUniversity/SingleCell_Bootcamp/workflows/compilation-check/badge.svg"></a></p>
 <p><strong>The course is tested and available on MacOS, Windows and
@@ -493,10 +493,13 @@ class="uri">https://rstudio.com/products/rstudio/download/</a></p>
 </div>
 <div id="install-required-packages" class="section level4">
 <h4><strong>Install required packages</strong></h4>
+<p>Packages can be installed from the course package or from
+CRAN/Bioconductor.</p>
 </div>
 <div id="from-the-course-package" class="section level4">
 <h4>From the course package</h4>
 <pre class="{r}"><code>install.packages(&#39;BiocManager&#39;)
+install.packages(&#39;remotes&#39;)
 BiocManager::install(&#39;RockefellerUniversity/SingleCell_Bootcamp&#39;,subdir=&#39;scRNASeq&#39;)</code></pre>
 <p><br></p>
 </div>
@@ -525,6 +528,7 @@ BiocManager::install(&#39;TSCAN&#39;)
 BiocManager::install(&#39;SoupX&#39;)
 BiocManager::install(&#39;devtools&#39;)
 BiocManager::install(&#39;hdf5r&#39;)
+BiocManager::install(&#39;irlba&#39;)
 BiocManager::install(&#39;knitr&#39;)
 BiocManager::install(&#39;rmarkdown&#39;)
 BiocManager::install(&#39;testthat&#39;)

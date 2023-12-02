@@ -4,7 +4,7 @@
     <title>Single-cell RNA sequencing ~ Session 1 ¶  ¶ ¶  ¶ </title>
     <meta charset="utf-8" />
     <meta name="author" content="Rockefeller University, Bioinformatics Resource Centre" />
-    <script src="libs/header-attrs-2.22/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.25/header-attrs.js"></script>
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link rel="stylesheet" href="metropolisCustom.css" type="text/css" />
     <link rel="stylesheet" href="metropolis-fontsCustom.css" type="text/css" />
@@ -46,8 +46,6 @@ class: inverse, center, middle
 - Overview of Single-cell sequencing
 
 ---
-
-
 
 ## Sequencing
 
@@ -130,7 +128,7 @@ Analysis of the bulk characteristics of data without understanding of hetergenei
 Newer technologies such as TRAP from the Heintz lab or nuclei sorting allow for capture of distinct cell types based on expressed markers.
 
 Pros
-- Allow for the capure of rare cell populations such as specific neuron types.
+- Allow for the capture of rare cell populations such as specific neuron types.
 
 Cons
 - Require known markers for desired cell populations
@@ -186,8 +184,6 @@ Major difference between the two are the sequencing depth and coverage profiles 
 
 - 10x is 3' biased so will not provide full length transcript coverage.
 - As 10x is sequencing only the 3' of transcripts/genes, less sequencing depth is required per transcript/gene
-
-
 
 
 ---
@@ -346,7 +342,7 @@ In this session we will make use of Cell Ranger **Count** tool to process our ge
 ## Cell Ranger
 
 - Cell Ranger only runs on linux machines (CentOS/RedHat 7.0+ and Ubuntu 14.04+).
-- Typically, due to memory requirements, users run Cell Ranger on a remote server and now their own machines.
+- Typically, due to memory requirements, users run Cell Ranger on a remote server and not their own machines.
 - To download Cell Ranger and the required reference on remote server, we typically use the wget command.
 
 Download the software
