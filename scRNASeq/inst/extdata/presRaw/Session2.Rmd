@@ -510,7 +510,7 @@ We can see in both S and G2/M scores are highest in cells with the corresponding
 
 ```{R ,fig.height=4,fig.width=7}
 
-ggplot(dat,aes(x=Phase, y=score, fill=Phase))+geom_boxplot()+
+ggplot(dat,aes(x=Phase, y=score, fill=Phase))+geom_violin()+
   labs(x="",y="Score",fill="Phase")+
   facet_wrap(~cat)+theme_classic()
 ```
@@ -522,11 +522,13 @@ An alternative approach is to use the *cyclone()* function in scran. This is **m
 
 The first step is to convert our Seurat object to a SinlgeCellExperiment object.
 
-```{r ccPhase_cyclon_prep,include=TRUE,eval=TRUE}
+```{r ccPhase_cyclon_prep,include=TRUE,eval=TRUE, warning=F, message=F}
 library(scran)
 
 sce <- as.SingleCellExperiment(seu_obj,assay = "RNA")
 rowData(sce)$SYMBOL <- rownames(sce)
+```
+```{r}
 sce
 ```
 
@@ -613,7 +615,7 @@ dat$cat <- factor(dat$cat,levels = c("cyclon_G1Score","cyclon_SScore","cyclon_G2
 We can see in both S and G2/M scores are highest in cells with the corresponding assignment. 
 
 ```{r,fig.height=4,fig.width=7}
-ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_boxplot()+
+ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_violin()+
   labs(x="",y="Score",fill="Phase")+
   facet_wrap(~cat)+theme_classic()
 ```
@@ -764,8 +766,9 @@ table(doublet$doublet)
 ```
 
 ---
-## Import Scrublet results into Seurat object
+## Import Scrublet results into Seurat
 
+We can just assign our results into our Seurat object.
 
 ```{r det_doublet_pres,include=TRUE,eval=TRUE}
 seu_obj[["doublet_score"]] <- doublet$doublet_score
@@ -775,19 +778,21 @@ seu_obj[["doublet"]] <- doublet$doublet
 ---
 ## Assessing Doublets
 
-UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TRUE) and singlets (FALSE).
+We can use violin plots to check our doublet predictions make sense.
+
+As expected out doublets (TRUE) have higher, doublet scores, UMIs (nCount), genes (nFeature) compared to singlets (FALSE).
 
 ```{r, fig.height=4,fig.width=7}
 
 VlnPlot(seu_obj, group.by = "doublet",
-        features = c("nCount_RNA","nFeature_RNA","doublet_score"),
+        features = c("doublet_score", "nCount_RNA","nFeature_RNA"),
         pt.size = 0)
 ```
 
 ---
 ## Assessing Doublets
 
-UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TRUE) and singlets (FALSE).
+An altearntive visualization of this is an X-Y plot comparing UMIs (nCount) and genes (nFeature).
 
 ```{r, fig.height=4,fig.width=7}
 FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",pt.size = 0.1,group.by = "doublet")
@@ -817,6 +822,13 @@ if(params$isSlides == "yes"){
 
 ```
 
+## Quality Assessment
+
+There are many aspects to determining the quality of your scRNAseq dataset. You can see we have already made several plots to descirbe features of the data. These help guide additional QC steps. We will dig more into that later. 
+
+For now we will show you several ways to plot the data and the various metrics we have to try and assess the state of our dataset.
+
+---
 ## Distribution of variables in violin plot
 
 We can use violin plots to check the distribution of specific variables such as:
@@ -833,7 +845,7 @@ VlnPlot(seu_obj, group.by = "dset",
 ---
 ## Distribution of variables in violin plot
 
-If a bimodal distribution is identified, we need to check for any interference. We can see some evidence of bimodality in our dataset here.
+If a bimodal distribution is identified, we need to check for any interference as it suggests that there could be multiple populations within our dataset. This could be biological (i.e very different cell types) or technical (doublets). We can see some evidence of bimodality in our dataset here.
 
 ```{r include=TRUE,echo=F, fig.height=4,fig.width=7}
 VlnPlot(seu_obj, group.by = "dset",
@@ -843,23 +855,12 @@ VlnPlot(seu_obj, group.by = "dset",
 
 ---
 ## Evaluating interactions
-Scatter plots can be used to look for interactions between specific variables. Here we compare UMIs and genes detected per cell:
+
+Scatter plots can be used to look for interactions between specific variables, like we did earlier. Here we compare UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
 
-```{r qcPlot_scatter_pres1,include=TRUE,eval=F}
-
-FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
-               group.by = "doublet")
-```
-
----
-## Evaluating interactions
-Comparison between UMIs and genes detected per cell:
-  * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
-  * Doublets with high UMIs and high genes detected.
-
-```{r ,include=TRUE,eval=T, echo=F, fig.height=4,fig.width=7}
+```{r ,include=TRUE,eval=T, echo=F, fig.height=3,fig.width=6}
 
 FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
                group.by = "doublet")
@@ -868,8 +869,9 @@ FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
 ---
 ## Evaluating interactions
 
-Comparison between UMI counts and the percent of mitochondrial content:
+We can use the same approach with different variables to compare between UMI counts and the percent of mitochondrial content:
 * Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
+
 ```{r ,include=TRUE,eval=F}
 FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 ```
@@ -887,9 +889,11 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 ---
 ## Ridge plot
 
+Another plot you will also often see is a ridge/joy plot. These are evry similar to violins we have already made. 
+
 * This plot would be applied to demonstrate a given variable and their corresponding score (e.g. doublet vs doublet_score).
 * It is applied to evaluate the difference between groups in the variable.
-* This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
+* This plot is most widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
 
 ```{r ,include=TRUE,eval=F}
 RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
@@ -898,14 +902,15 @@ RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
 ---
 ## Ridge plot
 
+Another plot you will also often see is a ridge/joy plot. These are evry similar to violins we have already made. 
+
 * This plot would be applied to demonstrate a given variable and their corresponding score (e.g. doublet vs doublet_score).
 * It is applied to evaluate the difference between groups in the variable.
-* This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
+* This plot is most widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
 
-```{r qcPlot_ridgePlot_pres,include=TRUE,eval=TRUE, echo=F, fig.height=4,fig.width=7}
+```{r qcPlot_ridgePlot_pres,include=TRUE,eval=TRUE, echo=F, fig.height=3,fig.width=6}
 RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
 ```
-
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -932,6 +937,8 @@ if(params$isSlides == "yes"){
 ```
 
 ## Filtering doublets and cell debris
+
+Once we have described and annotated our data, we can start to enact our quality control methods to filter out bad cells and correct confounding variables. 
 
 Cell debris are with high percent.mt and low UMI counts. Generally, we set various cut-off on percent.mt:
 * In most scRNA cases, we set the *percent.mt > 10* (95% of overall population)
@@ -1050,6 +1057,8 @@ if(params$isSlides == "yes"){
 
 ## Dimension Reduction
 
+At this point, in theory we should have a nice clean dataset, so we can start pushing towards the biological questions in our dataset.
+
 scRNAseq is highly dimensional data. To be able to tackle our data with approaches like clustering we need to simplify it down with dimension reduction. There are several steps:
 
 - Perform linear dimensional reduction with Principle Component Analysis (PCA)
@@ -1059,7 +1068,7 @@ scRNAseq is highly dimensional data. To be able to tackle our data with approach
 
 ---
 ## Linear dimensional reduction
-Perform PCA with *RunPCA()* function in Seurat. Set Principle components to 30.
+Perform PCA with *RunPCA()* function in Seurat. Set Principle components to 50.
 
 ```{r dimRed_pca,include=TRUE,eval=T}
 set.seed(1001)
@@ -1148,9 +1157,9 @@ ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pc)) + geom_text() +
 * Make non-linear dimensional reduction with UMAP
 
 ```{r dimRed_UMAP,include=TRUE,eval=T}
-seu_filt <- FindNeighbors(seu_filt,dims = 1:pc,reduction = "pca")
+seu_filt <- FindNeighbors(seu_filt,dims = 1:pc, reduction = "pca")
 
-seu_filt <- RunUMAP(seu_filt,dims = 1:pc,reduction = "pca")
+seu_filt <- RunUMAP(seu_filt,dims = 1:pc, reduction = "pca")
 ```
 
 ---
@@ -1169,12 +1178,11 @@ DimPlot(seu_filt)
 
 We will be making a lot of UMAPs going forward. 
 
-Relatively new approach (2018) and is generally used more than tSNE now. Though it sometimes faces criticism we find it does a good job on most data sets. 
+Relatively new approach (2018) and is generally used more than tSNE now. Though it sometimes faces criticism we find it does a good job on most data sets. It allows a comprehensible 2D visualization of your result. 
 
 For a detailed explanation and discussion of dimension reduction approaches here are some resources:
 
 [Data Science blog post](https://towardsdatascience.com/dimensionality-reduction-for-data-visualization-pca-vs-tsne-vs-umap-be4aa7b1cb29)
-
 
 [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
 
@@ -1203,7 +1211,7 @@ if(params$isSlides == "yes"){
 ```
 
 ## Clustering
-- The cells are clustered based on UMAP by using *FindClusters()* function in Seurat.
+- The cells are clustered using *FindClusters()* function in Seurat.
 - The clustering is differentiated by **original Louvain algorithm**.
 - To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
 
@@ -1219,6 +1227,7 @@ seu_filt[["cluster_byDefault"]] <- seu_filt$seurat_clusters
 
 ---
 ## Identify clusters
+
 Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
 
 ```{r, fig.height=4,fig.width=7}
@@ -1304,6 +1313,7 @@ DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoL
 ## Clustering - default
 
 We can see that we have slightly more clusters. We can now compare back to the original clustering, and see that cluster 12 is clearly defined now, where it wasn't before.
+
 ```{r ,include=TRUE,eval=T, fig.height=4,fig.width=7}
 DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
 ```
@@ -1339,6 +1349,7 @@ head(markers)
 ## Identify cluster-specific marker genes
 
 We can review the results with a heatmap. We will first select the top 2 genes for each cluster by log2FC.
+
 ```{r top2Mark,include=TRUE,eval=T}
 top_genes <- markers %>% group_by(cluster) %>%
   slice_max(n = 2, order_by = avg_log2FC)
@@ -1420,6 +1431,7 @@ FeaturePlot(seu_filt, features = known_marker)
 ## Match markers to clusters
 
 We can also check the expression of markers in each cluster. First, we need to get our count data and our full list of markers.
+
 ```{r resEval_knowMarker_heatmap,include=TRUE,eval=T}
 known_marker <- c("IL7R","CCR7","S100A4","CD8A",
                                    "MS4A1",
@@ -1602,7 +1614,8 @@ Seurat has many different options for differentials. You can use these to fully 
 
 - Assign the groups we want to compare: *group_by*
 - If we want to get a unfiltered results: set *logfc.threshold = 0* and *min.pct = 0*
-- Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*
+- Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*.
+- If you use other methods we advise checking the documentation, reading around, talking to us as some the implementations are not the same as in other packages.
 
 
 
@@ -1639,6 +1652,90 @@ unlink("clust_dat.csv")
 ```
 
 
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Loupe Browser
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("#  Loupe Browser
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Loupe Browser for visualization
+
+
+.pull-left[
+
+The Loupe browser is a tool for visualization of Cell Ranger cloupe files. 
+
+It provides t-sne visualization of your single-cell data alongside sample/cell information as well as methods to test and visualize changes in gene expression.
+
+Loupe browser can be freely downloaded from the 10x website.
+
+]
+
+.pull-right[
+ <div align="center">
+<img src="imgs/loupeDownload.png" alt="igv" height="400" width="350">
+</div>
+]
+
+
+---
+## Creating Loupe files
+
+We can export our seurat objects to a cloupe file using the loupeR package from 10X. This package is available on their github. Once installed we need agree to the license by running the setup function.
+
+```{r}
+remotes::install_github("10xGenomics/loupeR")
+loupeR::setup()
+```
+
+---
+## Creating Loupe files
+
+We can then create a loupe file from our seurat object really easily using the *create_loupe_from_seurat()* function.
+
+```{r}
+library(loupeR)
+create_loupe_from_seurat(seu_filt, 
+                         output_dir = "loupe", 
+                         output_name = "seu_filt")
+
+```
+
+---
+
+## Loupe Browser for visualization
+
+
+.pull-left[
+
+Having downloaded the Loupe browser we can load our cloupe files directly in and rapidly visually interrogate our data.
+
+In todays session we will review some of the features available in Loupe using the PBMC example data set.
+
+
+.pull-right[
+ <div align="center">
+<img src="imgs/loupeFront.png" alt="igv" height="300" width="400">
+</div>
+]
+
+
 ---
 ## Further reading
 
@@ -1650,6 +1747,7 @@ UMAPS:
 * [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
 * [Limitations](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011288)
 
+- [Loupe Broswer Download](https://www.10xgenomics.com/products/loupe-browser/downloads)
 
 
 
