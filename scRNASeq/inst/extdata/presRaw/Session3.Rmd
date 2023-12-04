@@ -642,7 +642,7 @@ if(params$isSlides == "yes"){
 
 
 ![](./imgs/overview1.png)
-
+[overview](./imgs/scRNA_workflow_ver001_20231017.png)
 
 ---
 ## Droplet processing
@@ -831,7 +831,7 @@ gc()
 ## Droplet processing
 
 ![](./imgs/overview1.png)
-
+[overview](./imgs/scRNA_workflow_ver001_20231017.png)
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1019,7 +1019,7 @@ if(params$isSlides == "yes"){
 
 ```
 
----
+
 ## Ambient RNAs
 
 * The cell-free RNA molecules randomly spread in the solution. It can be enclosed into droplets during the steps of library preparation. So, it would be falsely increase the UMI counts of genes.
@@ -1036,6 +1036,7 @@ if(params$isSlides == "yes"){
 
 
 ![](./imgs/overview2.png)
+[overview](./imgs/scRNA_workflow_ver001_20231017.png)
 
 ---
 ## Ambient RNAs
@@ -1398,6 +1399,139 @@ gc()
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
+# Normalization and transformation
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Normalization and transformation
+
+---
+"    
+  )
+  
+}
+
+```
+
+
+## SCTransform
+
+![](./imgs/overview3.png)
+[overview](./imgs/scRNA_workflow_ver001_20231017.png)
+
+---
+## SCTransform
+
+In our simplified workflow we used a log normalization approach. Recently an alternative approach has been gaining popularity: SCTransform. Lets compare this back to our log normalization. 
+
+
+```{r,include=F,echo=T,eval=TRUE}
+library(Seurat)
+mtx_dir <- "filtered_feature_bc_matrix"
+mtx <- Seurat::Read10X(mtx_dir)
+seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
+seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
+seu_obj <- ScaleData(seu_obj)
+```
+
+---
+## SCTransform
+
+- SCTransform is a normalization based on negative binomial regression.
+- It is performed with **SCTransform()** function of Seurat.
+- This function equal to the combinations of NormalizeData(), FindVariableFeatures(), and ScaleData().
+
+```{r norm_sct, include=TRUE, eval=F}
+seu_obj <- SCTransform(seu_obj, variable.features.n = 3000)
+seu_obj
+```
+
+```{r, eval=F, echo=F}
+SCT_assay <- seu_obj2@assays$SCT
+save(SCT_assay, file="data/SCT_assay.RData")
+```
+
+```{r, eval=T, echo=F}
+load("data/SCT_assay.RData")
+seu_obj@assays$SCT <- SCT_assay
+DefaultAssay(seu_obj) <- "SCT"
+seu_obj
+```
+
+
+---
+## SCTransform
+
+The normalized data is stored in assay **SCT**. We can see this is now the active assay. The log results are stored in the **RNA** assay. We can control which is the active assay with the *DefaultAssay()* function.
+
+```{r include=TRUE, eval=TRUE}
+seu_obj
+DefaultAssay(seu_obj) <- "RNA"
+DefaultAssay(seu_obj) <- "SCT"
+```
+
+
+---
+## SCTransform vs log normalization
+
+
+We can extract out the results of our normalized and scaled data with the *GetAssayData()* function. 
+
+```{r norm_comp,include=TRUE,eval=TRUE}
+log_mat <- GetAssayData(seu_obj,assay="RNA",slot="data")
+log_mat <- as.matrix(log_mat)
+log_avgExp <- rowMeans(log_mat)
+
+sct_mat <- GetAssayData(seu_obj,assay="SCT",slot="data")
+sct_mat <- as.matrix(sct_mat)
+sct_avgExp <- rowMeans(sct_mat)
+```
+
+---
+## log normalization vs SCTransform
+
+We can test the concordance with Spearman's correlation.
+
+```{R, eval=F}
+
+dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
+cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
+
+ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
+  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+```
+
+---
+## log normalization vs SCTransform
+
+We can see there is very high similarity between the results.
+
+```{R, echo=F, fig.height=4,fig.width=7}
+dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
+cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
+
+ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
+  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+rm(dat, log_mat, sct_mat, plot1, plot2)
+gc()
+```
+
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
 # Merging Datasets
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
@@ -1416,6 +1550,12 @@ if(params$isSlides == "yes"){
 
 ```
 
+## An advanced scRNAseq workflow
+
+![](./imgs/overview3.png)
+[overview](./imgs/scRNA_workflow_ver001_20231017.png)
+
+---
 ## Merge multiple datasets
 We will discuss a number of approaches and methods we may need to use to merge datasets.
 
@@ -2005,7 +2145,8 @@ gc()
 ---
 ## An advanced scRNAseq workflow
 
-![overview](./imgs/advancedworkflow.png)
+![](./imgs/overview3.png)
+[overview](./imgs/scRNA_workflow_ver001_20231017.png)
 
 
 ---
@@ -2261,17 +2402,6 @@ This isn't always the case. This is good demonstration data.
 rm(panc8, seu_list, ref_list, anchors, ref_panc, panc_list, seu, pred_res, mat, pred_cellType, sce_list, cell_type)
 gc()
 ```
-
----
-## An advanced scRNAseq workflow
-
-![overview](./imgs/advancedworkflow.png)
-
-
----
-## An advanced scRNAseq workflow
-
-![overview](./imgs/advancedworkflow.png)
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -3046,9 +3176,6 @@ top_genes <- read.csv("data/top_genes.csv")
 ```
 
 
-
-
-
 ---
 ## Marker genes by clusters
   
@@ -3097,7 +3224,6 @@ VlnPlot(seu,features = c("Dlk1","Postn"),
          ncol = 2,
          pt.size = 0)
 ```
-
 
 
 ---

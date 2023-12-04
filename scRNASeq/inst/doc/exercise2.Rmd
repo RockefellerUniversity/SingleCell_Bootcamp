@@ -27,6 +27,7 @@ Single-cell transcriptome data of Human Glioblastoma Multiforme (GBM) was fetche
 - Please read the filtered matrix of CellRanger results and load the counting matrix into a Seurat object. filtering cells with less than 200 expressing gene and genes presensting in less than 10 cells.
 - How many cells detected?
 - How many genes (features) detected?
+
 ```{r load_data,include=TRUE, eval=FALSE,echo=toMessage}
 library(Seurat)
 
@@ -40,6 +41,7 @@ seu
 
 ## data processing
 - Please estimate mitochondrial content
+
 ```{r prac1_dataProc_mito, eval=FALSE,echo=toMessage}
 seu[["percent.mt"]] <- PercentageFeatureSet(seu,pattern = "MT-")
 summary(seu$percent.mt)
@@ -48,13 +50,14 @@ summary(seu$percent.mt)
 - Make log normalization and identify variable features with the following settings
   + log normalization: *normalization.method="logNormalize"*.
   + find variable features: *select.method="vst"* and *nfeatures=3000*.
+  
 ```{r prac1_dataProc_logNorm,echo=toMessage, eval=F}
 seu <- NormalizeData(seu,normalization.method =  "LogNormalize")
 seu <- FindVariableFeatures(seu,selection.method = "vst",nfeatures = 3000)
 seu
 ```
 
-## cell cycle phase estimation
+## Cell cycle phase estimation
 - Please estimate cell cycle Phases with *Seurat::CellCycleScoring()*.
 ```{r prac1_ccEst_seurat, eval=FALSE,echo=toMessage}
 seu <- CellCycleScoring(seu,s.features = cc.genes$s.genes,g2m.features = cc.genes$g2m.genes)
@@ -64,6 +67,7 @@ table(seu$Phase)
 ```
 
 - Please estimate cell cycle Phases with *scran::cyclone()*. 
+
 ```{r prac1_ccEst_SingleR, eval=FALSE,echo=toMessage}
 # convert data into SingleCellExperiment
 library(scran)
@@ -85,9 +89,12 @@ seu[["cyclon_G2MScore"]] <- assignments$scores$G2M
 ```
 
 - Compare the results between the two methods
-Seurat results in row and cyclone results in column
+
+
+
 ```{r prac1_ccEst_compRes, eval=FALSE,echo=toMessage}
-table(seu$Phase,seu$cyclon_Phase)
+#Seurat results in row and cyclone results in column
+table(seu$Phase, seu$cyclon_Phase)
 ```
 
 ## Estimate doubets
@@ -135,6 +142,7 @@ FeatureScatter(seu,feature1 = "nCount_RNA","percent.mt")
 * Please filtering cells with
   + doublets
   + percent.mt >= 10
+  
 ```{r prac1_qcPlot_filt, eval=FALSE,echo=toMessage}
 seu[["filtOUT"]] <- seu$doublet == "TRUE" | seu$percent.mt >= 10
 table(seu$filtOUT)

@@ -20,10 +20,7 @@ suppressPackageStartupMessages(require(Seurat))
 
 <p>&nbsp;</p>
 
-We have no specific exercises for Cell Ranger and Loupe browser. 
-
-We recommend reading in the example dataset into Loupe browser and try to become familiar with user experience. 
-
+We have no specific exercises for scRNAseq background and setup. 
 
 
 

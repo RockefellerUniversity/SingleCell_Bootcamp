@@ -1699,7 +1699,7 @@ Loupe browser can be freely downloaded from the 10x website.
 
 We can export our seurat objects to a cloupe file using the loupeR package from 10X. This package is available on their github. Once installed we need agree to the license by running the setup function.
 
-```{r}
+```{r, eval=F}
 remotes::install_github("10xGenomics/loupeR")
 loupeR::setup()
 ```
@@ -1709,7 +1709,7 @@ loupeR::setup()
 
 We can then create a loupe file from our seurat object really easily using the *create_loupe_from_seurat()* function.
 
-```{r}
+```{r, eval=F}
 library(loupeR)
 create_loupe_from_seurat(seu_filt, 
                          output_dir = "loupe", 
