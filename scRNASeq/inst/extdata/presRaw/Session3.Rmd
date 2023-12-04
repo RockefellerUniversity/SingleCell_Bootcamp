@@ -723,7 +723,7 @@ The h5 file produced by CellBender is currently incompatible with Seurat. We can
 
 CellBender has a guide how to convert the h5 file to a Seurat object [here](https://cellbender.readthedocs.io/en/latest/tutorial/index.html#open-in-seurat), using PyTables. This is another command line tool. 
 
-```{sh}
+```{sh,eval=F}
 ptrepack --complevel 5 celbender_filtered.h5:/matrix celbender_filtered_forseurat.h5:/matrix
 
 ```
