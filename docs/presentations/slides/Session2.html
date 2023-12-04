@@ -4,7 +4,7 @@
     <title>Single-cell RNA sequencing ~ Session 2 ¶  ¶ ¶  ¶ </title>
     <meta charset="utf-8" />
     <meta name="author" content="Rockefeller University, Bioinformatics Resource Centre" />
-    <script src="libs/header-attrs-2.22/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.25/header-attrs.js"></script>
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link rel="stylesheet" href="metropolisCustom.css" type="text/css" />
     <link rel="stylesheet" href="metropolis-fontsCustom.css" type="text/css" />
@@ -33,6 +33,7 @@ class: center, middle, inverse, title-slide
 
 ---
 ## A basic scRNAseq workflow
+
 - Load data into Seurat
 - Data normalization with Seurat
 - Calculate mitochondrial content
@@ -43,6 +44,7 @@ class: center, middle, inverse, title-slide
 - Clustering with Seurat
 - Evaluate results - cell type specific clusters
 - Identify marker genes by clusters
+- Loupe Browser
 
 ---
 ## Seurat
@@ -98,6 +100,14 @@ download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nex
 
 ```r
 untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+```
+
+
+We can check the contents of the directory with the `dir()` command. We should see our our unpacked directory `filtered_feature_bc_matrix` and the original tar.gz file.
+
+
+```r
+dir()
 ```
 
 ---
@@ -2547,6 +2557,7 @@ The matrix is loaded into Seurat object with **CreateSeurtObject()**
 Cut-offs:
   + min_gene: minimum genes detected per cell: *cells with too few genes detected*
   + min_cell: minimum cells a gene expressed in: *Remove genes expressed in too few cells*
+  
 
 ```r
 sample_id &lt;- "PBMC_10k"  # sample name
@@ -2591,6 +2602,7 @@ seu_obj
 ## An object of class Seurat 
 ## 18389 features across 11428 samples within 1 assay 
 ## Active assay: RNA (18389 features, 0 variable features)
+##  2 layers present: counts, data
 ```
 
 
@@ -2683,7 +2695,7 @@ ggplot(dat, aes(x = byPattern, y = byGene)) + geom_point() + geom_smooth() + lab
 ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -2699,15 +2711,6 @@ class: inverse, center, middle
 * Normalization: Feature counts are normalized to total counts each cell
 * Feature selection: Identifies features that are highly variable
 * Data scaling: Scales and centers features in the dataset
-
----
-## To scaled data
-
-There are 2 main approaches for this:
-- Log normalization [default]
-- SCTransform
-
-We often find the results of these are fairly consistent, but there is growing trend in publications towards SCTransform, instead of the Seurat default of using log normalization. 
 
 ---
 ## Log normalization
@@ -2778,114 +2781,7 @@ plot2
 ## When using repel, set xnudge and ynudge to 0 for optimal results
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
-
----
-## SCTransform
-
-- SCTransform is a normalization based on negative binomial regression.
-- It is performed with **SCTransform()** function of Seurat.
-- This function equal to the combinations of NormalizeData(), FindVariableFeatures(), and ScaleData().
-
-
-```r
-seu_obj &lt;- SCTransform(seu_obj, variable.features.n = 3000)
-seu_obj
-```
-
-
-
-
-```
-## An object of class Seurat 
-## 36778 features across 11428 samples within 2 assays 
-## Active assay: SCT (18389 features, 3000 variable features)
-##  1 other assay present: RNA
-```
-
-
----
-## SCTransform
-
-The normalized data is stored in assay **SCT**. We can see this is now the active assay. Our log normalization is stored in the "RNA" assay. 
-
-
-```r
-seu_obj
-```
-
-```
-## An object of class Seurat 
-## 36778 features across 11428 samples within 2 assays 
-## Active assay: SCT (18389 features, 3000 variable features)
-##  1 other assay present: RNA
-```
-
----
-## log normalization vs SCTransform
-
-We can extract out the results of our normalized and scaled data with the *GetAssayData()* function. 
-
-
-```r
-log_mat &lt;- GetAssayData(seu_obj, assay = "RNA", slot = "data")
-log_mat &lt;- as.matrix(log_mat)
-```
-
-```
-## Warning in asMethod(object): sparse-&gt;dense coercion: allocating vector of size
-## 1.6 GiB
-```
-
-```r
-log_avgExp &lt;- rowMeans(log_mat)
-
-sct_mat &lt;- GetAssayData(seu_obj, assay = "SCT", slot = "data")
-sct_mat &lt;- as.matrix(sct_mat)
-```
-
-```
-## Warning in asMethod(object): sparse-&gt;dense coercion: allocating vector of size
-## 1.6 GiB
-```
-
-```r
-sct_avgExp &lt;- rowMeans(sct_mat)
-```
-
----
-## log normalization vs SCTransform
-
-We can test the concordance with Spearman's correlation.
-
-
-```r
-dat &lt;- data.frame(logNorm = log_avgExp, SCT = sct_avgExp)
-cor_val &lt;- cor.test(log_avgExp, sct_avgExp, method = "spearman")
-
-ggplot(dat, aes(x = logNorm, y = SCT)) + geom_point() + geom_smooth() + labs(x = "Log_Normalization",
-    y = "SCTransform", subtitle = paste0("rho=", round(cor_val$estimate, 3), "; p-value=",
-        cor_val$p.value[1])) + theme_classic()
-```
-
----
-## log normalization vs SCTransform
-
-We can see there is very high similarity between the results. 
-
-
-```
-## Warning in cor.test.default(log_avgExp, sct_avgExp, method = "spearman"):
-## Cannot compute exact p-value with ties
-```
-
-```
-## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-```
-
-![](Session2_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
-
-
+![](Session2_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -2999,7 +2895,7 @@ ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_boxplot() + labs(x =
     y = "Score", fill = "Phase") + facet_wrap(~cat) + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-34-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-29-1.png)&lt;!-- --&gt;
 
 ---
 ## Cell cycle estimation by cyclone
@@ -3014,7 +2910,15 @@ library(scran)
 ```
 
 ```
+## Warning: package 'scran' was built under R version 4.3.1
+```
+
+```
 ## Loading required package: SingleCellExperiment
+```
+
+```
+## Warning: package 'SingleCellExperiment' was built under R version 4.3.1
 ```
 
 ```
@@ -3022,7 +2926,15 @@ library(scran)
 ```
 
 ```
+## Warning: package 'SummarizedExperiment' was built under R version 4.3.1
+```
+
+```
 ## Loading required package: MatrixGenerics
+```
+
+```
+## Warning: package 'MatrixGenerics' was built under R version 4.3.1
 ```
 
 ```
@@ -3070,7 +2982,15 @@ library(scran)
 ```
 
 ```
+## Warning: package 'GenomicRanges' was built under R version 4.3.1
+```
+
+```
 ## Loading required package: GenomeInfoDb
+```
+
+```
+## Warning: package 'GenomeInfoDb' was built under R version 4.3.1
 ```
 
 ```
@@ -3086,6 +3006,10 @@ library(scran)
 
 ```
 ## Loading required package: Biobase
+```
+
+```
+## Warning: package 'Biobase' was built under R version 4.3.1
 ```
 
 ```
@@ -3119,19 +3043,23 @@ library(scran)
 ```
 
 ```
-## The following object is masked from 'package:SeuratObject':
-## 
-##     Assays
-```
-
-```
 ## The following object is masked from 'package:Seurat':
 ## 
 ##     Assays
 ```
 
 ```
+## The following object is masked from 'package:SeuratObject':
+## 
+##     Assays
+```
+
+```
 ## Loading required package: scuttle
+```
+
+```
+## Warning: package 'scuttle' was built under R version 4.3.1
 ```
 
 ```r
@@ -3194,7 +3122,7 @@ lapply(ccGene_hs, function(x) {
 ---
 ## Running cyclone
 
-We just provide the the SinlgeCellExperiment object, the cell cycle gene list, and also a vector of all gene names.
+We just provide the the SingleCellExperiment object, the cell cycle gene list, and also a vector of all gene names.
 
 Remember! This is slow. We have a processed result you can also load in. 
 
@@ -3290,7 +3218,7 @@ ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_boxplot() + labs(x =
     y = "Score", fill = "Phase") + facet_wrap(~cat) + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-40-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-35-1.png)&lt;!-- --&gt;
 
 ---
 ## Compare the two strategies
@@ -3373,12 +3301,14 @@ Scrublet is a tool to detect doublets.
 We can install the scrublet easily using the Herper package. This uses reticulate to manage miniconda, a repository of tools from which we can install scrublet. 
 
 
+
+
+
 ```r
-library(Herper)
+library(reticulate)
+reticulate::py_install("scrublet")
 
-conda_install &lt;- install_CondaTools("scrublet", "scRNA", pathToMiniConda = "../mini")
-
-Sys.setenv(RETICULATE_PYTHON = file.path(conda_install$pathToEnvBin, "python"))
+scr &lt;- reticulate::import("scrublet")
 ```
 
 ---
@@ -3464,7 +3394,7 @@ VlnPlot(seu_obj, group.by = "doublet", features = c("nCount_RNA", "nFeature_RNA"
     "doublet_score"), pt.size = 0)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-47-1.png)&lt;!-- --&gt;
 
 ---
 ## Assessing Doublets
@@ -3477,7 +3407,7 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", pt.s
     group.by = "doublet")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-48-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -3489,6 +3419,7 @@ class: inverse, center, middle
 ---
 
 ## Distribution of variables in violin plot
+
 We can use violin plots to check the distribution of specific variables such as:
   + UMIs (*nCount_RNA*) per cell
   + Genes detected (*nFeature_RNA*) per cell
@@ -3505,7 +3436,7 @@ VlnPlot(seu_obj, group.by = "dset", features = c("nCount_RNA", "nFeature_RNA", "
 
 If a bimodal distribution is identified, we need to check for any interference. We can see some evidence of bimodality in our dataset here.
 
-![](Session2_files/figure-html/unnamed-chunk-54-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-50-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluating interactions
@@ -3524,7 +3455,7 @@ Comparison between UMIs and genes detected per cell:
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
 
-![](Session2_files/figure-html/unnamed-chunk-55-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluating interactions
@@ -3628,15 +3559,13 @@ class: inverse, center, middle
 Though we have filtered out the most extreme problem cells we will likely still have confounders in our dataset. These are unexpected variables contribute to a high percent of the variances.
 
 - The *vars.to.regress* argument in *ScaleData()* allows us account for confounders.
-- For SCTransform data, we can use the same parameter in SCTransform().
-- Common potential confounders: percent.mt, doublet_score, cell cycle scores
+- Common potential confounders: percent.mt, doublet_score, cell cycle scores.
 
 
 ```r
 pot_conf &lt;- c("percent.mt", "doublet_score", "cyclon_G1Score", "cyclon_SScore", "cyclon_G2MScore",
     "cyclon_Phase")
 seu_filt &lt;- ScaleData(seu_filt, vars.to.regress = pot_conf)
-seu_filt &lt;- SCTransform(seu_filt, vars.to.regress = pot_conf)
 ```
 
 
@@ -3792,7 +3721,7 @@ ggplot(plot_df, aes(cumu, pct, label = rank, color = rank &gt; pc)) + geom_text(
 
 We can now look at our cutoff on our elbow plot. This seems to match the point where our data plateaus.
 
-![](Session2_files/figure-html/unnamed-chunk-65-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-61-1.png)&lt;!-- --&gt;
 
 ---
 ## Make non-linear dimensional reduction
@@ -3825,19 +3754,35 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 03:03:37 UMAP embedding parameters a = 0.9922 b = 1.112
+## 01:41:31 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 03:03:37 Read 9379 rows and found 19 numeric columns
+## Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
 ```
 
 ```
-## 03:03:37 Using Annoy for neighbor search, n_neighbors = 30
+## Also defined by 'spam'
 ```
 
 ```
-## 03:03:37 Building Annoy index with metric = cosine, n_trees = 50
+## 01:41:31 Read 9379 rows and found 19 numeric columns
+```
+
+```
+## 01:41:31 Using Annoy for neighbor search, n_neighbors = 30
+```
+
+```
+## Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+```
+
+```
+## Also defined by 'spam'
+```
+
+```
+## 01:41:31 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -3850,13 +3795,13 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 03:03:39 Writing NN index file to temp file /tmp/Rtmp1mtYKb/file190265dfa1d0
-## 03:03:39 Searching Annoy index using 1 thread, search_k = 3000
-## 03:03:42 Annoy recall = 100%
-## 03:03:43 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 03:03:45 Initializing from normalized Laplacian + noise (using irlba)
-## 03:03:45 Commencing optimization for 500 epochs, with 398570 positive edges
-## 03:03:59 Optimization finished
+## 01:41:32 Writing NN index file to temp file /tmp/Rtmpp2xqGI/file2b4c5c8c0892
+## 01:41:32 Searching Annoy index using 1 thread, search_k = 3000
+## 01:41:35 Annoy recall = 100%
+## 01:41:36 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 01:41:38 Initializing from normalized Laplacian + noise (using RSpectra)
+## 01:41:38 Commencing optimization for 500 epochs, with 398570 positive edges
+## 01:41:50 Optimization finished
 ```
 
 ---
@@ -3869,7 +3814,7 @@ We can now draw the results of our UMAP, which clearly separates our cells intro
 DimPlot(seu_filt)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-66-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-62-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -3935,12 +3880,12 @@ Looking at the UMAP we can see good separation of clusters. But there may be roo
 DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-64-1.png)&lt;!-- --&gt;
 
 ---
 ## Testing resolutions
 
-To identify the best resolution for each dataset we iteratively test potential resolutions.
+To identify the best resolution for each dataset we iteratively test potential resolutions using clustree.
 
 
 ```r
@@ -3949,6 +3894,17 @@ library(clustree)
 
 ```
 ## Loading required package: ggraph
+```
+
+```
+## 
+## Attaching package: 'ggraph'
+```
+
+```
+## The following object is masked from 'package:sp':
+## 
+##     geometry
 ```
 
 ```r
@@ -4057,6 +4013,13 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 names(reso_res) &lt;- paste0("k", 1:length(reso))
 ```
 
+Some newer Macs have issues with *clustree*. Installing *tweenr* directly should help. 
+
+
+```r
+remotes::install_github("thomasp85/tweenr")
+```
+
 ---
 ## Testing resolutions
 
@@ -4082,6 +4045,7 @@ head(k_dat, 2)
 - To identify the better resolution
   + less cross talks between lineages
   + more clusters identified
+  
 
 ```r
 clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
@@ -4091,7 +4055,8 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 ## Evaluate resolutions with clustree
 - The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
 * In this case, we use *resolution=0.4*
-![](Session2_files/figure-html/unnamed-chunk-70-1.png)&lt;!-- --&gt;
+
+![](Session2_files/figure-html/unnamed-chunk-67-1.png)&lt;!-- --&gt;
 
 ---
 ## Clustering - optimized
@@ -4127,7 +4092,7 @@ DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + N
     ggtitle("Optimized Clusters")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-71-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
 
 ---
 ## Clustering - default
@@ -4139,7 +4104,7 @@ DimPlot(seu_filt, group.by = "cluster_byDefault", label = TRUE, pt.size = 0.2) +
     NoLegend() + ggtitle("Default Clusters")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-72-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-69-1.png)&lt;!-- --&gt;
 
 ---
 ## A basic scRNAseq workflow
@@ -4212,7 +4177,7 @@ We can then use the *DoHeatmap()* from Seurat to plot just these genes.
 DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-75-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-72-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -4261,7 +4226,7 @@ known_marker &lt;- c("GNLY", "NKG7")
 FeaturePlot(seu_filt, features = known_marker)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-77-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-74-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -4270,12 +4235,12 @@ FeaturePlot(seu_filt, features = known_marker)
 We can also check the expression of markers in each cluster. First, we need to get our count data and our full list of markers.
 
 ```r
+known_marker &lt;- c("IL7R", "CCR7", "S100A4", "CD8A", "MS4A1", "CD14", "LYZ", "FCGR3A",
+    "MS4A7", "FCER1A", "CST3", "GNLY", "NKG7", "PPBP")
+
 mat &lt;- GetAssayData(seu_filt, assay = "RNA", slot = "data")
 mat &lt;- mat[known_marker, ]
 mat &lt;- as.matrix(mat)
-
-known_marker &lt;- c("IL7R", "CCR7", "S100A4", "CD8A", "MS4A1", "CD14", "LYZ", "FCGR3A",
-    "MS4A7", "FCER1A", "CST3", "GNLY", "NKG7", "PPBP")
 ```
 
 ---
@@ -4312,7 +4277,8 @@ avgExp_mat &lt;- do.call(cbind, avgExp_byClust)
 pheatmap(avgExp_mat, scale = "row")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-79-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-76-1.png)&lt;!-- --&gt;
+
 
 
 ---
@@ -4364,7 +4330,7 @@ DimPlot(seu_filt, group.by = c("seurat_clusters", "cellType_byClust"), label = T
     pt.size = 0.2) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-82-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-79-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -4392,6 +4358,18 @@ deg &lt;- FindMarkers(seu_filt, group.by = "cellType_byClust", ident.1 = "CD14+ 
     ident.2 = "FCGR3A+ Monocytes", logfc.threshold = 0.25, test.use = "wilcox", min.pct = 0.1)
 ```
 
+```
+## For a (much!) faster implementation of the Wilcoxon Rank Sum Test,
+## (default method for FindMarkers) please install the presto package
+## --------------------------------------------
+## install.packages('devtools')
+## devtools::install_github('immunogenomics/presto')
+## --------------------------------------------
+## After installation of presto, Seurat will automatically use the more 
+## efficient implementation (no further action necessary).
+## This message will be shown once per session
+```
+
 ---
 ## Results intepretation
 
@@ -4411,13 +4389,13 @@ head(deg)
 ```
 
 ```
-##        p_val avg_log2FC pct.1 pct.2 p_val_adj Symbol
-## S100A9     0   7.284148 0.998 0.275         0 S100A9
-## LYZ        0   6.697938 0.997 0.203         0    LYZ
-## S100A8     0   6.506652 0.997 0.143         0 S100A8
-## CTSS       0   4.821312 0.997 0.378         0   CTSS
-## MNDA       0   4.591103 0.996 0.030         0   MNDA
-## VCAN       0   4.557196 0.985 0.021         0   VCAN
+##                 p_val avg_log2FC pct.1 pct.2     p_val_adj  Symbol
+## TLR4    1.082797e-253  10.736370 0.642 0.000 1.991156e-249    TLR4
+## GAS7    1.152614e-230  10.546007 0.601 0.000 2.119542e-226    GAS7
+## THBS1   7.333729e-111  10.240706 0.348 0.000 1.348599e-106   THBS1
+## PLXDC2   0.000000e+00  10.081495 0.768 0.001  0.000000e+00  PLXDC2
+## SYK     5.249775e-300   9.650237 0.717 0.001 9.653811e-296     SYK
+## EPB41L3 6.863052e-130   9.625128 0.395 0.000 1.262047e-125 EPB41L3
 ```
 
 ---
@@ -4439,7 +4417,7 @@ table(deg$sig)
 ```
 ## 
 ##   CD14+      nc FCGR3A+ 
-##     998    1894     288
+##    3574    1520    1058
 ```
 
 ---
@@ -4452,7 +4430,7 @@ ggplot(deg, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) + geom_poin
     y = "-log10_adjPV", color = "") + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-85-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-82-1.png)&lt;!-- --&gt;
 
 ---
 ## Customizing your differentials
@@ -4476,7 +4454,7 @@ We have based our workflow on the [Seurat vignettes](https://satijalab.org/seura
 UMAPS:
 * [Data Science blog post](https://towardsdatascience.com/dimensionality-reduction-for-data-visualization-pca-vs-tsne-vs-umap-be4aa7b1cb29)
 * [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
-
+* [Limitations](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011288)
 
 
 

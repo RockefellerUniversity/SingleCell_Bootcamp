@@ -27,7 +27,7 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning 
 ## library(scuttle)
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -49,16 +49,37 @@ if(params$isSlides == "yes"){
 
 
 
-## ---- eval=F------------------------------------------------------------------
-## devtools::install_github('satijalab/seurat-data')
+## ----eval=F-------------------------------------------------------------------
+## remotes::install_github('satijalab/seurat-data')
+## 
 
 
-## -----------------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
+## library(Seurat)
+## library(SeuratData)
+## InstallData("ifnb")
+## LoadData("ifnb")
+## head(ifnb,2)
+
+
+## ----echo=F, eval=F-----------------------------------------------------------
+## write.csv(head(ifnb,2),"data/ifnb_head.csv")
+## 
+
+
+## ----echo=F, eval=T-----------------------------------------------------------
 library(Seurat)
-library(SeuratData)
-InstallData("ifnb")
-LoadData("ifnb")
-head(ifnb,2)
+ifnb_test <- read.csv("data/ifnb_head.csv",row.names=1)
+ifnb_test
+
+
+## ----echo=F, eval=F-----------------------------------------------------------
+## 
+## # Download: https://seurat.nygenome.org/src/contrib/ifnb.SeuratData_3.0.0.tar.gz
+## install.packages("~/Downloads/ifnb.SeuratData_3.0.2.tar.gz", repos = NULL, type = "source")
+## library(ifnb.SeuratData)
+## ifnb<-LoadData("ifnb")
+## 
 
 
 ## ----sec3_mergeData_fetchEG,include=TRUE, eval=F------------------------------
@@ -67,7 +88,13 @@ head(ifnb,2)
 ## ifnb_list
 
 
-## ---- echo=F, eval=F----------------------------------------------------------
+## ----echo=F, eval=F-----------------------------------------------------------
+## save("ifnb_list",
+##      file = "data/seuOBJ_IFNB_splitByStim.RData")
+
+
+## ----eval=F-------------------------------------------------------------------
+## 
 ## save("ifnb_list",
 ##      file = "data/seuOBJ_IFNB_splitByStim.RData")
 
@@ -86,7 +113,7 @@ data_proc <- function(seu){
 
 ## ----sec3_mergeData_funcUsed_quickClust,include=TRUE--------------------------
 quick_clust <- function(seu){
-  set.seed(1001)
+  set.seed(42)
   seu <- ScaleData(seu,verbose=FALSE)
   seu <- RunPCA(seu,npcs=30,verbose=FALSE)
   seu <- RunUMAP(seu, reduction = "pca", dims = 1:10,verbose=FALSE)
@@ -95,7 +122,7 @@ quick_clust <- function(seu){
   return(seu)}
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -124,6 +151,10 @@ ifnb_merge <- merge(ifnb_list$CTRL, ifnb_list$STIM,
 head(ifnb_merge,2)
 
 
+## ----eval=F, echo=F-----------------------------------------------------------
+## remotes::install_version("Matrix", version = "1.6-1.1")
+
+
 ## ----sec3_mergeData_woCorr_cluster,include=TRUE-------------------------------
 ifnb_merge <- data_proc(ifnb_merge)
 ifnb_merge <- quick_clust(ifnb_merge)
@@ -139,7 +170,7 @@ DimPlot(ifnb_merge, group.by = "seurat_annotations", pt.size = 0.2,split.by = "s
 
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -161,16 +192,28 @@ if(params$isSlides == "yes"){
 
 
 
-## ----sec3_mergeData_RPCA_prep,include=TRUE,eval=T-----------------------------
+## ----sec3_mergeData_RPCA_prep,include=TRUE,eval=F-----------------------------
+## 
+## ifnb_list_rpca <- lapply(ifnb_list, data_proc)
+## 
+## feats <- SelectIntegrationFeatures(ifnb_list_rpca)
+## 
+## ifnb_list <- lapply(ifnb_list,function(seu,feats){
+##   seu <- ScaleData(seu,features=feats,verbose=FALSE)
+##   seu <- RunPCA(seu,features=feats,verbose=FALSE)
+##   return(seu)},feats)
 
-ifnb_list_rpca <- lapply(ifnb_list, data_proc)
 
-feats <- SelectIntegrationFeatures(ifnb_list_rpca)
+## ----eval=F, echo=F-----------------------------------------------------------
+## saveRDS(ifnb_list, "data/ifnb_list.rds")
+## saveRDS(feats, "data/feats.rds")
+## 
 
-ifnb_list <- lapply(ifnb_list,function(seu,feats){
-  seu <- ScaleData(seu,features=feats,verbose=FALSE)
-  seu <- RunPCA(seu,features=feats,verbose=FALSE)
-  return(seu)},feats)
+
+## ----eval=T, echo=F-----------------------------------------------------------
+ifnb_list <- readRDS("data/ifnb_list.rds")
+feats <- readRDS("data/feats.rds")
+
 
 
 ## ----sec3_mergeData_RPCA_int,include=TRUE,eval=T------------------------------
@@ -218,7 +261,7 @@ pheatmap(tbl, scale = "column")
 
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -336,7 +379,7 @@ pheatmap(tbl,scale = "column")
 
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -378,13 +421,13 @@ DimPlot(seu_obj)
 ## DimPlot(seu_obj, reduction = "umap_harmony")
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
-rm(seu_obj, ifnb, ifnb_list, ifnb_merge, ifnb_list_rpca, feats, anchors, sce_list, dec_list, hvgc_list, combined_dec, chosen_hvgs, mnn_res, snn.gr, cluster_mnn ,cellType )
+rm(seu_obj, ifnb, ifnb_list, ifnb_merge, ifnb_list_rpca, anchors, sce_list, dec_list, hvgc_list, combined_dec, chosen_hvgs, mnn_res, snn.gr, cluster_mnn ,cellType )
 gc()
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -414,13 +457,23 @@ if(params$isSlides == "yes"){
 ## 
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----echo=F, eval=F-----------------------------------------------------------
+## 
+## # Download: https://seurat.nygenome.org/src/contrib/panc8.SeuratData_3.0.2.tar.gz
+## install.packages("~/Downloads/panc8.SeuratData_3.0.2.tar.gz", repos = NULL, type = "source")
+## library(panc8.SeuratData)
+## panc8 <- LoadData("panc8")
+## UpdateSeuratObject(panc8)
+
+
+## ----eval=F-------------------------------------------------------------------
+## panc8 <- UpdateSeuratObject(panc8)
 ## seu_list <- SplitObject(panc8, split.by = "tech")
 ## names(seu_list) <- c("celseq1", "celseq2", "smartseq", "fluidigmc1", "indrop")
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
-## save(seu_list, file="../data/panc8.RData")
+## ----eval=F, echo=F-----------------------------------------------------------
+## save(seu_list, file="data/panc8.RData")
 
 
 ## -----------------------------------------------------------------------------
@@ -526,13 +579,13 @@ tbl <- table(panc_list$query$cellType_predBySeurat,panc_list$query$cellType_pred
 pheatmap::pheatmap(tbl,scale = "row")
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
-rm(panc8, seu_list, ref_list, feats, anchors, ref_panc, panc_list, seu, pred_res, mat, pred_cellType, sce_list, cell_type)
+rm(panc8, seu_list, ref_list, anchors, ref_panc, panc_list, seu, pred_res, mat, pred_cellType, sce_list, cell_type)
 gc()
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -554,11 +607,11 @@ if(params$isSlides == "yes"){
 
 
 
-## ---- eval=T------------------------------------------------------------------
+## ----eval=T-------------------------------------------------------------------
 download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
 
 
-## ---- eval=T------------------------------------------------------------------
+## ----eval=T-------------------------------------------------------------------
 untar("10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
 
 
@@ -588,7 +641,7 @@ inflection <- metadata(bcrank)$inflection
 message(paste0("inflection point: ",inflection))
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
 ## ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
 ##   geom_hline(yintercept = knee, linetype="dashed",color="blue")+
 ##   geom_hline(yintercept = inflection, linetype="dashed",color="green")+
@@ -599,7 +652,7 @@ message(paste0("inflection point: ",inflection))
 ##   theme_classic()
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
   geom_hline(yintercept = knee, linetype="dashed",color="blue")+
   geom_hline(yintercept = inflection, linetype="dashed",color="green")+
@@ -610,7 +663,7 @@ ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
   theme_classic()
 
 
-## ----sec3_dropProc_remEmtpy_cal,include=FALSE,eval=TRUE-----------------------
+## ----sec3_dropProc_remEmtpy_cal, eval=TRUE------------------------------------
 
 e.out <- emptyDrops(raw_mtx)
 e.out <- e.out[order(e.out$FDR),]
@@ -618,7 +671,7 @@ head(e.out)
 
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
 ## 
 ## ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
 ##   geom_vline(xintercept = knee, color="red",linetype="dashed")+
@@ -628,7 +681,7 @@ head(e.out)
 ##   theme_classic()
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 
 ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
   geom_vline(xintercept = knee, color="red",linetype="dashed")+
@@ -649,7 +702,7 @@ amb <- metadata(e.out)$ambient[,1]
 head(amb)
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
+## ----eval=F, echo=F-----------------------------------------------------------
 ## load("data/seu_obj_raw.RData")
 ## seu <- seu_obj
 
@@ -660,22 +713,22 @@ untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz
 filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
 unlink("filtered_feature_bc_matrix/", recursive=TRUE)
 
 
-## ---- eval=T------------------------------------------------------------------
+## ----eval=T-------------------------------------------------------------------
 
 filt_mtx_drop <- filt_mtx[rownames(filt_mtx) %in% names(amb),]
 seu <- CreateSeuratObject(filt_mtx_drop)
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 rm(filt_mtx_drop)
 
 
-## ---- eval=T------------------------------------------------------------------
+## ----eval=T-------------------------------------------------------------------
 seu <- data_proc(seu)
 seu <- ScaleData(seu)
 seu <- quick_clust(seu)
@@ -729,7 +782,7 @@ VlnPlot(seu_list$woCorr,features = mark_gene,group.by = "seurat_clusters",pt.siz
 VlnPlot(seu_list$withCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(seu_list, out, sce)
 gc()
@@ -754,16 +807,16 @@ soupOBJ <- setClusters(soupOBJ,clust)
 ## 
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
+## ----eval=F, echo=F-----------------------------------------------------------
 ## save(soupOBJ, file="../data/soup.RData")
 ## save(autoCor_mtx, file="../data/auto_soup.RData")
 
 
-## -----------------------------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 load("data/soup.RData")
 
 
-## -----------------------------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 load("data/auto_soup.RData")
 
 
@@ -775,7 +828,7 @@ seu <- quick_clust(seu)
 seu_autoCorr <- seu
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 rm(seu)
 gc()
 
@@ -791,26 +844,26 @@ rho <- unique(soupOBJ$metaData$rho)
 rho
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 rm(use_toEst)
 gc()
 
 
-## ---- eval=F------------------------------------------------------------------
+## ----eval=F-------------------------------------------------------------------
 ## soupOBJ <- setContaminationFraction(soupOBJ,rho,forceAccept=TRUE)
 ## estCor_mtx <- adjustCounts(soupOBJ)
 ## 
 
 
-## ---- eval=F, echo=F----------------------------------------------------------
+## ----eval=F, echo=F-----------------------------------------------------------
 ## save(estCor_mtx, file="../data/estCor_mtx.RData")
 
 
-## ---- eval=T, echo=F----------------------------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
 load("data/estCor_mtx.RData")
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 rm(soupOBJ, rho)
 gc()
 
@@ -853,29 +906,20 @@ DimPlot(seu_estCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoL
 VlnPlot(seu_estCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 rm(seu_estCorr, seu_autoCorr)
 gc()
 
 
 ## input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
-
 ## output_h5=assign_the_h5_file_path_for_the_cellbender_corrected_matrix # essential
-
 ## expect_cell=expected_cell_number_can_be_find_in_cellranger_Web_Summary # essential
-
 ## droplet_num=the_total_number_of_droplets_assigned_while_sequencing # default 25,000
-
 ## fpr=threshols_of_FALSE_POSITIVE_RATE # default 0.01
-
 ## epochs=number_of_epochs_to_train # default 150
-
 ## num_train=number_of_times_to_attempt_to_train_the_model # default 1. would speed up while setting greater
-
 ## #
-
 ## cellbender remove-background --input $input_h5 --output $output_h5 --expected-cells $expect_cell --total-droplets-included $droplet_num --fpr $fpr --epochs $epochs --num-training-tries $num_train --cuda False
-
 
 ## ----sec3_dropProc_cbFilt_loadData,include=TRUE,eval=T------------------------
 cbFilt_mtx <- Read10X_h5("data/cbFilt_PBMCv3_20230324_filtered.h5")
@@ -900,7 +944,7 @@ seu <- quick_clust(seu)
 seu_cbFilt <- seu
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(seu)
 gc()
@@ -929,13 +973,13 @@ VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(bcrank, uniq, e.out, amb, filt_mtx, seu, sce, seu_list, out, soupOBJ, clust, autoCor_mtx, seu_autoCorr, use_toEst, rho, estCor_mtx, seu_estCorr, seu_cbFilt, seu_filt)
 gc()
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -1028,7 +1072,7 @@ avg_pseudoTime <- rowMeans(pseudo.paths, na.rm=TRUE)
 colData(sce.sling2)$avg_pseudoTime <- avg_pseudoTime
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(sce, sce2)
 gc()
@@ -1066,7 +1110,7 @@ plotUMAP(sce.sling2, colour_by="slingPseudotime_2")+
   geom_path(data=curve$curve2,aes(x=UMAP1,y=UMAP2))
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(embedded, embedded_curve, curve)
 gc()
@@ -1162,7 +1206,7 @@ plotExpression(sce.sling2,
                x="slingPseudotime_1",colour_by = "label")
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(sce.sling2)
 rm(res, embedded, embedded_curve,sce2, pseudo.paths, avg_pseudoTime, curve, sce.sling, sce, tbl, panc_list, cell_type, mat, pred_res,sce_list,pred_cellType,anchors,ref_panc,feats,ref_list,seu_list,panc8, seu_obj,mnn_res,cell_type,snn.gr,cluster_mnn,universe,sce_list,sce,dec_list,dec,combined_dec,chosen_hvgs,hvgc_list,anchors,ifnb_merge,ifnb_list,feats,ifnb_list_rpca ,ifnb)
@@ -1171,7 +1215,7 @@ gc()
 
 
 
-## ---- results='asis',include=TRUE,echo=FALSE----------------------------------
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
@@ -1209,7 +1253,7 @@ seu_obj[["HTO"]] <- CreateAssayObject(counts=hto.mat)
 seu_obj
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(hto.mat, rna.mat )
 gc()
@@ -1250,8 +1294,188 @@ RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
           features = rownames(seu_obj[["HTO"]])[3:4],ncol = 2)
 
 
-## ---- echo=F, eval=T, warning=F, message=FALSE, include=F---------------------
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(seu_obj )
 gc()
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# SMART-Seq 
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# SMART-Seq 
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----SMARTSeq_loadMTX,include=TRUE,eval=TRUE----------------------------------
+mtx <- read.delim("data/GSE151334_counts.mouse.tsv.gz")
+mtx[1:2,1:5]
+
+
+## ----SMARTSeq_loadSeu,include=TRUE,eval=TRUE----------------------------------
+library(Seurat)
+seu <- CreateSeuratObject(mtx,project="GSE151334",min.cells=3,min.features=300)
+seu[["percent.mt"]] <- PercentageFeatureSet(seu,pattern = "^mt-")
+seu <- SCTransform(seu,variable.features.n = 2000)
+
+
+
+## ----echo=F, eval=F-----------------------------------------------------------
+## 
+## # seu[["cellType"]] <- gsub("(.*)_(.*)_(.*)_(.*)_(.*)","\\1_\\2",Cells(seu))
+## # seu[["date"]] <- gsub("(.*)_(.*)_(.*)_(.*)_(.*)","\\3",Cells(seu))
+
+
+## ----echo=F, eval=F-----------------------------------------------------------
+## library(reticulate)
+## # py_path <- "//Users/mattpaul/myMiniconda/bin/python3"
+## # Sys.setenv(RETICULATE_PYTHON=py_path)
+
+
+## ----SMARTSeq_doublet,include=TRUE,eval=F-------------------------------------
+## library(reticulate)
+## reticulate::py_install("scrublet")
+## scr <- reticulate::import("scrublet")
+## 
+## mat <- GetAssayData(seu,assay = "RNA",slot = "counts")
+## mat <- as.matrix(mat)
+## scr <- reticulate::import("scrublet")
+## scrub <- scr$Scrublet(t(mat))
+## doublet <- scrub$scrub_doublets()
+## names(doublet) <- c("doublet_score","doublet")
+## seu[["doublet_score"]] <- doublet$doublet_score
+## seu[["doublet"]] <- doublet$doublet
+
+
+## ----SMARTSeq_estCC,include=TRUE,eval=F,echo=FALSE----------------------------
+## 
+## cc_ge <- read.delim("data/mouse_regev_lab_cell_cycle_genes.txt",header = FALSE,stringsAsFactors = FALSE)
+## ccGene_list <- list("S"=cc_ge$V1[1:43],"G2M"=cc_ge$V1[44:length(cc_ge)])
+## seu <- CellCycleScoring(seu,ccGene_list$S,ccGene_list$G2M)
+
+
+## ----SMARTSeq_norm,include=TRUE,eval=F----------------------------------------
+## set.seed(42)
+## seu <- RunPCA(seu,npcs = 50,verbose = FALSE)
+## seu <- FindNeighbors(seu,dims = 1:15,reduction = "pca")
+## seu <- RunUMAP(seu,dims = 1:15,reduction = "pca")
+## seu <- FindClusters(seu,resolution = 0.5)
+## 
+
+
+## ----echo=F, eval=F-----------------------------------------------------------
+## saveRDS(seu,"data/seuOBJ_mouseEB_ori.rds"")
+## 
+
+
+## ----echo=F, eval=T-----------------------------------------------------------
+seu <- readRDS("data/seuOBJ_mouseEB_ori.rds")
+
+
+
+## ----SMARTSeq_quickClust,include=TRUE,eval=TRUE-------------------------------
+library(ggplot2)
+VlnPlot(seu,
+        features = c("nCount_RNA","nFeature_RNA","percent.mt","doublet_score","S.Score","G2M.Score"),
+        group.by = "seurat_clusters")
+
+
+## -----------------------------------------------------------------------------
+FeatureScatter(seu,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",group.by = "seurat_clusters")
+
+
+## -----------------------------------------------------------------------------
+FeatureScatter(seu,feature1 = "nCount_RNA",feature2 = "percent.mt",group.by = "seurat_clusters") + geom_hline(yintercept = 10,color="black",linetype="dashed")
+
+
+## -----------------------------------------------------------------------------
+table(seu$doublet=="TRUE" | seu$percent.mt > 10)
+
+
+## ----SMARTSeq_filt_quickClust,include=TRUE,eval=TRUE--------------------------
+set.seed(42)
+seu <- subset(seu,subset=percent.mt <= 10 & doublet == "FALSE")
+seu <- SCTransform(seu,variable.features.n = 2000,vars.to.regress = c("percent.mt"))
+seu <- RunPCA(seu,npcs = 50,verbose = FALSE)
+seu <- RunUMAP(seu,dims = 1:15,reduction = "pca")
+seu <- FindNeighbors(seu,dims = 1:15,reduction = "pca")
+seu <- FindClusters(seu,resolution = 0.5)
+
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
+
+
+## ----SMARTseq_findMark,include=TRUE,eval=F------------------------------------
+## markers <- FindAllMarkers(seu,only.pos = TRUE,min.pct = 0.25,
+##                           logfc.threshold = 0.25)
+## library(dplyr)
+## top_genes <- markers %>% group_by(cluster) %>%
+##   slice_max(n=5,order_by=avg_log2FC)
+
+
+## ----eval=F, echo=F-----------------------------------------------------------
+## 
+## write.csv(top_genes,"data/top_genes.csv")
+
+
+## ----echo=F-------------------------------------------------------------------
+top_genes <- read.csv("data/top_genes.csv")
+
+
+## -----------------------------------------------------------------------------
+
+DoHeatmap(seu,features=c(top_genes$gene))
+
+
+## ----SMARTSeq_markExp,include=TRUE,eval=TRUE----------------------------------
+VlnPlot(seu,features = c("Nanog","Pou5f1"),
+        ncol = 2,
+        pt.size = 0)
+
+
+## ----SMARTSeq_markExp2,include=TRUE,eval=TRUE---------------------------------
+VlnPlot(seu,features = c("Pax6","Stau2"),
+        ncol = 2,
+        pt.size = 0)
+
+
+## ----SMARTSeq_markExp3,include=TRUE,eval=TRUE---------------------------------
+VlnPlot(seu,features = c("Epcam","Gata6"),
+         ncol = 2,
+         pt.size = 0)
+
+
+## ----SMARTSeq_markExp4,include=TRUE,eval=TRUE---------------------------------
+VlnPlot(seu,features = c("Dlk1","Postn"),
+         ncol = 2,
+         pt.size = 0)
+
+
+## -----------------------------------------------------------------------------
+seu[["layers"]] <- NA
+seu$layers[seu$seurat_clusters %in% c(0,4,5)] <- "primary_ES"
+seu$layers[seu$seurat_clusters %in% c(2,3,10,11,12)] <- "ectoderm"
+seu$layers[seu$seurat_clusters %in% c(1,9)] <- "mesoderm"
+seu$layers[seu$seurat_clusters %in% c(6,7,8)] <- "endoderm"
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu,group.by = "layers",pt.size = 0.2)
 
