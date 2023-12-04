@@ -808,7 +808,7 @@ quick_clust <- function(seu){
 ```{r sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T}
 message("processing matrix from CellRanger")
 seu <- CreateSeuratObject(filt_mtx)
-seu <- data_proc(filt_mtx)
+seu <- data_proc(seu)
 seu <- ScaleData(seu)
 seu <- quick_clust(seu)
 seu_filt <- seu
