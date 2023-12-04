@@ -340,7 +340,7 @@ Metrics include
 - Counts/UMIs per cell.
 - Number of cells detected.
 - Alignment quality.
-- Distibution of reads in genomic features.
+- Distribution of reads in genomic features.
 - Sequencing saturation
 - t-sne/UMAP with default clustering.
 
@@ -437,6 +437,18 @@ The **Sequencing** panel highlights information on the quality of the illumina s
 
 
 ---
+## Sequencing panel
+
+Key Metrics:
+
+	* Q30 Bases in RNA read > 65% (usually > 80%)
+		+ Reflect to Sequencing quality
+		+ Need to check with sequencing service supplier
+	* Sequencing saturation > 40% (usually range 20% ~ 80%)
+		+ Reflects the complexity of libraries
+		+ shall consider, but not necessarily, re-construct library while it too low 
+
+---
 ## Mapping panel
 
 .pull-left[
@@ -454,6 +466,18 @@ The **Mapping** panel highlights information on the mapping of reads to the refe
 ]
 
 ---
+## Mapping panel
+
+Key Metrics:
+
+	* Mapped to Genome > 60% (usually range 50% ~ 90%)
+		+ Mapping rate to reference genome
+		+ Check reference genome version if too low
+	* Reads Mapped Confidently to Transcriptome > 30% (usually > 60%)
+		+ Reflection of annotation to transcriptome
+		+ Check annotation if too low
+
+---
 ## Cells panel
 
 .pull-left[
@@ -469,6 +493,19 @@ The **Cells** panel highlights some of the most important information in the rep
 .pull-right[
 ![](./imgs/websum6.png)
 ]
+
+
+---
+## Cells panel
+
+Key Metrics:
+
+* Fraction Reads in Cells > 70% (usually > 85%): 
+		+ Reflects the ambient RNA contamination
+		+ Consider correcting for ambient RNA if < 90%
+	* Median reads per cell > 20,000/cell and estimated number of cells 500 ~ 10,000
+		+ May be caused by the failure of cell identification if the values were not in normal range
+		+ Need to check knee plot and re-evaluate cell number
 
 ---
 ## Knee plot
