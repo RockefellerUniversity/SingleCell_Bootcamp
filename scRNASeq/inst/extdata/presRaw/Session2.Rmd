@@ -146,7 +146,6 @@ mtx_dir <- "filtered_feature_bc_matrix"
 
 ```
 
-
 ```{r load_data,include=TRUE,eval=F}
 library(Seurat)
 
@@ -525,9 +524,10 @@ The first step is to convert our Seurat object to a SinlgeCellExperiment object.
 ```{r ccPhase_cyclon_prep,include=TRUE,eval=TRUE, warning=F, message=F}
 library(scran)
 
-sce <- as.SingleCellExperiment(seu_obj,assay = "RNA")
+sce <- as.SingleCellExperiment(seu_obj, assay = "RNA")
 rowData(sce)$SYMBOL <- rownames(sce)
 ```
+
 ```{r}
 sce
 ```

@@ -1533,7 +1533,7 @@ gc()
 
 We can extract out the results of our normalized and scaled data with the *GetAssayData()* function. 
 
-```{r norm_comp,include=TRUE,eval=TRUE}
+```{r norm_comp,include=TRUE,eval=F}
 log_mat <- GetAssayData(seu_obj,assay="RNA",slot="data")
 log_mat <- as.matrix(log_mat)
 log_avgExp <- rowMeans(log_mat)
@@ -1547,7 +1547,7 @@ sct_avgExp <- rowMeans(sct_mat)
 ---
 ## SCTransform vs log normalization
 
-```{r include=TRUE,eval=TRUE}
+```{r include=TRUE,eval=F}
 matched_names <- intersect(names(log_avgExp), names(sct_avgExp))
 log_avgExp <- log_avgExp[matched_names]
 ```
@@ -1557,7 +1557,25 @@ log_avgExp <- log_avgExp[matched_names]
 
 We can test the concordance with Spearman's correlation.
 
-```{R, eval=F}
+```{r, eval=F, echo=F}
+
+exp_sct <- list(log_avgExp,sct_avgExp)
+names(exp_sct) <- c("logNorm","SCTransform")
+save(exp_sct, file="data/exp_sct.RData")
+
+```
+
+
+```{r, eval=T, echo=F}
+
+load("data/exp_sct.RData")
+log_avgExp <- exp_sct$logNorm
+sct_avgExp <- exp_sct$SCTransform
+
+```
+
+
+```{R, eval=T}
 
 dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
 cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
