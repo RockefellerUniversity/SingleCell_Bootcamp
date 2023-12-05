@@ -1515,9 +1515,9 @@ seu_obj
 
 The normalized data is stored in assay **SCT**. We can see this is now the active assay. The log results are stored in the **RNA** assay. We can control which is the active assay with the *DefaultAssay()* function.
 
-```{r include=TRUE, eval=TRUE}
+```{r include=TRUE, eval=F}
 DefaultAssay(seu_obj) <- "RNA"
-seu_obj
+
 DefaultAssay(seu_obj) <- "SCT"
 ```
 
