@@ -1469,13 +1469,13 @@ In our simplified workflow we used a log normalization approach. Recently an alt
 ```{r, eval=T, echo=F}
 download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
 untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
-filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
 ```
 
-```{r,include=F,echo=T,eval=TRUE}
+```{r,include=F,echo=T,eval=T}
 library(Seurat)
 mtx_dir <- "filtered_feature_bc_matrix"
 seu_obj <- Seurat::Read10X(mtx_dir)
+seu_obj <- CreateSeuratObject(seu_obj)
 seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
 seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
 seu_obj <- ScaleData(seu_obj)
@@ -1493,7 +1493,7 @@ unlink("filtered_feature_bc_matrix/", recursive=TRUE)
 - It is performed with **SCTransform()** function of Seurat.
 - This function equal to the combinations of NormalizeData(), FindVariableFeatures(), and ScaleData().
 
-```{r norm_sct, include=TRUE, eval=F}
+```{r norm_sct, include=TRUE, eval=T}
 seu_obj <- SCTransform(seu_obj, variable.features.n = 3000)
 seu_obj
 ```
@@ -1503,7 +1503,7 @@ SCT_assay <- seu_obj2@assays$SCT
 save(SCT_assay, file="data/SCT_assay.RData")
 ```
 
-```{r, eval=T, echo=F}
+```{r, eval=F, echo=F}
 load("data/SCT_assay.RData")
 seu_obj@assays$SCT <- SCT_assay
 DefaultAssay(seu_obj) <- "SCT"
@@ -1516,8 +1516,8 @@ seu_obj
 The normalized data is stored in assay **SCT**. We can see this is now the active assay. The log results are stored in the **RNA** assay. We can control which is the active assay with the *DefaultAssay()* function.
 
 ```{r include=TRUE, eval=TRUE}
-seu_obj
 DefaultAssay(seu_obj) <- "RNA"
+seu_obj
 DefaultAssay(seu_obj) <- "SCT"
 ```
 
