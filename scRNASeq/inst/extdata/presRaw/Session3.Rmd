@@ -1493,13 +1493,13 @@ unlink("filtered_feature_bc_matrix/", recursive=TRUE)
 - It is performed with **SCTransform()** function of Seurat.
 - This function equal to the combinations of NormalizeData(), FindVariableFeatures(), and ScaleData().
 
-```{r norm_sct, include=TRUE, eval=T}
+```{r norm_sct, include=TRUE, eval=F}
 seu_obj <- SCTransform(seu_obj, variable.features.n = 3000)
 seu_obj
 ```
 
 ```{r, eval=F, echo=F}
-SCT_assay <- seu_obj2@assays$SCT
+SCT_assay <- seu_obj@assays$SCT
 save(SCT_assay, file="data/SCT_assay.RData")
 ```
 
@@ -1537,6 +1537,15 @@ sct_mat <- as.matrix(sct_mat)
 sct_avgExp <- rowMeans(sct_mat)
 ```
 
+
+---
+## SCTransform vs log normalization
+
+```{r include=TRUE,eval=TRUE}
+matched_names <- intersect(names(log_avgExp), names(sct_avgExp))
+log_avgExp <- log_avgExp[matched_names]
+```
+
 ---
 ## log normalization vs SCTransform
 
@@ -1567,7 +1576,7 @@ ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
 ```
 
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
-rm(dat, log_mat, sct_mat, plot1, plot2)
+rm(dat, log_mat, sct_mat, plot1, plot2, seu_obj, SCT_assay)
 gc()
 ```
 
