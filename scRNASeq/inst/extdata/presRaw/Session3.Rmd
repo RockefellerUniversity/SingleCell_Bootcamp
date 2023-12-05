@@ -1521,6 +1521,12 @@ DefaultAssay(seu_obj) <- "RNA"
 DefaultAssay(seu_obj) <- "SCT"
 ```
 
+```{r, echo=FALSE}
+rm(SCT_assay)
+gc()
+
+```
+
 
 ---
 ## SCTransform vs log normalization
