@@ -1475,7 +1475,7 @@ filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
 ```{r,include=F,echo=T,eval=TRUE}
 library(Seurat)
 mtx_dir <- "filtered_feature_bc_matrix"
-mtx <- Seurat::Read10X(mtx_dir)
+seu_obj <- Seurat::Read10X(mtx_dir)
 seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
 seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
 seu_obj <- ScaleData(seu_obj)
