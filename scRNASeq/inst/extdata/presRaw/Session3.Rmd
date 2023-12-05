@@ -1503,7 +1503,7 @@ SCT_assay <- seu_obj@assays$SCT
 save(SCT_assay, file="data/SCT_assay.RData")
 ```
 
-```{r, eval=F, echo=F}
+```{r, eval=T, echo=F}
 load("data/SCT_assay.RData")
 seu_obj@assays$SCT <- SCT_assay
 DefaultAssay(seu_obj) <- "SCT"
@@ -1515,7 +1515,7 @@ seu_obj
 
 The normalized data is stored in assay **SCT**. We can see this is now the active assay. The log results are stored in the **RNA** assay. We can control which is the active assay with the *DefaultAssay()* function.
 
-```{r include=TRUE, eval=F}
+```{r include=TRUE, eval=T}
 DefaultAssay(seu_obj) <- "RNA"
 
 DefaultAssay(seu_obj) <- "SCT"
