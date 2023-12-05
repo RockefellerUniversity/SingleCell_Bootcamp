@@ -485,7 +485,7 @@ following settings
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>seu</span></code></pre></div>
 </div>
 <div id="cell-cycle-phase-estimation" class="section level2">
-<h2>cell cycle phase estimation</h2>
+<h2>Cell cycle phase estimation</h2>
 <ul>
 <li>Please estimate cell cycle Phases with
 <em>Seurat::CellCycleScoring()</em>.</li>
@@ -516,10 +516,10 @@ following settings
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;cyclon_SScore&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>scores<span class="sc">$</span>S</span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;cyclon_G2MScore&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>scores<span class="sc">$</span>G2M</span></code></pre></div>
 <ul>
-<li>Compare the results between the two methods Seurat results in row
-and cyclone results in column</li>
+<li>Compare the results between the two methods</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(seu<span class="sc">$</span>Phase,seu<span class="sc">$</span>cyclon_Phase)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Seurat results in row and cyclone results in column</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(seu<span class="sc">$</span>Phase, seu<span class="sc">$</span>cyclon_Phase)</span></code></pre></div>
 </div>
 <div id="estimate-doubets" class="section level2">
 <h2>Estimate doubets</h2>

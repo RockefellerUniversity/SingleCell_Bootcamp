@@ -125,7 +125,6 @@ class: inverse, center, middle
 
 
 
-
 ```r
 library(Seurat)
 
@@ -2891,7 +2890,7 @@ We can see in both S and G2/M scores are highest in cells with the corresponding
 
 
 ```r
-ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_boxplot() + labs(x = "",
+ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_violin() + labs(x = "",
     y = "Score", fill = "Phase") + facet_wrap(~cat) + theme_classic()
 ```
 
@@ -2907,164 +2906,13 @@ The first step is to convert our Seurat object to a SinlgeCellExperiment object.
 
 ```r
 library(scran)
-```
 
-```
-## Warning: package 'scran' was built under R version 4.3.1
-```
-
-```
-## Loading required package: SingleCellExperiment
-```
-
-```
-## Warning: package 'SingleCellExperiment' was built under R version 4.3.1
-```
-
-```
-## Loading required package: SummarizedExperiment
-```
-
-```
-## Warning: package 'SummarizedExperiment' was built under R version 4.3.1
-```
-
-```
-## Loading required package: MatrixGenerics
-```
-
-```
-## Warning: package 'MatrixGenerics' was built under R version 4.3.1
-```
-
-```
-## Loading required package: matrixStats
-```
-
-```
-## 
-## Attaching package: 'matrixStats'
-```
-
-```
-## The following object is masked from 'package:dplyr':
-## 
-##     count
-```
-
-```
-## 
-## Attaching package: 'MatrixGenerics'
-```
-
-```
-## The following objects are masked from 'package:matrixStats':
-## 
-##     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
-##     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
-##     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
-##     colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
-##     colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
-##     colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
-##     colWeightedMeans, colWeightedMedians, colWeightedSds,
-##     colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
-##     rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
-##     rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
-##     rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
-##     rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
-##     rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
-##     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
-##     rowWeightedSds, rowWeightedVars
-```
-
-```
-## Loading required package: GenomicRanges
-```
-
-```
-## Warning: package 'GenomicRanges' was built under R version 4.3.1
-```
-
-```
-## Loading required package: GenomeInfoDb
-```
-
-```
-## Warning: package 'GenomeInfoDb' was built under R version 4.3.1
-```
-
-```
-## 
-## Attaching package: 'GenomicRanges'
-```
-
-```
-## The following object is masked from 'package:magrittr':
-## 
-##     subtract
-```
-
-```
-## Loading required package: Biobase
-```
-
-```
-## Warning: package 'Biobase' was built under R version 4.3.1
-```
-
-```
-## Welcome to Bioconductor
-## 
-##     Vignettes contain introductory material; view with
-##     'browseVignettes()'. To cite Bioconductor, see
-##     'citation("Biobase")', and for packages 'citation("pkgname")'.
-```
-
-```
-## 
-## Attaching package: 'Biobase'
-```
-
-```
-## The following object is masked from 'package:MatrixGenerics':
-## 
-##     rowMedians
-```
-
-```
-## The following objects are masked from 'package:matrixStats':
-## 
-##     anyMissing, rowMedians
-```
-
-```
-## 
-## Attaching package: 'SummarizedExperiment'
-```
-
-```
-## The following object is masked from 'package:Seurat':
-## 
-##     Assays
-```
-
-```
-## The following object is masked from 'package:SeuratObject':
-## 
-##     Assays
-```
-
-```
-## Loading required package: scuttle
-```
-
-```
-## Warning: package 'scuttle' was built under R version 4.3.1
-```
-
-```r
 sce &lt;- as.SingleCellExperiment(seu_obj, assay = "RNA")
 rowData(sce)$SYMBOL &lt;- rownames(sce)
+```
+
+
+```r
 sce
 ```
 
@@ -3214,11 +3062,11 @@ We can see in both S and G2/M scores are highest in cells with the corresponding
 
 
 ```r
-ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_boxplot() + labs(x = "",
+ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_violin() + labs(x = "",
     y = "Score", fill = "Phase") + facet_wrap(~cat) + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-35-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-36-1.png)&lt;!-- --&gt;
 
 ---
 ## Compare the two strategies
@@ -3374,8 +3222,9 @@ table(doublet$doublet)
 ```
 
 ---
-## Import Scrublet results into Seurat object
+## Import Scrublet results into Seurat
 
+We can just assign our results into our Seurat object.
 
 
 ```r
@@ -3386,20 +3235,22 @@ seu_obj[["doublet"]] &lt;- doublet$doublet
 ---
 ## Assessing Doublets
 
-UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TRUE) and singlets (FALSE).
+We can use violin plots to check our doublet predictions make sense.
+
+As expected out doublets (TRUE) have higher, doublet scores, UMIs (nCount), genes (nFeature) compared to singlets (FALSE).
 
 
 ```r
-VlnPlot(seu_obj, group.by = "doublet", features = c("nCount_RNA", "nFeature_RNA",
-    "doublet_score"), pt.size = 0)
+VlnPlot(seu_obj, group.by = "doublet", features = c("doublet_score", "nCount_RNA",
+    "nFeature_RNA"), pt.size = 0)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-47-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-48-1.png)&lt;!-- --&gt;
 
 ---
 ## Assessing Doublets
 
-UMIs (nCount), genes (nFeature), and doublet scores of each cell in doublets (TRUE) and singlets (FALSE).
+An altearntive visualization of this is an X-Y plot comparing UMIs (nCount) and genes (nFeature).
 
 
 ```r
@@ -3407,7 +3258,7 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", pt.s
     group.by = "doublet")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-48-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-49-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -3418,6 +3269,13 @@ class: inverse, center, middle
 
 ---
 
+## Quality Assessment
+
+There are many aspects to determining the quality of your scRNAseq dataset. You can see we have already made several plots to descirbe features of the data. These help guide additional QC steps. We will dig more into that later. 
+
+For now we will show you several ways to plot the data and the various metrics we have to try and assess the state of our dataset.
+
+---
 ## Distribution of variables in violin plot
 
 We can use violin plots to check the distribution of specific variables such as:
@@ -3434,34 +3292,25 @@ VlnPlot(seu_obj, group.by = "dset", features = c("nCount_RNA", "nFeature_RNA", "
 ---
 ## Distribution of variables in violin plot
 
-If a bimodal distribution is identified, we need to check for any interference. We can see some evidence of bimodality in our dataset here.
-
-![](Session2_files/figure-html/unnamed-chunk-50-1.png)&lt;!-- --&gt;
-
----
-## Evaluating interactions
-Scatter plots can be used to look for interactions between specific variables. Here we compare UMIs and genes detected per cell:
-  * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
-  * Doublets with high UMIs and high genes detected.
-
-
-```r
-FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by = "doublet")
-```
-
----
-## Evaluating interactions
-Comparison between UMIs and genes detected per cell:
-  * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
-  * Doublets with high UMIs and high genes detected.
+If a bimodal distribution is identified, we need to check for any interference as it suggests that there could be multiple populations within our dataset. This could be biological (i.e very different cell types) or technical (doublets). We can see some evidence of bimodality in our dataset here.
 
 ![](Session2_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluating interactions
 
-Comparison between UMI counts and the percent of mitochondrial content:
+Scatter plots can be used to look for interactions between specific variables, like we did earlier. Here we compare UMIs and genes detected per cell:
+  * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
+  * Doublets with high UMIs and high genes detected.
+
+![](Session2_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
+
+---
+## Evaluating interactions
+
+We can use the same approach with different variables to compare between UMI counts and the percent of mitochondrial content:
 * Potential cell debris would show low UMI counts (*nCount_RNA*) and high percentage of mitochondrial genes (*percent.mt*)
+
 
 ```r
 FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
@@ -3478,9 +3327,11 @@ Comparison between UMI counts and the percent of mitochondrial content:
 ---
 ## Ridge plot
 
+Another plot you will also often see is a ridge/joy plot. These are evry similar to violins we have already made. 
+
 * This plot would be applied to demonstrate a given variable and their corresponding score (e.g. doublet vs doublet_score).
 * It is applied to evaluate the difference between groups in the variable.
-* This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
+* This plot is most widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
 
 
 ```r
@@ -3490,9 +3341,11 @@ RidgePlot(seu_obj, group.by = "doublet", features = c("doublet_score"))
 ---
 ## Ridge plot
 
+Another plot you will also often see is a ridge/joy plot. These are evry similar to violins we have already made. 
+
 * This plot would be applied to demonstrate a given variable and their corresponding score (e.g. doublet vs doublet_score).
 * It is applied to evaluate the difference between groups in the variable.
-* This plot would be widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
+* This plot is most widely applied in hash-tag determination of CITE-Seq. We could discuss more details in Section III.
 
 
 ```
@@ -3500,7 +3353,6 @@ RidgePlot(seu_obj, group.by = "doublet", features = c("doublet_score"))
 ```
 
 ![](Session2_files/figure-html/qcPlot_ridgePlot_pres-1.png)&lt;!-- --&gt;
-
 
 ---
 class: inverse, center, middle
@@ -3512,6 +3364,8 @@ class: inverse, center, middle
 ---
 
 ## Filtering doublets and cell debris
+
+Once we have described and annotated our data, we can start to enact our quality control methods to filter out bad cells and correct confounding variables. 
 
 Cell debris are with high percent.mt and low UMI counts. Generally, we set various cut-off on percent.mt:
 * In most scRNA cases, we set the *percent.mt &gt; 10* (95% of overall population)
@@ -3591,6 +3445,8 @@ class: inverse, center, middle
 
 ## Dimension Reduction
 
+At this point, in theory we should have a nice clean dataset, so we can start pushing towards the biological questions in our dataset.
+
 scRNAseq is highly dimensional data. To be able to tackle our data with approaches like clustering we need to simplify it down with dimension reduction. There are several steps:
 
 - Perform linear dimensional reduction with Principle Component Analysis (PCA)
@@ -3600,7 +3456,7 @@ scRNAseq is highly dimensional data. To be able to tackle our data with approach
 
 ---
 ## Linear dimensional reduction
-Perform PCA with *RunPCA()* function in Seurat. Set Principle components to 30.
+Perform PCA with *RunPCA()* function in Seurat. Set Principle components to 50.
 
 
 ```r
@@ -3721,7 +3577,7 @@ ggplot(plot_df, aes(cumu, pct, label = rank, color = rank &gt; pc)) + geom_text(
 
 We can now look at our cutoff on our elbow plot. This seems to match the point where our data plateaus.
 
-![](Session2_files/figure-html/unnamed-chunk-61-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-62-1.png)&lt;!-- --&gt;
 
 ---
 ## Make non-linear dimensional reduction
@@ -3754,7 +3610,7 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 01:41:31 UMAP embedding parameters a = 0.9922 b = 1.112
+## 22:45:29 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
@@ -3766,11 +3622,11 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 01:41:31 Read 9379 rows and found 19 numeric columns
+## 22:45:29 Read 9379 rows and found 19 numeric columns
 ```
 
 ```
-## 01:41:31 Using Annoy for neighbor search, n_neighbors = 30
+## 22:45:29 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
@@ -3782,7 +3638,7 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 01:41:31 Building Annoy index with metric = cosine, n_trees = 50
+## 22:45:29 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -3795,13 +3651,13 @@ seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 01:41:32 Writing NN index file to temp file /tmp/Rtmpp2xqGI/file2b4c5c8c0892
-## 01:41:32 Searching Annoy index using 1 thread, search_k = 3000
-## 01:41:35 Annoy recall = 100%
-## 01:41:36 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 01:41:38 Initializing from normalized Laplacian + noise (using RSpectra)
-## 01:41:38 Commencing optimization for 500 epochs, with 398570 positive edges
-## 01:41:50 Optimization finished
+## 22:45:30 Writing NN index file to temp file /tmp/RtmpmwPlyq/file2b4d1350c1f6
+## 22:45:30 Searching Annoy index using 1 thread, search_k = 3000
+## 22:45:34 Annoy recall = 100%
+## 22:45:34 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 22:45:36 Initializing from normalized Laplacian + noise (using RSpectra)
+## 22:45:37 Commencing optimization for 500 epochs, with 398570 positive edges
+## 22:45:49 Optimization finished
 ```
 
 ---
@@ -3814,7 +3670,7 @@ We can now draw the results of our UMAP, which clearly separates our cells intro
 DimPlot(seu_filt)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-62-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-63-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -3822,12 +3678,11 @@ DimPlot(seu_filt)
 
 We will be making a lot of UMAPs going forward. 
 
-Relatively new approach (2018) and is generally used more than tSNE now. Though it sometimes faces criticism we find it does a good job on most data sets. 
+Relatively new approach (2018) and is generally used more than tSNE now. Though it sometimes faces criticism we find it does a good job on most data sets. It allows a comprehensible 2D visualization of your result. 
 
 For a detailed explanation and discussion of dimension reduction approaches here are some resources:
 
 [Data Science blog post](https://towardsdatascience.com/dimensionality-reduction-for-data-visualization-pca-vs-tsne-vs-umap-be4aa7b1cb29)
-
 
 [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
 
@@ -3841,7 +3696,7 @@ class: inverse, center, middle
 ---
 
 ## Clustering
-- The cells are clustered based on UMAP by using *FindClusters()* function in Seurat.
+- The cells are clustered using *FindClusters()* function in Seurat.
 - The clustering is differentiated by **original Louvain algorithm**.
 - To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
 
@@ -3873,6 +3728,7 @@ seu_filt[["cluster_byDefault"]] &lt;- seu_filt$seurat_clusters
 
 ---
 ## Identify clusters
+
 Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
 
 
@@ -3880,7 +3736,7 @@ Looking at the UMAP we can see good separation of clusters. But there may be roo
 DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-64-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-65-1.png)&lt;!-- --&gt;
 
 ---
 ## Testing resolutions
@@ -4056,7 +3912,7 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
 - The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
 * In this case, we use *resolution=0.4*
 
-![](Session2_files/figure-html/unnamed-chunk-67-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
 
 ---
 ## Clustering - optimized
@@ -4092,19 +3948,20 @@ DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + N
     ggtitle("Optimized Clusters")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-69-1.png)&lt;!-- --&gt;
 
 ---
 ## Clustering - default
 
 We can see that we have slightly more clusters. We can now compare back to the original clustering, and see that cluster 12 is clearly defined now, where it wasn't before.
 
+
 ```r
 DimPlot(seu_filt, group.by = "cluster_byDefault", label = TRUE, pt.size = 0.2) +
     NoLegend() + ggtitle("Default Clusters")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-69-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-70-1.png)&lt;!-- --&gt;
 
 ---
 ## A basic scRNAseq workflow
@@ -4146,6 +4003,7 @@ head(markers)
 
 We can review the results with a heatmap. We will first select the top 2 genes for each cluster by log2FC.
 
+
 ```r
 top_genes &lt;- markers %&gt;%
     group_by(cluster) %&gt;%
@@ -4177,7 +4035,7 @@ We can then use the *DoHeatmap()* from Seurat to plot just these genes.
 DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-72-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-73-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -4226,13 +4084,14 @@ known_marker &lt;- c("GNLY", "NKG7")
 FeaturePlot(seu_filt, features = known_marker)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-74-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-75-1.png)&lt;!-- --&gt;
 
 
 ---
 ## Match markers to clusters
 
 We can also check the expression of markers in each cluster. First, we need to get our count data and our full list of markers.
+
 
 ```r
 known_marker &lt;- c("IL7R", "CCR7", "S100A4", "CD8A", "MS4A1", "CD14", "LYZ", "FCGR3A",
@@ -4277,7 +4136,7 @@ avgExp_mat &lt;- do.call(cbind, avgExp_byClust)
 pheatmap(avgExp_mat, scale = "row")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-76-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-77-1.png)&lt;!-- --&gt;
 
 
 
@@ -4330,7 +4189,7 @@ DimPlot(seu_filt, group.by = c("seurat_clusters", "cellType_byClust"), label = T
     pt.size = 0.2) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-79-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-80-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -4430,7 +4289,7 @@ ggplot(deg, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) + geom_poin
     y = "-log10_adjPV", color = "") + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-82-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-83-1.png)&lt;!-- --&gt;
 
 ---
 ## Customizing your differentials
@@ -4438,11 +4297,81 @@ Seurat has many different options for differentials. You can use these to fully 
 
 - Assign the groups we want to compare: *group_by*
 - If we want to get a unfiltered results: set *logfc.threshold = 0* and *min.pct = 0*
-- Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*
+- Seurat also support different statistic methods: *Wilcox Rank Sum test (wilcox)*, *likelihood-ratio test (bimod)*,*receiver operating characteristic (roc)*,*Student's T-test (t)*,*negative binomial linear model (negbinom)*, *poisson generalized linear model (poisson)*, *logitstic regression (LR)*, *MAST*, *DESeq2*.
+- If you use other methods we advise checking the documentation, reading around, talking to us as some the implementations are not the same as in other packages.
 
 
 
 
+
+
+class: inverse, center, middle
+
+# Loupe Browser
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Loupe Browser for visualization
+
+
+.pull-left[
+
+The Loupe browser is a tool for visualization of Cell Ranger cloupe files. 
+
+It provides t-sne visualization of your single-cell data alongside sample/cell information as well as methods to test and visualize changes in gene expression.
+
+Loupe browser can be freely downloaded from the 10x website.
+
+]
+
+.pull-right[
+ &lt;div align="center"&gt;
+&lt;img src="imgs/loupeDownload.png" alt="igv" height="400" width="350"&gt;
+&lt;/div&gt;
+]
+
+
+---
+## Creating Loupe files
+
+We can export our seurat objects to a cloupe file using the loupeR package from 10X. This package is available on their github. Once installed we need agree to the license by running the setup function.
+
+
+```r
+remotes::install_github("10xGenomics/loupeR")
+loupeR::setup()
+```
+
+---
+## Creating Loupe files
+
+We can then create a loupe file from our seurat object really easily using the *create_loupe_from_seurat()* function.
+
+
+```r
+library(loupeR)
+create_loupe_from_seurat(seu_filt, output_dir = "loupe", output_name = "seu_filt")
+```
+
+---
+
+## Loupe Browser for visualization
+
+
+.pull-left[
+
+Having downloaded the Loupe browser we can load our cloupe files directly in and rapidly visually interrogate our data.
+
+In todays session we will review some of the features available in Loupe using the PBMC example data set.
+
+
+.pull-right[
+ &lt;div align="center"&gt;
+&lt;img src="imgs/loupeFront.png" alt="igv" height="300" width="400"&gt;
+&lt;/div&gt;
+]
 
 
 ---
@@ -4456,6 +4385,7 @@ UMAPS:
 * [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
 * [Limitations](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011288)
 
+- [Loupe Broswer Download](https://www.10xgenomics.com/products/loupe-browser/downloads)
 
 
 
