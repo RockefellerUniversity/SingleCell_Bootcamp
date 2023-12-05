@@ -1460,11 +1460,17 @@ if(params$isSlides == "yes"){
 ![](./imgs/overview3.png)
 [overview](./imgs/scRNA_workflow_ver001_20231017.png)
 
+
 ---
 ## SCTransform
 
 In our simplified workflow we used a log normalization approach. Recently an alternative approach has been gaining popularity: SCTransform. Lets compare this back to our log normalization. 
 
+```{r, eval=T, echo=F}
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
+```
 
 ```{r,include=F,echo=T,eval=TRUE}
 library(Seurat)
@@ -1473,6 +1479,11 @@ mtx <- Seurat::Read10X(mtx_dir)
 seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
 seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
 seu_obj <- ScaleData(seu_obj)
+```
+
+```{r, eval=T, echo=F}
+unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
+unlink("filtered_feature_bc_matrix/", recursive=TRUE)
 ```
 
 ---
@@ -1499,7 +1510,6 @@ DefaultAssay(seu_obj) <- "SCT"
 seu_obj
 ```
 
-
 ---
 ## SCTransform
 
@@ -1514,7 +1524,6 @@ DefaultAssay(seu_obj) <- "SCT"
 
 ---
 ## SCTransform vs log normalization
-
 
 We can extract out the results of our normalized and scaled data with the *GetAssayData()* function. 
 
