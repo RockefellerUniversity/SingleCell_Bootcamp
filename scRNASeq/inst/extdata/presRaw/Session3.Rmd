@@ -1476,9 +1476,14 @@ untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz
 
 ```{r,include=F,echo=T,eval=T}
 library(Seurat)
+
+sample_id <- "PBMC_10k" 
+min_gene <- 200
+min_cell <- 10 
+
 mtx_dir <- "filtered_feature_bc_matrix"
 seu_obj <- Seurat::Read10X(mtx_dir)
-seu_obj <- CreateSeuratObject(seu_obj)
+seu_obj <- Seurat::CreateSeuratObject(mtx, project=sample_id, min.cells=min_cell, min.features=min_gene)
 seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
 seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
 seu_obj <- ScaleData(seu_obj)
