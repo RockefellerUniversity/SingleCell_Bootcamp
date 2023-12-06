@@ -31,6 +31,703 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning 
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
+# Cell Ranger
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Ranger
+
+---
+"    
+  )
+  
+}
+
+
+
+## wget -O cellranger-7.2.0.tar.gz "https://cf.10xgenomics.com/releases/cell-exp/cellranger-7.2.0.tar.gz?Expires=1701688001&Key-Pair-Id=APKAI7S6A5RYOXBWRPDA&Signature=Puwpsqsf~wMQz5e~PwTvM2DRQO1XdJ~9zeLCWqX6tVbOx~dnf24hP1bwlmNhybr3SZUQ8C12ywcICMH6Au02wxiCRm1uuTxZ0Uvq8g~s8L8s6XFyhepdi6Qjq8dzXNGoxswg3hModjKWVptTWq-MTHBDZv~yTFB7QAM9lzHHXo6SPWg8Fnx30ngmtGC5tDReVOiJ3DY0hsFvZtG3HaQ-HEbnzEH3lre-0rpWMBlsQu-vZ4RnKE0o3Xv6pQsb6261M19nHcpCsGhDCkFjDDbradx~SNw5rpY-HMxM4SnRuaOOI0rYyDNn7xdTat3eFj7rlgATXRaYx7SYNqDYKSrNWw__"
+
+## wget -O https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz
+
+## tar -xzvf cellranger-7.2.0.tar.gz
+## tar -xzvf refdata-gex-GRCh38-2020-A.tar.gz
+
+## export PATH=/PATH_TO_CELLRANGER_DIRECTORY/cellranger-7.1.0:$PATH
+
+## cellranger count --id=my_run_name \
+##    --fastqs=PATH_TO_FASTQ_DIRECTORY \
+##    --transcriptome=/PATH_TO_CELLRANGER_DIRECTORY/refdata-gex-GRCh38-2020-A
+
+## cellranger mkgtf Homo_sapiens.GRCh38.ensembl.gtf \
+## Homo_sapiens.GRCh38.ensembl.filtered.gtf \
+##                    --attribute=gene_biotype:protein_coding \
+##                    --attribute=gene_biotype:lncRNA \
+##                    --attribute=gene_biotype:antisense \
+##                    --attribute=gene_biotype:IG_LV_gene \
+##                    --attribute=gene_biotype:IG_V_gene \
+##                    --attribute=gene_biotype:IG_V_pseudogene \
+##                    --attribute=gene_biotype:IG_D_gene \
+##                    --attribute=gene_biotype:IG_J_gene \
+##                    --attribute=gene_biotype:IG_J_pseudogene \
+##                    --attribute=gene_biotype:IG_C_gene \
+##                    --attribute=gene_biotype:IG_C_pseudogene \
+##                    --attribute=gene_biotype:TR_V_gene \
+##                    --attribute=gene_biotype:TR_V_pseudogene \
+##                    --attribute=gene_biotype:TR_D_gene \
+##                    --attribute=gene_biotype:TR_J_gene \
+##                    --attribute=gene_biotype:TR_J_pseudogene \
+##                    --attribute=gene_biotype:TR_C_gene
+
+## cellranger mkref --genome=custom_reference \
+## --fasta=custom_reference.fa  \
+## --genes=custom_reference_filtered.gtf
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Cell Ranger -  Output files
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Ranger - Output files
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Cell Ranger - Web Summary QC
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Ranger - Web Summary QC
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Droplet processing
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Droplet processing
+
+---
+"    
+  )
+  
+}
+
+
+
+## input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
+## output_h5=assign_the_h5_file_path_for_the_cellbender_corrected_matrix # essential
+## fpr=threshold_of_FALSE_POSITIVE_RATE # default 0.01
+## epochs=number_of_epochs_to_train # default 150
+## num_train=number_of_times_to_attempt_to_train_the_model # default 1. would speed up while setting greater
+## 
+## cellbender remove-background --input $input_h5 --output $output_h5 --fpr $fpr --epochs $epochs --num-training-tries $num_train --cuda
+
+## ptrepack --complevel 5 celbender_filtered.h5:/matrix celbender_filtered_forseurat.h5:/matrix
+## 
+
+## ----sec3_dropProc_cbFilt_loadData,include=TRUE,eval=T------------------------
+library(Seurat)
+cbFilt_mtx <- Read10X_h5("data/cbFilt_PBMCv3_20230324_filtered.h5")
+
+
+
+## ----eval=F, echo=F-----------------------------------------------------------
+## load("data/seu_obj_raw.RData")
+## filt_mtx <- seu_obj
+
+
+## -----------------------------------------------------------------------------
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
+
+
+## -----------------------------------------------------------------------------
+dim(cbFilt_mtx)
+
+dim(filt_mtx)
+
+
+## ----sec_mergeData_funcUsed_dataProc,include=TRUE-----------------------------
+data_proc <- function(seu){
+  seu <- NormalizeData(seu, normalization.method="LogNormalize", scale.factor=10000)
+  seu <- FindVariableFeatures(seu, select.method="vst", nfeatures=2000)
+  return(seu)}
+
+
+## ----sec3_mergeData_funcUsed_quickClust,include=TRUE--------------------------
+quick_clust <- function(seu){
+  set.seed(42)
+  seu <- ScaleData(seu, verbose=FALSE)
+  seu <- RunPCA(seu, npcs=30, verbose=FALSE)
+  seu <- RunUMAP(seu, reduction = "pca", dims = 1:10, verbose=FALSE)
+  seu <- FindNeighbors(seu, reduction = "pca", dims = 1:10, verbose=FALSE)
+  seu <- FindClusters(seu, resolution = 0.5, verbose=FALSE)
+  return(seu)}
+
+
+## ----sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T-----------------------
+message("processing matrix from CellRanger")
+seu <- CreateSeuratObject(filt_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_filt <- seu
+
+message("processing matrix from CellBender")
+seu <- CreateSeuratObject(cbFilt_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_cbFilt <- seu
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+
+rm(seu)
+gc()
+  
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+mark_gene <- c("CD3E","CCR7")
+VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+
+## -----------------------------------------------------------------------------
+mark_gene <- c("CD3E","CCR7")
+VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## -----------------------------------------------------------------------------
+rm(cbFilt_mtx, filt_mtx, seu_filt, seu_cbFilt)
+gc()
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Droplet evaluation in R
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Droplet evaluation in R
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----sec3_dropProc_kneePlot_prep,include=TRUE, eval=T-------------------------
+library(DropletUtils)
+
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
+
+raw_mtx <- Seurat::Read10X("raw_feature_bc_matrix")
+dim(raw_mtx)
+
+
+
+## -----------------------------------------------------------------------------
+bcrank <- barcodeRanks(raw_mtx)
+head(bcrank, 2)
+
+
+## ----sec3_dropProc_kennPlot_press,include=TRUE,eval=T-------------------------
+
+uniq <- !duplicated(bcrank$rank)
+bcrank <- bcrank[uniq,]
+
+knee <- metadata(bcrank)$knee
+message(paste0("knee point: ",knee))
+inflection <- metadata(bcrank)$inflection
+message(paste0("inflection point: ",inflection))
+
+
+## ----eval=F-------------------------------------------------------------------
+## ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
+##   geom_hline(yintercept = knee, linetype="dashed",color="blue")+
+##   geom_hline(yintercept = inflection, linetype="dashed",color="green")+
+##   scale_x_continuous(trans = "log10")+
+##   scale_y_continuous(trans = "log10")+
+##   labs(x="cell barcode ranked by counts",
+##        y="UMI counts of each cell barcode")+
+##   theme_classic()
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
+  geom_hline(yintercept = knee, linetype="dashed",color="blue")+
+  geom_hline(yintercept = inflection, linetype="dashed",color="green")+
+  scale_x_continuous(trans = "log10")+
+  scale_y_continuous(trans = "log10")+
+  labs(x="cell barcode ranked by counts",
+       y="UMI counts of each cell barcode")+
+  theme_classic()
+
+
+## ----sec3_dropProc_remEmtpy_cal, eval=TRUE------------------------------------
+
+e.out <- emptyDrops(raw_mtx)
+e.out <- e.out[order(e.out$FDR),]
+head(e.out)
+
+
+
+## ----eval=F-------------------------------------------------------------------
+## 
+## ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
+##   geom_vline(xintercept = knee, color="red",linetype="dashed")+
+##   labs(x="UMI counts per cell",y="Frequency")+
+##   scale_y_continuous(trans = "log10")+
+##   scale_x_continuous(trans = "log10")+
+##   theme_classic()
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+
+ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
+  geom_vline(xintercept = knee, color="red",linetype="dashed")+
+  labs(x="UMI counts per cell",y="Frequency")+
+  scale_y_continuous(trans = "log10")+
+  scale_x_continuous(trans = "log10")+
+  theme_classic()
+
+
+## -----------------------------------------------------------------------------
+table(e.out$FDR < 0.001)
+cell_sel <- rownames(e.out)[e.out$FDR < 0.001]
+filt_mtx <- raw_mtx[,colnames(raw_mtx) %in% cell_sel]
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Ambient RNA evaluation in R
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Ambient RNA evaluation in R
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----sec3_dropProc_ambIDENT_DorpUtils,include=TRUE,eval=T---------------------
+amb <- metadata(e.out)$ambient[,1]
+head(amb)
+
+
+## ----eval=F, echo=F-----------------------------------------------------------
+## load("data/seu_obj_raw.RData")
+## filt_mtx <- seu_obj
+
+
+## -----------------------------------------------------------------------------
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
+unlink("filtered_feature_bc_matrix/", recursive=TRUE)
+
+
+## ----eval=T-------------------------------------------------------------------
+
+filt_mtx_drop <- filt_mtx[rownames(filt_mtx) %in% names(amb),]
+seu <- CreateSeuratObject(filt_mtx_drop)
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+rm(filt_mtx_drop)
+
+
+## ----eval=T-------------------------------------------------------------------
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+sce <- as.SingleCellExperiment(seu,assay = "RNA")
+
+
+## -----------------------------------------------------------------------------
+plotUMAP(sce, colour_by="seurat_clusters")
+
+
+## -----------------------------------------------------------------------------
+seu_list <- list()
+seu_list[["woCorr"]] <- seu
+
+
+## ----sec3_dropProc_ambProc_DropUtils,include=TRUE,eval=T----------------------
+out <- removeAmbience(counts(sce), ambient=amb, groups=sce$seurat_clusters) 
+rownames(out) <- rownames(sce)
+colnames(out) <- colnames(sce)
+
+
+
+## -----------------------------------------------------------------------------
+seu_list[["withCorr"]] <- CreateSeuratObject(out)
+seu_list[["withCorr"]] <- data_proc(seu_list[["withCorr"]])
+seu_list[["withCorr"]] <- ScaleData(seu_list[["withCorr"]])
+seu_list[["withCorr"]] <- quick_clust(seu_list[["withCorr"]])
+
+
+## ----sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T-----------------
+
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
+mark_gene
+
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_list$woCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_list$withCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_list$woCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_list$withCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+
+rm(seu_list, out, sce)
+gc()
+
+
+## ----sec3_dropProc_SoupX_prep,include=TRUE,eval=T-----------------------------
+
+clust <- setNames(seu$seurat_clusters, Cells(seu))
+seu_filt <- seu
+
+
+## -----------------------------------------------------------------------------
+library(SoupX)
+soupOBJ <- SoupChannel(raw_mtx, filt_mtx)
+soupOBJ <- setClusters(soupOBJ,clust)
+
+
+## ----sec3_dropProc_SoupX_autoCor,include=TRUE,eval=F--------------------------
+## soupOBJ <- autoEstCont(soupOBJ)
+## 
+## autoCor_mtx <- adjustCounts(soupOBJ)
+## 
+
+
+## ----eval=F, echo=F-----------------------------------------------------------
+## save(soupOBJ, file="../data/soup.RData")
+## save(autoCor_mtx, file="../data/auto_soup.RData")
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+load("data/soup.RData")
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+load("data/auto_soup.RData")
+
+
+## -----------------------------------------------------------------------------
+seu <- CreateSeuratObject(autoCor_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_autoCorr <- seu
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+rm(seu)
+gc()
+
+
+## ----sec3_dropProc_SoupX_estCor,include=TRUE,eval=T---------------------------
+
+mark_list <- list("CD4 T-cell"=c("IL7R","CCR7","S100A4"),"CD8 T-cell"=c("CD8A"),"B-Cell"=c("MS4A1"),
+                  "Monocyte"=c("CD14","FCGR3A"),"DC"=c("FCER1A"),"NK"=c("NKG7","GNLY"),"Platelet"=c("PPBP"))
+
+use_toEst <- estimateNonExpressingCells(soupOBJ, nonExpressedGeneList = mark_list)
+soupOBJ <- calculateContaminationFraction(soupOBJ, mark_list, useToEst = use_toEst)
+rho <- unique(soupOBJ$metaData$rho)
+rho
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+rm(use_toEst)
+gc()
+
+
+## ----eval=F-------------------------------------------------------------------
+## soupOBJ <- setContaminationFraction(soupOBJ,rho,forceAccept=TRUE)
+## estCor_mtx <- adjustCounts(soupOBJ)
+## 
+
+
+## ----eval=F, echo=F-----------------------------------------------------------
+## save(estCor_mtx, file="../data/estCor_mtx.RData")
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+load("data/estCor_mtx.RData")
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+rm(soupOBJ, rho)
+gc()
+
+
+## -----------------------------------------------------------------------------
+seu <- CreateSeuratObject(estCor_mtx)
+seu <- data_proc(seu)
+seu <- ScaleData(seu)
+seu <- quick_clust(seu)
+seu_estCorr <- seu
+
+
+## ----sec3_dorpProc_SoupX_estCor_eval,include=TRUE,eval=T----------------------
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
+mark_gene
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_filt, features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## -----------------------------------------------------------------------------
+
+DimPlot(seu_autoCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_autoCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## -----------------------------------------------------------------------------
+DimPlot(seu_estCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+## -----------------------------------------------------------------------------
+VlnPlot(seu_estCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+rm(seu_estCorr, seu_autoCorr)
+gc()
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+
+rm(bcrank, uniq, e.out, amb, filt_mtx, seu, sce, seu_list, out, soupOBJ, clust, autoCor_mtx, seu_autoCorr, use_toEst, rho, estCor_mtx, seu_estCorr, seu_cbFilt, seu_filt)
+gc()
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Normalization and transformation
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Normalization and transformation
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
+
+
+## ----include=F,echo=T,eval=T--------------------------------------------------
+library(Seurat)
+mtx_dir <- "filtered_feature_bc_matrix"
+seu_obj <- Seurat::Read10X(mtx_dir)
+seu_obj <- CreateSeuratObject(seu_obj)
+seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
+seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
+seu_obj <- ScaleData(seu_obj)
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
+unlink("filtered_feature_bc_matrix/", recursive=TRUE)
+
+
+## ----norm_sct, include=TRUE, eval=F-------------------------------------------
+## seu_obj <- SCTransform(seu_obj, variable.features.n = 3000)
+## seu_obj
+
+
+## ----eval=F, echo=F-----------------------------------------------------------
+## SCT_assay <- seu_obj@assays$SCT
+## save(SCT_assay, file="data/SCT_assay.RData")
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+load("data/SCT_assay.RData")
+seu_obj@assays$SCT <- SCT_assay
+DefaultAssay(seu_obj) <- "SCT"
+seu_obj
+
+
+## ----include=TRUE, eval=T-----------------------------------------------------
+DefaultAssay(seu_obj) <- "RNA"
+
+DefaultAssay(seu_obj) <- "SCT"
+
+
+## ----echo=FALSE---------------------------------------------------------------
+rm(SCT_assay)
+gc()
+
+
+
+## ----norm_comp,include=TRUE,eval=F--------------------------------------------
+## log_mat <- GetAssayData(seu_obj,assay="RNA",slot="data")
+## log_mat <- as.matrix(log_mat)
+## log_avgExp <- rowMeans(log_mat)
+## 
+## sct_mat <- GetAssayData(seu_obj,assay="SCT",slot="data")
+## sct_mat <- as.matrix(sct_mat)
+## sct_avgExp <- rowMeans(sct_mat)
+
+
+## ----include=TRUE,eval=F------------------------------------------------------
+## matched_names <- intersect(names(log_avgExp), names(sct_avgExp))
+## log_avgExp <- log_avgExp[matched_names]
+
+
+## ----eval=F, echo=F-----------------------------------------------------------
+## 
+## exp_sct <- list(log_avgExp,sct_avgExp)
+## names(exp_sct) <- c("logNorm","SCTransform")
+## save(exp_sct, file="data/exp_sct.RData")
+## 
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+
+load("data/exp_sct.RData")
+log_avgExp <- exp_sct$logNorm
+sct_avgExp <- exp_sct$SCTransform
+
+
+
+## ----eval=T-------------------------------------------------------------------
+
+dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
+cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
+
+ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
+  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+
+
+## ----echo=F, fig.height=4,fig.width=7-----------------------------------------
+dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
+cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
+
+ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
+  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+  theme_classic()
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+rm(dat, log_mat, sct_mat, plot1, plot2, seu_obj, SCT_assay)
+gc()
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
 # Merging Datasets
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
@@ -102,24 +799,6 @@ ifnb_test
 ## -----------------------------------------------------------------------------
 load("data/seuOBJ_IFNB_splitByStim.RData")
 
-
-
-## ----sec_mergeData_funcUsed_dataProc,include=TRUE-----------------------------
-data_proc <- function(seu){
-  seu <- NormalizeData(seu,normalization.method="LogNormalize",scale.factor=10000)
-  seu <- FindVariableFeatures(seu,select.method="vst",nfeatures=2000)
-  return(seu)}
-
-
-## ----sec3_mergeData_funcUsed_quickClust,include=TRUE--------------------------
-quick_clust <- function(seu){
-  set.seed(42)
-  seu <- ScaleData(seu,verbose=FALSE)
-  seu <- RunPCA(seu,npcs=30,verbose=FALSE)
-  seu <- RunUMAP(seu, reduction = "pca", dims = 1:10,verbose=FALSE)
-  seu <- FindNeighbors(seu, reduction = "pca", dims = 1:10,verbose=FALSE)
-  seu <- FindClusters(seu, resolution = 0.5,verbose=FALSE)
-  return(seu)}
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
@@ -589,400 +1268,6 @@ gc()
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Droplet processing
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-
----
-"    
-  )
-}else{
-  cat("# Droplet processing
-
----
-"    
-  )
-  
-}
-
-
-
-## ----eval=T-------------------------------------------------------------------
-download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
-
-
-## ----eval=T-------------------------------------------------------------------
-untar("10k_PBMC_3p_nextgem_Chromium_Controller_raw_feature_bc_matrix.tar.gz")
-
-
-
-## ----sec3_dropProc_kneePlot_prep,include=TRUE, eval=T-------------------------
-library(DropletUtils)
-library(Seurat)
-
-raw_mtx <- Seurat::Read10X("raw_feature_bc_matrix")
-dim(raw_mtx)
-
-
-
-## -----------------------------------------------------------------------------
-bcrank <- barcodeRanks(raw_mtx)
-head(bcrank,2)
-
-
-## ----sec3_dropProc_kennPlot_press,include=TRUE,eval=T-------------------------
-
-uniq <- !duplicated(bcrank$rank)
-bcrank <- bcrank[uniq,]
-
-knee <- metadata(bcrank)$knee
-message(paste0("knee point: ",knee))
-inflection <- metadata(bcrank)$inflection
-message(paste0("inflection point: ",inflection))
-
-
-## ----eval=F-------------------------------------------------------------------
-## ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
-##   geom_hline(yintercept = knee, linetype="dashed",color="blue")+
-##   geom_hline(yintercept = inflection, linetype="dashed",color="green")+
-##   scale_x_continuous(trans = "log10")+
-##   scale_y_continuous(trans = "log10")+
-##   labs(x="cell barcode ranked by counts",
-##        y="UMI counts of each cell barcode")+
-##   theme_classic()
-
-
-## ----eval=T, echo=F-----------------------------------------------------------
-ggplot(as.data.frame(bcrank),aes(x=rank,y=total)) + geom_point()+
-  geom_hline(yintercept = knee, linetype="dashed",color="blue")+
-  geom_hline(yintercept = inflection, linetype="dashed",color="green")+
-  scale_x_continuous(trans = "log10")+
-  scale_y_continuous(trans = "log10")+
-  labs(x="cell barcode ranked by counts",
-       y="UMI counts of each cell barcode")+
-  theme_classic()
-
-
-## ----sec3_dropProc_remEmtpy_cal, eval=TRUE------------------------------------
-
-e.out <- emptyDrops(raw_mtx)
-e.out <- e.out[order(e.out$FDR),]
-head(e.out)
-
-
-
-## ----eval=F-------------------------------------------------------------------
-## 
-## ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
-##   geom_vline(xintercept = knee, color="red",linetype="dashed")+
-##   labs(x="UMI counts per cell",y="Frequency")+
-##   scale_y_continuous(trans = "log10")+
-##   scale_x_continuous(trans = "log10")+
-##   theme_classic()
-
-
-## ----eval=T, echo=F-----------------------------------------------------------
-
-ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
-  geom_vline(xintercept = knee, color="red",linetype="dashed")+
-  labs(x="UMI counts per cell",y="Frequency")+
-  scale_y_continuous(trans = "log10")+
-  scale_x_continuous(trans = "log10")+
-  theme_classic()
-
-
-## -----------------------------------------------------------------------------
-table(e.out$FDR < 0.001)
-cell_sel <- rownames(e.out)[e.out$FDR < 0.001]
-filt_mtx <- raw_mtx[,colnames(raw_mtx) %in% cell_sel]
-
-
-## ----sec3_dropProc_ambIDENT_DorpUtils,include=TRUE,eval=T---------------------
-amb <- metadata(e.out)$ambient[,1]
-head(amb)
-
-
-## ----eval=F, echo=F-----------------------------------------------------------
-## load("data/seu_obj_raw.RData")
-## seu <- seu_obj
-
-
-## -----------------------------------------------------------------------------
-download.file("https://cf.10xgenomics.com/samples/cell-exp/6.1.0/10k_PBMC_3p_nextgem_Chromium_Controller/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz","10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
-untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz")
-filt_mtx <- Seurat::Read10X("filtered_feature_bc_matrix/")
-
-
-## ----eval=T, echo=F-----------------------------------------------------------
-unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
-unlink("filtered_feature_bc_matrix/", recursive=TRUE)
-
-
-## ----eval=T-------------------------------------------------------------------
-
-filt_mtx_drop <- filt_mtx[rownames(filt_mtx) %in% names(amb),]
-seu <- CreateSeuratObject(filt_mtx_drop)
-
-
-## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
-rm(filt_mtx_drop)
-
-
-## ----eval=T-------------------------------------------------------------------
-seu <- data_proc(seu)
-seu <- ScaleData(seu)
-seu <- quick_clust(seu)
-sce <- as.SingleCellExperiment(seu,assay = "RNA")
-
-
-## -----------------------------------------------------------------------------
-plotUMAP(sce, colour_by="seurat_clusters")
-
-
-## -----------------------------------------------------------------------------
-seu_list <- list()
-seu_list[["woCorr"]] <- seu
-
-
-## ----sec3_dropProc_ambProc_DropUtils,include=TRUE,eval=T----------------------
-out <- removeAmbience(counts(sce), ambient=amb, groups=sce$seurat_clusters) 
-rownames(out) <- rownames(sce)
-colnames(out) <- colnames(sce)
-
-
-
-## -----------------------------------------------------------------------------
-seu_list[["withCorr"]] <- CreateSeuratObject(out)
-seu_list[["withCorr"]] <- data_proc(seu_list[["withCorr"]])
-seu_list[["withCorr"]] <- ScaleData(seu_list[["withCorr"]])
-seu_list[["withCorr"]] <- quick_clust(seu_list[["withCorr"]])
-
-
-## ----sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T-----------------
-
-mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
-mark_gene
-
-
-
-## -----------------------------------------------------------------------------
-DimPlot(seu_list$woCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
-
-
-## -----------------------------------------------------------------------------
-DimPlot(seu_list$withCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
-
-
-
-## -----------------------------------------------------------------------------
-VlnPlot(seu_list$woCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-
-
-## -----------------------------------------------------------------------------
-VlnPlot(seu_list$withCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-
-
-## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
-
-rm(seu_list, out, sce)
-gc()
-
-
-## ----sec3_dropProc_SoupX_prep,include=TRUE,eval=T-----------------------------
-
-clust <- setNames(seu$seurat_clusters, Cells(seu))
-seu_filt <- seu
-
-
-## -----------------------------------------------------------------------------
-library(SoupX)
-soupOBJ <- SoupChannel(raw_mtx, filt_mtx)
-soupOBJ <- setClusters(soupOBJ,clust)
-
-
-## ----sec3_dropProc_SoupX_autoCor,include=TRUE,eval=F--------------------------
-## soupOBJ <- autoEstCont(soupOBJ)
-## 
-## autoCor_mtx <- adjustCounts(soupOBJ)
-## 
-
-
-## ----eval=F, echo=F-----------------------------------------------------------
-## save(soupOBJ, file="../data/soup.RData")
-## save(autoCor_mtx, file="../data/auto_soup.RData")
-
-
-## ----eval=T, echo=F-----------------------------------------------------------
-load("data/soup.RData")
-
-
-## ----eval=T, echo=F-----------------------------------------------------------
-load("data/auto_soup.RData")
-
-
-## -----------------------------------------------------------------------------
-seu <- CreateSeuratObject(autoCor_mtx)
-seu <- data_proc(seu)
-seu <- ScaleData(seu)
-seu <- quick_clust(seu)
-seu_autoCorr <- seu
-
-
-## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
-rm(seu)
-gc()
-
-
-## ----sec3_dropProc_SoupX_estCor,include=TRUE,eval=T---------------------------
-
-mark_list <- list("CD4 T-cell"=c("IL7R","CCR7","S100A4"),"CD8 T-cell"=c("CD8A"),"B-Cell"=c("MS4A1"),
-                  "Monocyte"=c("CD14","FCGR3A"),"DC"=c("FCER1A"),"NK"=c("NKG7","GNLY"),"Platelet"=c("PPBP"))
-
-use_toEst <- estimateNonExpressingCells(soupOBJ, nonExpressedGeneList = mark_list)
-soupOBJ <- calculateContaminationFraction(soupOBJ, mark_list, useToEst = use_toEst)
-rho <- unique(soupOBJ$metaData$rho)
-rho
-
-
-## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
-rm(use_toEst)
-gc()
-
-
-## ----eval=F-------------------------------------------------------------------
-## soupOBJ <- setContaminationFraction(soupOBJ,rho,forceAccept=TRUE)
-## estCor_mtx <- adjustCounts(soupOBJ)
-## 
-
-
-## ----eval=F, echo=F-----------------------------------------------------------
-## save(estCor_mtx, file="../data/estCor_mtx.RData")
-
-
-## ----eval=T, echo=F-----------------------------------------------------------
-load("data/estCor_mtx.RData")
-
-
-## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
-rm(soupOBJ, rho)
-gc()
-
-
-## -----------------------------------------------------------------------------
-seu <- CreateSeuratObject(estCor_mtx)
-seu <- data_proc(seu)
-seu <- ScaleData(seu)
-seu <- quick_clust(seu)
-seu_estCorr <- seu
-
-
-## ----sec3_dorpProc_SoupX_estCor_eval,include=TRUE,eval=T----------------------
-mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
-mark_gene
-
-
-## -----------------------------------------------------------------------------
-DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
-
-
-## -----------------------------------------------------------------------------
-VlnPlot(seu_filt, features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-
-
-## -----------------------------------------------------------------------------
-
-DimPlot(seu_autoCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
-
-
-## -----------------------------------------------------------------------------
-VlnPlot(seu_autoCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-
-
-## -----------------------------------------------------------------------------
-DimPlot(seu_estCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
-
-
-## -----------------------------------------------------------------------------
-VlnPlot(seu_estCorr,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-
-
-## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
-rm(seu_estCorr, seu_autoCorr)
-gc()
-
-
-## input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
-## output_h5=assign_the_h5_file_path_for_the_cellbender_corrected_matrix # essential
-## expect_cell=expected_cell_number_can_be_find_in_cellranger_Web_Summary # essential
-## droplet_num=the_total_number_of_droplets_assigned_while_sequencing # default 25,000
-## fpr=threshols_of_FALSE_POSITIVE_RATE # default 0.01
-## epochs=number_of_epochs_to_train # default 150
-## num_train=number_of_times_to_attempt_to_train_the_model # default 1. would speed up while setting greater
-## #
-## cellbender remove-background --input $input_h5 --output $output_h5 --expected-cells $expect_cell --total-droplets-included $droplet_num --fpr $fpr --epochs $epochs --num-training-tries $num_train --cuda False
-
-## ----sec3_dropProc_cbFilt_loadData,include=TRUE,eval=T------------------------
-cbFilt_mtx <- Read10X_h5("data/cbFilt_PBMCv3_20230324_filtered.h5")
-dim(cbFilt_mtx)
-
-dim(filt_mtx)
-
-
-## ----sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T-----------------------
-message("processing matrix from CellRanger")
-seu <- CreateSeuratObject(filt_mtx)
-seu <- data_proc(seu)
-seu <- ScaleData(seu)
-seu <- quick_clust(seu)
-seu_filt <- seu
-
-message("processing matrix from CellBender")
-seu <- CreateSeuratObject(cbFilt_mtx)
-seu <- data_proc(seu)
-seu <- ScaleData(seu)
-seu <- quick_clust(seu)
-seu_cbFilt <- seu
-
-
-## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
-
-rm(seu)
-gc()
-  
-
-
-## ----sec3_dorpProc_cbFilt_eval,include=TRUE,eval=T----------------------------
-mark_gene <- c("CD3E","CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","PPBP")
-mark_gene
-
-
-## -----------------------------------------------------------------------------
-DimPlot(seu_filt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
-
-
-## -----------------------------------------------------------------------------
-DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
-
-
-## -----------------------------------------------------------------------------
-VlnPlot(seu_filt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-
-
-
-## -----------------------------------------------------------------------------
-VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
-
-
-## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
-
-rm(bcrank, uniq, e.out, amb, filt_mtx, seu, sce, seu_list, out, soupOBJ, clust, autoCor_mtx, seu_autoCorr, use_toEst, rho, estCor_mtx, seu_estCorr, seu_cbFilt, seu_filt)
-gc()
-
-
-## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
 # Trajectory and Psuedotime analysis
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
@@ -1272,26 +1557,36 @@ DimPlot(seu_obj,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegen
 
 
 ## ----sec3_CITE_hto,include=TRUE,eval=T----------------------------------------
-
+DefaultAssay(seu_obj) <- "HTO"
 seu_obj <- NormalizeData(seu_obj, assay="HTO", normalization.method="CLR")
+
+
+
+## -----------------------------------------------------------------------------
 seu_obj <- HTODemux(seu_obj, assay = "HTO", positive.quantile = 0.99)
 
 head(seu_obj,2)
 
 
-## -----------------------------------------------------------------------------
+## ----CITESeq_posEG,include=TRUE,eval=TRUE,dpi=300-----------------------------
+# Distribution of HTO-A level
+RidgePlot(seu_obj,features = "HTO-A",group.by = "orig.ident")+NoLegend()
+
+
+## ----CITESeq_posEG2,include=TRUE,eval=TRUE,dpi=300----------------------------
+RidgePlot(seu_obj,
+          features = c("HTO-A","HTO-B"),
+          group.by = "hash.ID")+NoLegend()
+#
 table(seu_obj$HTO_classification.global)
+#
 table(seu_obj$hash.ID)
+#
+table(seu_obj$HTO_classification.global,seu_obj$hash.ID)
 
 
-## ----sec3_CITE_ridget,include=TRUE,eval=T-------------------------------------
-RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
-          features = rownames(seu_obj[["HTO"]])[1:2],ncol = 2)
-
-
-## ----include=TRUE,eval=T------------------------------------------------------
-RidgePlot(seu_obj,group.by = "hash.ID", assay = "HTO",
-          features = rownames(seu_obj[["HTO"]])[3:4],ncol = 2)
+## ----CITESeq_spltUMAP,include=TRUE,eval=TRUE,dpi=300--------------------------
+DimPlot(seu_obj,group.by = "seurat_clusters",label = TRUE,pt.size = 0.2,split.by = "hash.ID",ncol = 5)+NoLegend()
 
 
 ## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
@@ -1478,4 +1773,9 @@ seu$layers[seu$seurat_clusters %in% c(6,7,8)] <- "endoderm"
 
 ## -----------------------------------------------------------------------------
 DimPlot(seu,group.by = "layers",pt.size = 0.2)
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+unlink("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz", recursive=TRUE)
+unlink("filtered_feature_bc_matrix/", recursive=TRUE)
 

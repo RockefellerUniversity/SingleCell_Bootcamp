@@ -291,16 +291,19 @@ dat$Phase <- factor(dat$Phase, levels = c("G1","S","G2M"))
 
 ## ----fig.height=4,fig.width=7-------------------------------------------------
 
-ggplot(dat,aes(x=Phase, y=score, fill=Phase))+geom_boxplot()+
+ggplot(dat,aes(x=Phase, y=score, fill=Phase))+geom_violin()+
   labs(x="",y="Score",fill="Phase")+
   facet_wrap(~cat)+theme_classic()
 
 
-## ----ccPhase_cyclon_prep,include=TRUE,eval=TRUE-------------------------------
+## ----ccPhase_cyclon_prep,include=TRUE,eval=TRUE, warning=F, message=F---------
 library(scran)
 
-sce <- as.SingleCellExperiment(seu_obj,assay = "RNA")
+sce <- as.SingleCellExperiment(seu_obj, assay = "RNA")
 rowData(sce)$SYMBOL <- rownames(sce)
+
+
+## -----------------------------------------------------------------------------
 sce
 
 
@@ -350,7 +353,7 @@ dat$cat <- factor(dat$cat,levels = c("cyclon_G1Score","cyclon_SScore","cyclon_G2
 
 
 ## ----fig.height=4,fig.width=7-------------------------------------------------
-ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_boxplot()+
+ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_violin()+
   labs(x="",y="Score",fill="Phase")+
   facet_wrap(~cat)+theme_classic()
 
@@ -450,7 +453,7 @@ seu_obj[["doublet"]] <- doublet$doublet
 ## ----fig.height=4,fig.width=7-------------------------------------------------
 
 VlnPlot(seu_obj, group.by = "doublet",
-        features = c("nCount_RNA","nFeature_RNA","doublet_score"),
+        features = c("doublet_score", "nCount_RNA","nFeature_RNA"),
         pt.size = 0)
 
 
@@ -493,13 +496,7 @@ VlnPlot(seu_obj, group.by = "dset",
         pt.size = 0)
 
 
-## ----qcPlot_scatter_pres1,include=TRUE,eval=F---------------------------------
-## 
-## FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
-##                group.by = "doublet")
-
-
-## ----include=TRUE,eval=T, echo=F, fig.height=4,fig.width=7--------------------
+## ----include=TRUE,eval=T, echo=F, fig.height=3,fig.width=6--------------------
 
 FeatureScatter(seu_obj,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",
                group.by = "doublet")
@@ -517,7 +514,7 @@ FeatureScatter(seu_obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
 ## RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
 
 
-## ----qcPlot_ridgePlot_pres,include=TRUE,eval=TRUE, echo=F, fig.height=4,fig.width=7----
+## ----qcPlot_ridgePlot_pres,include=TRUE,eval=TRUE, echo=F, fig.height=3,fig.width=6----
 RidgePlot(seu_obj,group.by = "doublet",features = c("doublet_score"))
 
 
@@ -679,9 +676,9 @@ ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pc)) + geom_text() +
 
 
 ## ----dimRed_UMAP,include=TRUE,eval=T------------------------------------------
-seu_filt <- FindNeighbors(seu_filt,dims = 1:pc,reduction = "pca")
+seu_filt <- FindNeighbors(seu_filt,dims = 1:pc, reduction = "pca")
 
-seu_filt <- RunUMAP(seu_filt,dims = 1:pc,reduction = "pca")
+seu_filt <- RunUMAP(seu_filt,dims = 1:pc, reduction = "pca")
 
 
 ## ----fig.height=4,fig.width=7-------------------------------------------------
@@ -976,4 +973,39 @@ gc()
 
 unlink("clust_dat.csv")
 
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Loupe Browser
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("#  Loupe Browser
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----eval=F-------------------------------------------------------------------
+## remotes::install_github("10xGenomics/loupeR")
+## loupeR::setup()
+
+
+## ----eval=F-------------------------------------------------------------------
+## library(loupeR)
+## create_loupe_from_seurat(seu_filt,
+##                          output_dir = "loupe",
+##                          output_name = "seu_filt")
+## 
 
