@@ -48,7 +48,7 @@ library(scuttle)
 ```
 
 
----
+
 # Outlines
 - QC and Droplet processing - 3 different approaches for this
 - Merge multiple data sets - 4 different approaches for this
@@ -56,6 +56,7 @@ library(scuttle)
 - CITE-seq data processing
 - SMART-seq processing
 
+---
 ## A more advanced scRNAseq workflow
 
 ![overview](./imgs/scRNA_workflow_ver001_20231017.png)
@@ -500,7 +501,7 @@ The **Cells** panel highlights some of the most important information in the rep
 
 Key Metrics:
 
-* Fraction Reads in Cells > 70% (usually > 85%): 
+  * Fraction Reads in Cells > 70% (usually > 85%): 
 		+ Reflects the ambient RNA contamination
 		+ Consider correcting for ambient RNA if < 90%
 	* Median reads per cell > 20,000/cell and estimated number of cells 500 ~ 10,000
@@ -686,7 +687,7 @@ if(params$isSlides == "yes"){
 
 Often empty droplets can still make their way past Cell Ranger, or we might see an issue in the Cell Ranger web report itself. If this happens we might want to do custom filtering outside of Cell Ranger.
 
-One cause of these issues could be ambient RNAs. Ambient RNAs from lysed cells make empty droplets seem like they contain a cell or contaminate droplets and. 
+One cause of these issues could be ambient RNAs. Ambient RNAs from lysed cells make empty droplets seem like they contain a cell or contaminate droplets that already have a cell. 
 
 Lets look at the PBMC 10k data from 10X Genomics as an example to deal with these issues. This time we will use the raw matrix. This way we don't use the filtering that Cell Ranger does.
 
@@ -859,7 +860,7 @@ mark_gene <- c("CD3E","CCR7")
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 ```
 
-```{r}
+```{r, echo=F}
 rm(cbFilt_mtx, filt_mtx, seu_filt, seu_cbFilt)
 gc()
 ```
@@ -893,7 +894,6 @@ if(params$isSlides == "yes"){
 
 ```
 
----
 ## Detect TRUE cells
 
 - The knee plot is available in the Web Summary from Cell Ranger.
@@ -1009,7 +1009,7 @@ ggplot(as.data.frame(e.out),aes(x=Total))+geom_histogram()+
 ---
 ## Detect empty droplets 
 
-The distribution of UMI counts per cell is often a bimodal distribution. The high-UMI group are likely droplets with a cell. In contrast, the droplets with low UMI are more likely empty droplets containing ambient RNAs.
+The distribution of UMI counts per cell is often a bimodal distribution. The high-UMI group are likelys droplets with a cell. In contrast, the droplets with low UMI are more likely empty droplets containing ambient RNAs.
 
 ```{r, eval=T, echo=F}
 
@@ -1182,17 +1182,7 @@ seu_list[["withCorr"]] <- ScaleData(seu_list[["withCorr"]])
 seu_list[["withCorr"]] <- quick_clust(seu_list[["withCorr"]])
 ```
 
----
-## Evaluate with marker genes
 
-Lets compare to our marker genes. 
-
-```{r sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T}
-
-mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
-mark_gene
-
-```
 
 ---
 ## Evaluate with marker genes
@@ -1212,6 +1202,19 @@ Lets now compare to UMAP wit ambient RNA correction.
 DimPlot(seu_list$withCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
 
 ```
+
+---
+## Evaluate with marker genes
+
+Lets compare to  some of our marker genes. 
+
+```{r sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T}
+
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14")
+mark_gene
+
+```
+
 
 ---
 ## Evaluate with marker genes
@@ -1575,7 +1578,7 @@ sct_avgExp <- exp_sct$SCTransform
 ```
 
 
-```{R, eval=T}
+```{R, eval=F}
 
 dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
 cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
