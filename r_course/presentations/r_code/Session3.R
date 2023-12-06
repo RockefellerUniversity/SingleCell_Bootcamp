@@ -246,7 +246,7 @@ mark_gene <- c("CD3E","CCR7")
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 
-## -----------------------------------------------------------------------------
+## ----echo=F-------------------------------------------------------------------
 rm(cbFilt_mtx, filt_mtx, seu_filt, seu_cbFilt)
 gc()
 
@@ -439,19 +439,19 @@ seu_list[["withCorr"]] <- ScaleData(seu_list[["withCorr"]])
 seu_list[["withCorr"]] <- quick_clust(seu_list[["withCorr"]])
 
 
-## ----sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T-----------------
-
-mark_gene <- c("CCR7","CD8A","MS4A1","CD14","FCGR3A","FCER1A","GNLY","NKG7","PPBP")
-mark_gene
-
-
-
 ## -----------------------------------------------------------------------------
 DimPlot(seu_list$woCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
 
 
 ## -----------------------------------------------------------------------------
 DimPlot(seu_list$withCorr,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
+
+
+
+## ----sec3_dropProc_testMarker_DropletUtil,include=TRUE,eval=T-----------------
+
+mark_gene <- c("CCR7","CD8A","MS4A1","CD14")
+mark_gene
 
 
 
@@ -627,9 +627,14 @@ untar("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.tar.gz
 
 ## ----include=F,echo=T,eval=T--------------------------------------------------
 library(Seurat)
+
+sample_id <- "PBMC_10k" 
+min_gene <- 200
+min_cell <- 10 
+
 mtx_dir <- "filtered_feature_bc_matrix"
 seu_obj <- Seurat::Read10X(mtx_dir)
-seu_obj <- CreateSeuratObject(seu_obj)
+seu_obj <- Seurat::CreateSeuratObject(seu_obj, project=sample_id, min.cells=min_cell, min.features=min_gene)
 seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
 seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
 seu_obj <- ScaleData(seu_obj)
@@ -679,11 +684,6 @@ gc()
 ## sct_avgExp <- rowMeans(sct_mat)
 
 
-## ----include=TRUE,eval=F------------------------------------------------------
-## matched_names <- intersect(names(log_avgExp), names(sct_avgExp))
-## log_avgExp <- log_avgExp[matched_names]
-
-
 ## ----eval=F, echo=F-----------------------------------------------------------
 ## 
 ## exp_sct <- list(log_avgExp,sct_avgExp)
@@ -700,14 +700,14 @@ sct_avgExp <- exp_sct$SCTransform
 
 
 
-## ----eval=T-------------------------------------------------------------------
-
-dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
-cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
-
-ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
-  labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
-  theme_classic()
+## ----eval=F-------------------------------------------------------------------
+## 
+## dat <- data.frame(logNorm=log_avgExp, SCT=sct_avgExp)
+## cor_val <- cor.test(log_avgExp,sct_avgExp,method = "spearman")
+## 
+## ggplot(dat,aes(x=logNorm,y=SCT))+geom_point()+geom_smooth()+
+##   labs(x="Log_Normalization",y="SCTransform",subtitle = paste0("rho=",round(cor_val$estimate,3),"; p-value=",cor_val$p.value[1]))+
+##   theme_classic()
 
 
 ## ----echo=F, fig.height=4,fig.width=7-----------------------------------------
