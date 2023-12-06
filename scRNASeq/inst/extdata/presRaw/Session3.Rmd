@@ -1483,7 +1483,7 @@ min_cell <- 10
 
 mtx_dir <- "filtered_feature_bc_matrix"
 seu_obj <- Seurat::Read10X(mtx_dir)
-seu_obj <- Seurat::CreateSeuratObject(mtx, project=sample_id, min.cells=min_cell, min.features=min_gene)
+seu_obj <- Seurat::CreateSeuratObject(seu_obj, project=sample_id, min.cells=min_cell, min.features=min_gene)
 seu_obj <- NormalizeData(seu_obj, normalization.method="LogNormalize")
 seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
 seu_obj <- ScaleData(seu_obj)
