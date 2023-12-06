@@ -1551,15 +1551,6 @@ sct_mat <- as.matrix(sct_mat)
 sct_avgExp <- rowMeans(sct_mat)
 ```
 
-
----
-## SCTransform vs log normalization
-
-```{r include=TRUE,eval=F}
-matched_names <- intersect(names(log_avgExp), names(sct_avgExp))
-log_avgExp <- log_avgExp[matched_names]
-```
-
 ---
 ## log normalization vs SCTransform
 
