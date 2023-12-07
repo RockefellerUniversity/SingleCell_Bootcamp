@@ -821,8 +821,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells 11944368 637.9   22661624 1210.3  22661624 1210.3
-## Vcells 21302870 162.6  417781380 3187.5 466036796 3555.6
+## Ncells 11944378 637.9   22661650 1210.3  22661650 1210.3
+## Vcells 21303040 162.6  417781612 3187.5 466036966 3555.6
 ```
 
 ---
@@ -1470,8 +1470,8 @@ DefaultAssay(seu_obj) &lt;- "SCT"
 
 ```
 ##             used   (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  14142669  755.4   22661624 1210.3  22661624 1210.3
-## Vcells 288460350 2200.8  534250249 4076.1 694851404 5301.3
+## Ncells  14142674  755.4   22661650 1210.3  22661650 1210.3
+## Vcells 288460524 2200.8  534250432 4076.1 694851574 5301.3
 ```
 
 
@@ -1983,39 +1983,36 @@ reducedDim(mnn_res, "corrected")[1:2, ]
 ##                       [,1]         [,2]        [,3]        [,4]        [,5]
 ## AAACATACATTTCC.1 0.4692084  0.002558369  0.24112460 -0.01932947 -0.02919753
 ## AAACATACCAGAAA.1 0.4849751 -0.221433871 -0.03194567 -0.04457301  0.02085704
-##                           [,6]        [,7]       [,8]         [,9]       [,10]
-## AAACATACATTTCC.1 -0.0001116517 -0.05219879 0.01560541  0.018456590 -0.02042355
-## AAACATACCAGAAA.1  0.0208653688  0.02518230 0.05640069 -0.001590786  0.02042924
+##                           [,6]        [,7]        [,8]         [,9]       [,10]
+## AAACATACATTTCC.1 -0.0001116517 -0.05219879 -0.01560541 -0.018456590  0.02042355
+## AAACATACCAGAAA.1  0.0208653688  0.02518230 -0.05640069  0.001590786 -0.02042924
 ##                        [,11]       [,12]        [,13]       [,14]         [,15]
-## AAACATACATTTCC.1 0.008021788  0.04396844  0.005131837  0.01141104 -0.0002610285
-## AAACATACCAGAAA.1 0.006484710 -0.02690261 -0.014495237 -0.01603656  0.0417677341
+## AAACATACATTTCC.1 0.008021788 -0.04396844  0.005131837 -0.01141104 -0.0002610285
+## AAACATACCAGAAA.1 0.006484710  0.02690261 -0.014495237  0.01603656  0.0417677341
 ##                         [,16]       [,17]        [,18]        [,19]       [,20]
-## AAACATACATTTCC.1  0.001044311  0.02583133 -0.004660621  0.003453847 0.007833429
-## AAACATACCAGAAA.1 -0.002738321 -0.01539083  0.028006124 -0.010241152 0.016709705
-##                         [,21]       [,22]       [,23]        [,24]       [,25]
-## AAACATACATTTCC.1  0.004925765  0.01688819  0.01693241  0.003615093 0.007882780
-## AAACATACCAGAAA.1 -0.019963264 -0.02561860 -0.01056931 -0.010869554 0.005000097
-##                        [,26]        [,27]        [,28]        [,29]
-## AAACATACATTTCC.1 -0.01073247 0.0075159768  0.006422343 -0.004441872
-## AAACATACCAGAAA.1  0.02215599 0.0008773935 -0.003697461 -0.014406621
-##                         [,30]       [,31]        [,32]        [,33]
-## AAACATACATTTCC.1  0.002957031  0.01006521 -0.002491118 -0.001875366
-## AAACATACCAGAAA.1 -0.003685269 -0.01067559 -0.021875400  0.011806193
-##                         [,34]        [,35]        [,36]        [,37]
-## AAACATACATTTCC.1 -0.008862147  0.002032289 -0.008468607 -0.007954116
-## AAACATACCAGAAA.1  0.003560579 -0.002324063  0.002952769 -0.006034000
-##                          [,38]        [,39]       [,40]        [,41]
-## AAACATACATTTCC.1 -0.0009951656  0.002792573 0.002435519 -0.015530207
-## AAACATACCAGAAA.1 -0.0009532853 -0.002280508 0.010147310  0.003641573
-##                          [,42]         [,43]        [,44]       [,45]
-## AAACATACATTTCC.1  0.0009633955  0.0026935385 0.0002299275 0.003499859
-## AAACATACCAGAAA.1 -0.0034695643 -0.0008694543 0.0037271426 0.002181876
-##                         [,46]        [,47]        [,48]        [,49]
-## AAACATACATTTCC.1 -0.001978661 -0.009881723 -0.004609779  0.001163945
-## AAACATACCAGAAA.1 -0.001995334 -0.005362670  0.001793127 -0.005419268
-##                          [,50]
-## AAACATACATTTCC.1 -0.0095770715
-## AAACATACCAGAAA.1  0.0003581869
+## AAACATACATTTCC.1 -0.001044311 -0.02583133 -0.004660621  0.003453847 0.007833429
+## AAACATACCAGAAA.1  0.002738321  0.01539083  0.028006124 -0.010241152 0.016709705
+##                         [,21]       [,22]       [,23]        [,24]        [,25]
+## AAACATACATTTCC.1 -0.004925765 -0.01688819 -0.01693241  0.003615093 -0.007882780
+## AAACATACCAGAAA.1  0.019963264  0.02561860  0.01056931 -0.010869554 -0.005000097
+##                        [,26]        [,27]        [,28]       [,29]        [,30]
+## AAACATACATTTCC.1  0.01073247 0.0075159768  0.006422343 0.004441872 -0.002957031
+## AAACATACCAGAAA.1 -0.02215599 0.0008773935 -0.003697461 0.014406621  0.003685269
+##                        [,31]       [,32]        [,33]        [,34]        [,35]
+## AAACATACATTTCC.1 -0.01006521 0.002491118 -0.001875366 -0.008862147  0.002032289
+## AAACATACCAGAAA.1  0.01067559 0.021875400  0.011806193  0.003560579 -0.002324063
+##                         [,36]        [,37]         [,38]        [,39]
+## AAACATACATTTCC.1 -0.008468607 -0.007954116 -0.0009951656  0.002792573
+## AAACATACCAGAAA.1  0.002952769 -0.006034000 -0.0009532853 -0.002280508
+##                        [,40]        [,41]         [,42]         [,43]
+## AAACATACATTTCC.1 0.002435519 -0.015530207  0.0009633955  0.0026935385
+## AAACATACCAGAAA.1 0.010147310  0.003641573 -0.0034695643 -0.0008694543
+##                         [,44]        [,45]        [,46]        [,47]
+## AAACATACATTTCC.1 0.0002299275 -0.003499859 -0.001978661 -0.009881723
+## AAACATACCAGAAA.1 0.0037271426 -0.002181876 -0.001995334 -0.005362670
+##                         [,48]        [,49]         [,50]
+## AAACATACATTTCC.1 -0.004609779  0.001163945 -0.0095770715
+## AAACATACCAGAAA.1  0.001793127 -0.005419268  0.0003581869
 ```
 
 
@@ -2562,7 +2559,7 @@ class: inverse, center, middle
 
 ]
 .pull-right[
-![](./imgs/ica_vs_pca.png)
+![](./imgs/ica_vs_pca.jpeg)
 ]
 
 
@@ -2670,8 +2667,8 @@ head(pseudo.paths, 2)
 
 ```
 ##           Lineage1 Lineage2 Lineage3
-## HSPC_025 111.82993       NA       NA
-## HSPC_031  96.15939 99.77961       NA
+## HSPC_025 111.83001       NA       NA
+## HSPC_031  96.15946 99.77945       NA
 ```
 
 It will be useful to combine these times, to find the shared time.
@@ -2713,12 +2710,12 @@ head(curve$curve1)
 
 ```
 ##       UMAP1     UMAP2
-## 1 -12.23250 0.6437628
-## 2 -12.01319 0.7200463
-## 3 -11.79388 0.7963086
-## 4 -11.57455 0.8725464
-## 5 -11.35521 0.9487473
-## 6 -11.13585 1.0248888
+## 1 -12.23250 0.6437522
+## 2 -12.01319 0.7200359
+## 3 -11.79387 0.7962985
+## 4 -11.57454 0.8725365
+## 5 -11.35520 0.9487377
+## 6 -11.13584 1.0248795
 ```
 
 ---
@@ -2803,7 +2800,7 @@ plotUMAP(sce.sling2, colour_by = "avg_pseudoTime") + geom_path(data = curve$curv
 ![](Session3_files/figure-html/unnamed-chunk-130-1.png)&lt;!-- --&gt;
 
 ---
-## Trajectory and pseudotime for each lineage
+## Looking at a single lineage
 
 So far we have visualized the lineages together. We will want to break this down and compare to clusters. First we will look at clusters. 
 
@@ -2815,7 +2812,7 @@ plotUMAP(sce.sling2, colour_by = "label")
 ![](Session3_files/figure-html/sec3_trajANA_trajSep-1.png)&lt;!-- --&gt;
 
 ---
-## Trajectory and pseudotime for each lineage
+## Looking at a single lineage
 
 We can reveal which cluster belong to each cluster and lineage 1's trajectory. 
 
@@ -2836,7 +2833,7 @@ plotUMAP(sce.sling2, colour_by = "slingPseudotime_1") + geom_path(data = curve$c
 ![](Session3_files/figure-html/unnamed-chunk-131-1.png)&lt;!-- --&gt;
 
 ---
-## Trajectory and pseudotime for each lineage
+## Looking at a single lineage
 
 We can reveal which cluster belong to each cluster and lineage 2's trajectory. 
 
@@ -3047,11 +3044,8 @@ plotExpression(sce.sling2, features = top, swap_rownames = "GENEID", x = "slingP
 ## Choosing a trajectory inference and pseudotiming algorithm
 
 
-]
-.pull-right[
-[full image](./imgs/pseudotime_algorithms.jpg)
-![](./imgs/pseudotime_algorithms.jpg)
-]
+[full image](./imgs/pseudotime_algorithms.jpeg)
+![](./imgs/pseudotime_algorithms.jpeg)
 
 
 
@@ -3176,8 +3170,8 @@ head(seu_obj, 2)
 ## AGGCCACAGCGTCTAT citeSeq_demo        273          210       4200            7
 ## ATTGGTGAGTTCGCAT citeSeq_demo        305          174       3475            8
 ##                  RNA_snn_res.0.5 seurat_clusters HTO_maxID HTO_secondID
-## AGGCCACAGCGTCTAT               1               1     HTO-H        HTO-E
-## ATTGGTGAGTTCGCAT               0               0     HTO-H        HTO-G
+## AGGCCACAGCGTCTAT               0               0     HTO-H        HTO-E
+## ATTGGTGAGTTCGCAT               2               2     HTO-H        HTO-G
 ##                  HTO_margin HTO_classification HTO_classification.global
 ## AGGCCACAGCGTCTAT 4.71133972              HTO-H                   Singlet
 ## ATTGGTGAGTTCGCAT 0.03995001        HTO-G_HTO-H                   Doublet
