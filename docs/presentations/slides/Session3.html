@@ -821,8 +821,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells 11944356 637.9   22661585 1210.3  22661585 1210.3
-## Vcells 21302604 162.6  417781420 3187.5 466036534 3555.6
+## Ncells 11944368 637.9   22661624 1210.3  22661624 1210.3
+## Vcells 21302870 162.6  417781380 3187.5 466036796 3555.6
 ```
 
 ---
@@ -1470,8 +1470,8 @@ DefaultAssay(seu_obj) &lt;- "SCT"
 
 ```
 ##             used   (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  14142664  755.3   22661585 1210.3  22661585 1210.3
-## Vcells 288460092 2200.8  534249959 4076.1 694851142 5301.3
+## Ncells  14142669  755.4   22661624 1210.3  22661624 1210.3
+## Vcells 288460350 2200.8  534250249 4076.1 694851404 5301.3
 ```
 
 
@@ -2550,12 +2550,29 @@ class: inverse, center, middle
 - Many biological processes are link a dynamic changes in the cellular state e.g. immune cell activation.
 - Trajectory analysis is a way to postulate this kind dynamic changes in single-cell data.
 - According to the postulated trajectories, we can also estimate pseudotime of each cell included in a particular trajectory. 
-- Here, we demonstrate how to find out trajectories reflecting hematopoietic stem cell differentiation.
+- Formal definition of pseudotime:  Latent (unobserved) dimension which measures the cells’ progress through the transition.
+- Related to but not necessarily the same as laboratory capture time.
+
+---
+## How does it work?
+
+.pull-left[
+- PCA is used to determine which variables (cells) have maximum variance - and which genes drive these differences
+- Trajectory inference / pseudotime algorithms apply downstream statistical methods to linearly transform the cells within each PC and categorize cells into lineages with different end cellular states
+
+]
+.pull-right[
+![](./imgs/ica_vs_pca.png)
+]
+
+
 
 ---
 ## Prepare the demo
+
+- Here, we will find out trajectories reflecting hematopoietic stem cell differentiation.
 - In this practice, we are using the SMART-Seq data of mouse hematopoietic stem cells (HSCs) published Nestorowa et al., Blood(2016) [link](https://ashpublications.org/blood/article/128/8/e20/35749/A-single-cell-resolution-map-of-mouse).
-- We will provide the SingleCellExperiment 
+- We will provide the SingleCellExperiment.
 - The SingleCellExperiment (sce) object was downloaded and processed by following this vignette [link](http://bioconductor.org/books/3.17/OSCA.workflows/nestorowa-mouse-hsc-smart-seq2.html#ref-nestorowa2016singlecell).
 
 
@@ -2580,7 +2597,8 @@ sce
 ```
 
 ---
-## Estimate trajectories by fitting principle curves
+## Estimate trajectories
+
 To find the trajectories we need to fit our high dimensional data onto a curve. This step is processed with the *slingshot* [link](https://bioconductor.org/packages/release/bioc/html/slingshot.html) package.
 
 To run slingshot we need:
@@ -2598,7 +2616,7 @@ sce.sling &lt;- slingshot(sce, cluster = sce$label, reducedDim = "PCA", approx_p
 ```
 
 ---
-## Estimate trajectories by fitting principle curves
+## Estimate trajectories
 
 
 ```r
@@ -2970,6 +2988,7 @@ plotExpression(sce.sling2, features = top, swap_rownames = "GENEID", x = "slingP
 ## Plotting top driver genes
 
 We can now repeat this for the top 5 late genes. 
+
 ![](Session3_files/figure-html/sec3_trajANA_driveL1_topLate-1.png)&lt;!-- --&gt;
 
 ---
@@ -3010,7 +3029,7 @@ plotExpression(sce.sling2, features = top, swap_rownames = "GENEID", x = "slingP
 
 ![](Session3_files/figure-html/sec3_trajANA_driveL2_topEarly-1.png)&lt;!-- --&gt;
 
-
+---
 ## Plotting top driver genes
 
 ```r
@@ -3022,6 +3041,19 @@ plotExpression(sce.sling2, features = top, swap_rownames = "GENEID", x = "slingP
 ```
 
 ![](Session3_files/figure-html/sec3_trajANA_driveL2_topLate-1.png)&lt;!-- --&gt;
+
+
+---
+## Choosing a trajectory inference and pseudotiming algorithm
+
+
+]
+.pull-right[
+[full image](./imgs/pseudotime_algorithms.jpg)
+![](./imgs/pseudotime_algorithms.jpg)
+]
+
+
 
 
 
