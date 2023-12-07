@@ -821,8 +821,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells 11944378 637.9   22661650 1210.3  22661650 1210.3
-## Vcells 21303040 162.6  417781612 3187.5 466036966 3555.6
+## Ncells 11944396 637.9   22661695 1210.3  22661695 1210.3
+## Vcells 21302949 162.6  417781412 3187.5 466036875 3555.6
 ```
 
 ---
@@ -1470,8 +1470,8 @@ DefaultAssay(seu_obj) &lt;- "SCT"
 
 ```
 ##             used   (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  14142674  755.4   22661650 1210.3  22661650 1210.3
-## Vcells 288460524 2200.8  534250432 4076.1 694851574 5301.3
+## Ncells  14142704  755.4   22661695 1210.3  22661695 1210.3
+## Vcells 288460433 2200.8  534250336 4076.1 694851483 5301.3
 ```
 
 
@@ -1579,6 +1579,16 @@ head(ifnb, 2)
 
 
 
+
+
+
+
+```r
+install.packages("https://seurat.nygenome.org/src/contrib/ifnb.SeuratData_3.0.0.tar.gz",
+    repos = NULL, type = "source")
+library(ifnb.SeuratData)
+```
+
 ---
 ## Example dataset
 
@@ -1662,7 +1672,7 @@ Our UMAP shows our cells are distinct, depending on the condition.
 DimPlot(ifnb_merge, group.by = "stim", pt.size = 0.2)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-88-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-89-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluate with cell types
@@ -1787,7 +1797,7 @@ tbl &lt;- table(ifnb_merge$stim, ifnb_merge$seurat_clusters)
 barplot(tbl, beside = T, main = "Cell numbers in each cluster of each group")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-92-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-93-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -1815,7 +1825,7 @@ tbl &lt;- table(ifnb_merge$seurat_clusters, ifnb_merge$seurat_annotations)
 pheatmap(tbl, scale = "column")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-93-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-94-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -2076,7 +2086,7 @@ mnn_res$cluster &lt;- factor(cluster_mnn)
 plotUMAP(mnn_res, colour_by = "cluster")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-101-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-102-1.png)&lt;!-- --&gt;
 
 ---
 ## Clustering data merged with MNN 
@@ -2089,7 +2099,7 @@ tbl &lt;- table(mnn_res$batch, mnn_res$cluster)
 barplot(tbl, beside = T, main = "Cell numbers in each cluster of each group")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-102-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-103-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluate with cell types
@@ -2116,7 +2126,7 @@ mnn_res$cell_type &lt;- factor(mnn_res$cell_type)
 plotUMAP(mnn_res, colour_by = "cell_type")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-103-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-104-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluate with cell types
@@ -2129,7 +2139,7 @@ tbl &lt;- table(mnn_res$cluster, mnn_res$cell_type)
 pheatmap(tbl, scale = "column")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-104-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-105-1.png)&lt;!-- --&gt;
 
 ---
 ## MNN vs RPCA
@@ -2179,7 +2189,7 @@ As you can see we are back with our completely seperate groups.
 DimPlot(seu_obj)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-106-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-107-1.png)&lt;!-- --&gt;
 
 ---
 ## Merge data with Harmony
@@ -2298,7 +2308,7 @@ DimPlot(ref_panc, group.by = "seurat_clusters", split.by = "tech", pt.size = 0.2
     label = TRUE)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-113-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-114-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -2363,7 +2373,7 @@ colnames(mat) &lt;- gsub("prediction.score.", "", colnames(mat))
 pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-114-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-115-1.png)&lt;!-- --&gt;
 
 ---
 ## Load cell types into query
@@ -2445,7 +2455,7 @@ rownames(mat) &lt;- rownames(pred_res)
 pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-116-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-117-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -2522,7 +2532,7 @@ tbl &lt;- table(panc_list$query$cellType_predBySeurat, panc_list$query$cellType_
 pheatmap::pheatmap(tbl, scale = "row")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-119-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-120-1.png)&lt;!-- --&gt;
 
 ---
 ## Seurat vs SingleR annotation
@@ -2689,7 +2699,7 @@ Once we have the average pseudotime we can always project these values on to our
 plotUMAP(sce.sling, colour_by = "avg_pseudoTime")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-125-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-126-1.png)&lt;!-- --&gt;
 
 ---
 ## Plotting principle curves
@@ -2731,7 +2741,7 @@ plotUMAP(sce.sling, colour_by = "avg_pseudoTime") + geom_path(data = curve$curve
     y = UMAP2), color = "red")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-126-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-127-1.png)&lt;!-- --&gt;
 
 ---
 ## Refine the estimations
@@ -2797,7 +2807,7 @@ plotUMAP(sce.sling2, colour_by = "avg_pseudoTime") + geom_path(data = curve$curv
     y = UMAP2), color = "black")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-130-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-131-1.png)&lt;!-- --&gt;
 
 ---
 ## Looking at a single lineage
@@ -2830,7 +2840,7 @@ plotUMAP(sce.sling2, colour_by = "slingPseudotime_1") + geom_path(data = curve$c
     aes(x = UMAP1, y = UMAP2))
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-131-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-132-1.png)&lt;!-- --&gt;
 
 ---
 ## Looking at a single lineage
@@ -2851,7 +2861,7 @@ plotUMAP(sce.sling2, colour_by = "slingPseudotime_2") + geom_path(data = curve$c
     aes(x = UMAP1, y = UMAP2))
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-132-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-133-1.png)&lt;!-- --&gt;
 
 
 
@@ -2964,7 +2974,7 @@ plotExpression(sce.sling2, features = top, swap_rownames = "GENEID", x = "slingP
     colour_by = "label")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-137-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-138-1.png)&lt;!-- --&gt;
 
 ---
 ## Plotting top driver genes
@@ -3137,7 +3147,7 @@ seu_obj &lt;- quick_clust(seu_obj)
 DimPlot(seu_obj, group.by = "seurat_clusters", pt.size = 0.2, label = TRUE) + NoLegend()
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-142-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-143-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -3181,7 +3191,7 @@ head(seu_obj, 2)
 ```
 
 ---
-## Decide postive hashtags ~ use HTO-A as example
+## Decide postive hashtags
 
 * Use the "negative" distribution to calculate cut-off value (99% quantile).
 * Every cell barcode with HTO-A &gt;= cut-off was assigned as HTO-A positive.
@@ -3264,7 +3274,7 @@ DimPlot(seu_obj, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2, spli
 ![](Session3_files/figure-html/CITESeq_spltUMAP-1.png)&lt;!-- --&gt;
 
 ---
-## For the cells were not assigned a particular hashtag
+## Unassigned cells
 
 * The cell barcodes with *Negattive or Doublet* would not be used for further analysis directly.
   + Generally, the mis-labeled rate in CITE-Seq would be ranged from 10% ~ 80% (avg 30%).
@@ -3328,7 +3338,7 @@ class: inverse, center, middle
 * When considering whether to do pseudo-alignment or alignment, we do have to consider to pros and cons of these approaches. Pseudoaligner is much faster, but alignment gives you an exact location of the read. This can be important if you suspect RNA degradation or similar QC issues as you can check the 5'-3' bias of the reads. This is not possible with 10X. 
 
 ---
-## Read count matrix (in tsv file) into matrix
+## Read the count matrix
 
 
 ```r
@@ -3429,7 +3439,7 @@ VlnPlot(seu, features = c("nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_s
 FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by = "seurat_clusters")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-150-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-151-1.png)&lt;!-- --&gt;
 
 
 
@@ -3444,7 +3454,7 @@ FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "percent.mt", group.by =
     geom_hline(yintercept = 10, color = "black", linetype = "dashed")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-151-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-152-1.png)&lt;!-- --&gt;
 
 ---
 ## Quality assessment
@@ -3494,7 +3504,7 @@ seu &lt;- FindClusters(seu, resolution = 0.5)
 DimPlot(seu, group.by = "seurat_clusters", pt.size = 0.2, label = TRUE) + NoLegend()
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-153-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-154-1.png)&lt;!-- --&gt;
 
 ---
 ## Marker genes by clusters
@@ -3521,11 +3531,11 @@ top_genes &lt;- markers %&gt;%
 DoHeatmap(seu, features = c(top_genes$gene))
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-156-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-157-1.png)&lt;!-- --&gt;
 
 
 ---
-## Add annotation by using known marker genes
+## Add annotation using known markers
 
 
 
@@ -3536,7 +3546,7 @@ VlnPlot(seu, features = c("Nanog", "Pou5f1"), ncol = 2, pt.size = 0)
 ![](Session3_files/figure-html/SMARTSeq_markExp-1.png)&lt;!-- --&gt;
 
 ---
-## Add annotation by using known marker genes
+## Add annotation using known markers
 
 
 
@@ -3548,7 +3558,7 @@ VlnPlot(seu, features = c("Pax6", "Stau2"), ncol = 2, pt.size = 0)
 
 
 ---
-## Add annotation by using known marker genes
+## Add annotation using known markers
 
 
 ```r
@@ -3559,7 +3569,7 @@ VlnPlot(seu, features = c("Epcam", "Gata6"), ncol = 2, pt.size = 0)
 
 
 ---
-## Add annotation by using known marker genes
+## Add annotation using known markers
 
 
 ```r
@@ -3570,7 +3580,7 @@ VlnPlot(seu, features = c("Dlk1", "Postn"), ncol = 2, pt.size = 0)
 
 
 ---
-## Add annotation by using known marker genes
+## Add annotation using known markers
 
 
 ```r
@@ -3582,14 +3592,14 @@ seu$layers[seu$seurat_clusters %in% c(6, 7, 8)] &lt;- "endoderm"
 ```
 
 ---
-## Add annotation by using known marker genes
+## Add annotation using known markers
 
 
 ```r
 DimPlot(seu, group.by = "layers", pt.size = 0.2)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-158-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-159-1.png)&lt;!-- --&gt;
 
 
 

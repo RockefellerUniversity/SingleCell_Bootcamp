@@ -779,6 +779,12 @@ ifnb_test
 ## 
 
 
+## -----------------------------------------------------------------------------
+install.packages("https://seurat.nygenome.org/src/contrib/ifnb.SeuratData_3.0.0.tar.gz", repos = NULL, type = "source") 
+library(ifnb.SeuratData)
+
+
+
 ## ----sec3_mergeData_fetchEG,include=TRUE, eval=F------------------------------
 ## table(ifnb$stim)
 ## ifnb_list <- Seurat::SplitObject(ifnb, split.by="stim")
