@@ -3181,7 +3181,7 @@ seu[["doublet"]] <- doublet$doublet
 
 Lets read in annotated cell cycle genes from the Regev lab. This list of genes was curated by the authors of Seurat, and is a subset of the genes used in the original Cell Cycle paper.
 
-```{r SMARTSeq_estCC,include=TRUE,eval=F,echo=FALSE}
+```{r SMARTSeq_estCC,include=TRUE,eval=F,echo=T}
 
 cc_ge <- read.delim("data/mouse_regev_lab_cell_cycle_genes.txt",header = FALSE,stringsAsFactors = FALSE)
 ccGene_list <- list("S"=cc_ge$V1[1:43],"G2M"=cc_ge$V1[44:length(cc_ge)])
