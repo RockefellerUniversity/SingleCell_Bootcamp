@@ -1,0 +1,186 @@
+---
+title: "Exercise 3 - Bioconductor"
+author: "Rockefeller University, Bioinformatics Resource Centre"
+date: "https://rockefelleruniversity.github.io/scRNA-seq"
+output: 
+  html_document:
+    number_sections: false  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+params:
+  toMessage: false    
+---
+
+```{r, setup,include=FALSE}
+toMessage <- ifelse(!is.null(params$toMessage),params$toMessage,FALSE)
+
+
+```
+
+<p>&nbsp;</p>
+These exercises are about the simple scRNAseq workflow in [session 3](https://rockefelleruniversity.github.io/https://rockefelleruniversity.github.io/SingleCell_Bootcamp/). 
+
+## Description
+We will be using the IFNB-Stimulated and Control PBMCs from Seurat Data. The easiest way to get this data is from their custom package *SeuratData* which is hosted on GitHub. This is the same data we used to try out merging our data. 
+
+```{r, eval=F}
+remotes::install_github('satijalab/seurat-data')
+
+```
+
+## Load data
+- Load the data and plit it into the STIM and CTRL group.
+
+```{r load_data,include=TRUE, eval=FALSE,echo=toMessage}
+library(Seurat)
+
+library(Seurat)
+library(SeuratData)
+InstallData("ifnb")
+ifnb <- LoadData("ifnb")
+ifnb_list <- Seurat::SplitObject(ifnb, split.by="stim")
+```
+
+**Exercise 1**
+
+## Data Processing
+
+- We want to run QC for our dataset. The MT genes have been filtered out in this example dataset. So lets skip that step. 
+
+- Make log normalization and identify variable features with the following settings
+  + log normalization: *normalization.method="logNormalize"*.
+  + find variable features: *select.method="vst"* and *nfeatures=3000*.
+  
+```{r prac1_dataProc_logNorm,echo=toMessage, eval=F}
+
+ifnb_list[[1]] <- NormalizeData(ifnb_list[[1]],normalization.method =  "LogNormalize")
+ifnb_list[[1]] <- FindVariableFeatures(ifnb_list[[1]],selection.method = "vst",nfeatures = 3000)
+ifnb_list[[1]]
+
+
+ifnb_list[[2]] <- NormalizeData(ifnb_list[[2]],normalization.method =  "LogNormalize")
+ifnb_list[[2]] <- FindVariableFeatures(ifnb_list[[2]],selection.method = "vst",nfeatures = 3000)
+ifnb_list[[2]]
+```
+
+## Estimate doublets
+Please estimate doublets with scrublet
+
+```{r prac1_doubletEst, eval=FALSE,echo=toMessage}
+# Prepare environment
+library(reticulate)
+py_path <- "/Users/JDLuo/opt/anaconda3/envs/reticulate/bin/python"
+Sys.setenv('RETICULATE_PYTHON'=py_path)
+scr <- import("scrublet")
+#
+# Extract counting matrix
+mat <- GetAssayData(ifnb_list[[1]],assay = "RNA",slot = "counts")
+mat <- as.matrix(mat)
+#
+# calculate doubelt scores
+scrub <- scr$Scrublet(t(mat))
+doublet <- scrub$scrub_doublets()
+names(doublet) <- c("doublet_score","doublet")
+#
+# import results into seurat object
+ifnb_list[[1]][["doublet_score"]] <- doublet$doublet_score
+ifnb_list[[1]][["doublet"]] <- doublet$doublet
+
+
+
+mat <- GetAssayData(ifnb_list[[2]],assay = "RNA",slot = "counts")
+mat <- as.matrix(mat)
+#
+# calculate doubelt scores
+scrub <- scr$Scrublet(t(mat))
+doublet <- scrub$scrub_doublets()
+names(doublet) <- c("doublet_score","doublet")
+#
+# import results into seurat object
+ifnb_list[[2]][["doublet_score"]] <- doublet$doublet_score
+ifnb_list[[2]][["doublet"]] <- doublet$doublet
+
+
+#
+summary(ifnb_list[[1]]$doublet_score)
+table(ifnb_list[[1]]$doublet)
+summary(ifnb_list[[2]]$doublet_score)
+table(ifnb_list[[2]]$doublet)
+
+```
+
+## Run SoupX
+- Run SoupX on the automatic mode to determine the number of ambient RNA molecules in each cell.
+- Correct ambient RNA molecules from each cell and reload in corrected matrix.
+- Read in corrected matrix into seurat. Add scrublet doublet scores to the corrected matrix.
+
+```{r prac1_dataProc_soupx, eval=FALSE,echo=toMessage}
+```
+
+## Cell cycle phase estimation
+- Please estimate cell cycle Phases with *Seurat::CellCycleScoring()*.
+- Check how many are assigned to each phase.
+
+```{r prac1_dataProc_mito, eval=FALSE,echo=toMessage}
+
+ifnb_list[[1]] <- CellCycleScoring(ifnb_list[[1]], s.features = cc.genes$s.genes,g2m.features = cc.genes$g2m.genes)
+
+ifnb_list[[2]] <- CellCycleScoring(ifnb_list[[2]], s.features = cc.genes$s.genes,g2m.features = cc.genes$g2m.genes)
+
+table(ifnb_list[[1]]$Phase)
+table(ifnb_list[[2]]$Phase)
+```
+
+
+## Check QCs and filtering cells
+- Please make a violin plot including the following variables: UMI counts, genes detected, and doublet score per cell
+- Compare pre-post correction of ambient RNA molecules
+
+```{r prac1_qcPlot_vlnPlot, eval=FALSE,echo=toMessage}
+VlnPlot(ifnb_list[[1]],features = c("nCount_RNA","nFeature_RNA","doublet_score"),ncol = 4)
+VlnPlot(ifnb_list[[2]],features = c("nCount_RNA","nFeature_RNA","doublet_score"),ncol = 4)
+```
+
+- Please use scatter plot to identify potential doublets and coloured by doublets detected with scrublet
+
+```{r prac1_qcPlot_scatter1, eval=FALSE,echo=toMessage}
+FeatureScatter(ifnb_list[[1]],feature1 = "nCount_RNA","nFeature_RNA",group.by = "doublet")
+
+FeatureScatter(ifnb_list[[2]],feature1 = "nCount_RNA","nFeature_RNA",group.by = "doublet")
+```
+
+## Filter out the doublets
+
+* Please filtering cells with
+  + doublets
+  
+```{r prac1_qcPlot_filt, eval=FALSE,echo=toMessage}
+ifnb_list[[1]][["filtOUT"]] <- ifnb_list[[1]]$doublet == "TRUE"
+table(ifnb_list[[1]]$filtOUT)
+
+ifnb_list[[2]][["filtOUT"]] <- ifnb_list[[2]]$doublet == "TRUE"
+table(ifnb_list[[2]]$filtOUT)
+```
+
+* Subset cells and re-scale to *percent.mt* and *CellCycleScoring Phase*
+```{r prac1_qcPlot_reScale, eval=FALSE,echo=toMessage}
+ifnb_list[[1]] <- subset(ifnb_list[[1]],subset=filtOUT == "FALSE")
+ifnb_list[[1]] <- ScaleData(ifnb_list[[1]],vars.to.regress = c("Phase"))
+
+ifnb_list[[2]] <- subset(ifnb_list[[2]],subset=filtOUT == "FALSE")
+ifnb_list[[2]] <- ScaleData(ifnb_list[[2]],vars.to.regress = c("Phase"))
+```
+
+## Dimensional reduction
+- Please make dimensional reduction with principle component analysis, UMAP and then cluster.
+```{r prac1_dimRed_PCA, eval=FALSE,echo=toMessage}
+
+```
+
+
+## Merge with rPCA
+- Integrate the two datasets together. 
+
+
+## Rescale the data and visualize with UMAP
+- Rescale and then run dimension reduction and clustering. We can visualize the results with UMAP.
