@@ -246,7 +246,7 @@ mark_gene <- c("CD3E","CCR7")
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 
-## ----echo=F-------------------------------------------------------------------
+## ----echo=F, warning=F, message=FALSE-----------------------------------------
 rm(cbFilt_mtx, filt_mtx, seu_filt, seu_cbFilt)
 gc()
 

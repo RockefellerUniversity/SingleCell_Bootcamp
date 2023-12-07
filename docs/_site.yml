@@ -36,6 +36,12 @@ navbar:
         href: exercises/exercises/exercise2_exercise.html
       - text: Solution
         href: exercises/answers/exercise2_answers.html
+    - text: exercise3
+      menu:
+      - text: Exercise
+        href: exercises/exercises/exercise3_exercise.html
+      - text: Solution
+        href: exercises/answers/exercise3_answers.html
   right:
   - text: Getting help!
     href: https://github.com//RockefellerUniversity/SingleCell_Bootcamp/issues
