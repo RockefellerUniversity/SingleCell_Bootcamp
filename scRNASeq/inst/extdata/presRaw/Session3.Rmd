@@ -2520,7 +2520,7 @@ if(params$isSlides == "yes"){
 
 ]
 .pull-right[
-![](./imgs/ica_vs_pca.png)
+![](./imgs/ica_vs_pca.jpeg)
 ]
 
 
@@ -2687,7 +2687,7 @@ plotUMAP(sce.sling2, colour_by="avg_pseudoTime") +
 ```
 
 ---
-## Trajectory and pseudotime for each lineage
+## Looking at a single lineage
 
 So far we have visualized the lineages together. We will want to break this down and compare to clusters. First we will look at clusters. 
 
@@ -2696,7 +2696,7 @@ plotUMAP(sce.sling2, colour_by="label")
 ```
 
 ---
-## Trajectory and pseudotime for each lineage
+## Looking at a single lineage
 
 We can reveal which cluster belong to each cluster and lineage 1's trajectory. 
 
@@ -2707,7 +2707,7 @@ plotUMAP(sce.sling2,colour_by="slingPseudotime_1")+
 ```
 
 ---
-## Trajectory and pseudotime for each lineage
+## Looking at a single lineage
 
 We can reveal which cluster belong to each cluster and lineage 2's trajectory. 
 
@@ -2874,11 +2874,8 @@ plotExpression(sce.sling2,
 ## Choosing a trajectory inference and pseudotiming algorithm
 
 
-]
-.pull-right[
-[full image](./imgs/pseudotime_algorithms.jpg)
-![](./imgs/pseudotime_algorithms.jpg)
-]
+[full image](./imgs/pseudotime_algorithms.jpeg)
+![](./imgs/pseudotime_algorithms.jpeg)
 
 
 
