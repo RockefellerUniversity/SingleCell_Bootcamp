@@ -26,6 +26,7 @@ suppressPackageStartupMessages(require(Seurat))
 suppressPackageStartupMessages(require(dplyr))
 suppressPackageStartupMessages(require(bioMart))
 suppressPackageStartupMessages(require(SeuratWrappers))
+suppressPackageStartupMessages(require(ggplot2))
 knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ```
 
@@ -1040,9 +1041,7 @@ gc()
 - There are other popular software used for ambient RNA removal, most which you can use in R
 - Here are the pros and cons of each method:
 
-(insert table here)
-
-
+![](./imgs/ambient_rna_comparisons.png)
 ---
 
 ## Using CellBender object
