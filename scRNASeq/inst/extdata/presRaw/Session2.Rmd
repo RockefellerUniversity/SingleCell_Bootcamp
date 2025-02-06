@@ -1814,7 +1814,7 @@ load("data/pbmc8k_sce.RData")
 
 ```{R,sctload, eval=T, echo=F}
 load("data/pbmc8k_SCT2.RData")
-seu_filt <- readRDS("data/pbmc8k_SCT2.rds")
+
 ```
 
 ---
@@ -1831,13 +1831,13 @@ Once we have defined clusters, we want to know what distinguishes them. We can i
 In this case we are selecting only positive markers (only.pos=TRUE), genes that are found in 0.25 of cells and have a logFC 0.25 difference.
 
 
-```{r markGene_cal,include=TRUE,eval=FALSE}
+```{r markGene_cal,include=TRUE,eval=F}
 markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
                           min.pct = 0.25, logfc.threshold = 0.25)
 ```
 
 ```{r, eval=T, echo=F}
-save(markers, file="data/pbmc8k_markers.RData")
+#save(markers, file="data/pbmc8k_markers.RData")
 load("data/pbmc8k_markers.RData")
 ```
 
