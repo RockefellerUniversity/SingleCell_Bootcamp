@@ -1284,7 +1284,7 @@ assignments <- cyclone(sce, ccGene_hs, gene.names=rowData(sce)$SYMBOL)
 
 ```
 
-```{R, echo=F}
+```{R, echo=F, eval=F}
 save(assignments, file="data/pbmc8k_cyclone.RData")
 ```
 
