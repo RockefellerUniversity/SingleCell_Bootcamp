@@ -56,8 +56,9 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ---
 ## Seurat
 * An R toolkit for single cell genomics [link](https://satijalab.org/seurat/index.html)
-* The workflow we used in this section was based on Seurat vignette [link](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html).
+* The workflow we used in this section was orginally based on Seurat vignette [link](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html).
 * References
+  + **Seurat V5**, Hao et al., *Nature Biotechnology* ** (2023)[link](https://www.nature.com/articles/s41587-023-01767-y)
   + **Seurat V4**, Hao, Hao et al., *Cell* (2021) [link](https://doi.org/10.1016/j.cell.2021.04.048)
   + **Seurat V3**, Stuart, Butler et al., *Cell* (2019) [link](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
   + **Seurat V2**, Butler, et al., *Nat Biotechnol* (2018) [link](https://doi.org/10.1038/nbt.4096)
