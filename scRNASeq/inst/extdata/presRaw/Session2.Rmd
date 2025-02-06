@@ -1682,7 +1682,7 @@ table(seu_cbFilt$doublet=="TRUE" | seu_cbFilt$percent.mt >= 10)
 ```
 
 Filtering the cells:
-```{r, eval=F}
+```{r, eval=T}
 seu_filt <- subset(seu_cbFilt, subset=doublet=="FALSE" & 
                      percent.mt < 10)
 
@@ -1690,7 +1690,6 @@ seu_filt <- subset(seu_cbFilt, subset=doublet=="FALSE" &
 
 
 ---
-
 ## Filtering doublets and cell debris
 
 - Distribution of variables before filtering
@@ -1705,7 +1704,6 @@ VlnPlot(seu_cbFilt, group.by = "dset",
 ```
 
 ---
-
 ## Filtering doublets and cell debris
 
 - Distribution of variables after filtering
