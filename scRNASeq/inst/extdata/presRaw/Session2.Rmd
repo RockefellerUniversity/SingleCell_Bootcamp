@@ -1814,7 +1814,7 @@ load("data/pbmc8k_sce.RData")
 
 ```{R,sctload, eval=T, echo=F}
 load("data/pbmc8k_SCT2.RData")
-seu_filt <- load("data/pbmc8k_SCT2.rds")
+seu_filt <- readRDS("data/pbmc8k_SCT2.rds")
 ```
 
 ---
