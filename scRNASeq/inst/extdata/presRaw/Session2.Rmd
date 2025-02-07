@@ -363,12 +363,12 @@ plot2
 
 In our simplified workflow we used a log normalization approach. Recently an alternative approach has been gaining popularity: SCTransform. Lets compare this back to our log normalization. 
 
-```{r, eval=T, echo=F}
+```{r, eval=F, echo=F}
 download.file("https://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_filtered_gene_bc_matrices.tar.gz","pbmc8k_filtered_gene_bc_matrices.tar.gz")
 untar("pbmc8k_filtered_gene_bc_matrices.tar.gz")
 ```
 
-```{r,include=F,echo=T,eval=T}
+```{r,include=F,echo=T,eval=F}
 library(Seurat)
 
 sample_id <- "PBMC_8k" 
@@ -383,7 +383,7 @@ seu_obj <- FindVariableFeatures(seu_obj, select.method="vst", nfeatures=3000)
 seu_obj <- ScaleData(seu_obj)
 ```
 
-```{r, eval=T, echo=F}
+```{r, eval=F, echo=F}
 unlink("pbmc8k_filtered_gene_bc_matrices.tar.gz", recursive=TRUE)
 unlink("filtered_feature_bc_matrix/GRCh38", recursive=TRUE)
 ```
@@ -1780,6 +1780,7 @@ pot_conf <- c("percent.mt","doublet_score","cyclon_G1Score","cyclon_SScore","cyc
 seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
 
 ```
+
 ---
 
 ## Quick re-processing of data
