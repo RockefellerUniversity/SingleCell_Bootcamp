@@ -30,6 +30,36 @@ suppressPackageStartupMessages(require(ggplot2))
 knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ```
 
+
+
+## Set Up
+
+All prerequisites, links to material and slides for this course can be found on github. At this point hopefully everyone has installed the required packages listed on our homepage. 
+
+* [Bootcamp](https://rockefelleruniversity.github.io/SingleCell_Bootcamp/)
+
+Or can be downloaded as a zip archive from here.
+
+* [Download zip](https://github.com/rockefelleruniversity/SingleCell_Bootcamp/zipball/master)
+
+---
+## Course materials
+
+Once the zip file in unarchived. All presentations as HTML slides and pages, their R code and HTML practical sheets will be available in the directories underneath.
+
+* **presentations/slides/**
+Presentations as an HTML slide show.
+* **presentations/singlepage/** 
+Presentations as an HTML single page.
+* **presentations/r_code/**
+R code in presentations.
+* **exercises/**
+Practicals as HTML pages. 
+* **answers/**
+Practicals with answers as HTML pages and R code solutions. 
+
+---
+
 ## A basic scRNAseq workflow
 
 ![overview](./imgs/basicworkflow.png)
@@ -65,32 +95,6 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T)
   + **Seurat V1**, Satija, Farrell, et al., *Nat Biotechnol* (2015) [link](https://doi.org/10.1038/nbt.3192)
 * Demo data used in this section was the **10k Human PBMC data** from *10X Genomics* [link](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high).
 
----
-## Set Up
-
-All prerequisites, links to material and slides for this course can be found on github. At this point hopefully everyone has installed the required packages listed on our homepage. 
-
-* [Bootcamp](https://rockefelleruniversity.github.io/SingleCell_Bootcamp/)
-
-Or can be downloaded as a zip archive from here.
-
-* [Download zip](https://github.com/rockefelleruniversity/SingleCell_Bootcamp/zipball/master)
-
----
-## Course materials
-
-Once the zip file in unarchived. All presentations as HTML slides and pages, their R code and HTML practical sheets will be available in the directories underneath.
-
-* **presentations/slides/**
-Presentations as an HTML slide show.
-* **presentations/singlepage/** 
-Presentations as an HTML single page.
-* **presentations/r_code/**
-R code in presentations.
-* **exercises/**
-Practicals as HTML pages. 
-* **answers/**
-Practicals with answers as HTML pages and R code solutions. 
 
 ---
 ## What is our data?
