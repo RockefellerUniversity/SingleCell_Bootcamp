@@ -101,7 +101,7 @@ Practicals with answers as HTML pages and R code solutions.
 
 We will use the 8k Human PBMC data from [10X genomics](https://www.10xgenomics.com/datasets/8-k-pbm-cs-from-a-healthy-donor-2-standard-2-1-0). We will be using the filtered dataset that has been produced by Cell Ranger. 
 
-```{r, warning=F, message=F, echo=F, eval=F}
+```{r, warning=F, message=F, echo=F}
 library(RCurl)
 if(!url.exists("https://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_filtered_gene_bc_matrices.tar.gz")){stop("Download path broken")}
 
