@@ -206,8 +206,10 @@ jobs:
         shell: Rscript {0}
         
       - name: free disk space
-      run: |
-        df -h
+        run: |
+          df -h
+        shell:
+          bash {0}
 
       - name: Install package
         if: github.ref == 'refs/heads/main' 
