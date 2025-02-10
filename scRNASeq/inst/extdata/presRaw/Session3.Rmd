@@ -36,11 +36,8 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning 
 library(Seurat)
 library(scran)
 library(scater)
-library(SeuratData)
-library(batchelor)
 library(ggplot2)
 library(pheatmap)
-library(slingshot)
 library(TSCAN)
 library(SoupX)
 library(DropletUtils)
@@ -50,6 +47,7 @@ library(scuttle)
 ## Outlines
 
 - Merge multiple data sets
+- Cell Type Annotation 
 - CITE-seq data processing
 
 
@@ -219,6 +217,8 @@ Our UMAP shows our cells are quite similar. Bu there are a few regions that are 
 ```{r}
 DimPlot(seu_merge, group.by = "sample_id", pt.size = 0.2)
 
+
+
 ```
 
 
@@ -299,6 +299,8 @@ The steps involved in rPCA:
 First we need to identify features for integration. We do this on our list of Seurat objects. This is similar to the VariableFeatures function we ran on a single dataset, but works across all 4 datasets. We will then run scaling and PCA, using these features.
 
 ```{r sec3_mergeData_RPCA_prep,include=TRUE,eval=T}
+
+
 
 feats <- SelectIntegrationFeatures(my_seu_list)
 
@@ -664,6 +666,11 @@ For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.g
 [overview](./imgs/scRNA_workflow_ver001_20231017.png)
 
 
+```{r, echo=F, warning=FALSE, message=F}
+
+rm(seu_merge_harmony, my_seu_list_rpca,my_seu_list,seu_merge)
+```
+
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
@@ -861,7 +868,7 @@ DimPlot(my_seu_merge_rpca, group.by = "hpcad_singleR_labels")
 
 Lets try an alternative dataset. Often we will have data from other Seurat objects that we want to use as a reference. Here we have a processed version of human data from the [Allen Brain Map](https://portal.brain-map.org/atlases-and-data/rnaseq). This is 10X data from 2020. 
 
-```{r}
+```{r, eval=F}
 abm <- readRDS("data/abm.rds")
 
 ```
@@ -871,9 +878,14 @@ abm <- readRDS("data/abm.rds")
 
 There are several interesting labels associated with this data. Lets focus on the *class_label*.
 
-```{r}
+```{r, eval=F,echo=TRUE}
 head(abm)
 
+```
+
+```{r, echo=F}
+out<-read.csv("data/out.txt", row.names=1)
+out
 ```
 
 ---
@@ -881,9 +893,21 @@ head(abm)
 
 As our reference data is in a Seurat format we can just extract out the data matrix of counts. We also already have our matrix from our test data. 
 
-```{R}
+```{R, eval=F, echo=T}
 
 pred_res2 <- SingleR(ref = GetAssayData(abm), test = my_seu_merge_rpca_mat, labels = abm$class_label)
+```
+
+```{R, eval=F, echo=F}
+saveRDS(pred_res2,file = "data/annotate_df1.rds")
+```
+
+```{R, eval=F, echo=T}
+pred_res2 <- readRDS(file = "data/annotate_df1.rds")
+my_seu_merge_rpca <- readRDS(file = "data/annotated.rds")
+```
+
+```{r}
 head(pred_res2,2)
 ```
 
@@ -903,10 +927,12 @@ pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE, fontsize_col = 5)
 
 We can now add our labels back to our original Seurat object by a quick assignment. This then allows us to start reviewing the annotation in the context of UMAPs and also versus our other annotation. 
 
-```{r}
+```{r, eval=F}
 
 my_seu_merge_rpca$abm_singleR_labels <- pred_res2$labels
+```
 
+```{r}
 summ_table <- table(my_seu_merge_rpca$abm_singleR_labels, my_seu_merge_rpca$paper_annot)
 
 pheatmap(summ_table, scale="column", fontsize_row = 5)
@@ -955,7 +981,7 @@ A restriction of this approach is both datasets have to be Seurat objects and th
 
 As with integration, we find integration features in common, then scale and run PCA in the context of these specific features. 
 
-```{r sec3_ctAnno_Seurat_gatherData,include=TRUE,eval=T}
+```{r sec3_ctAnno_Seurat_gatherData,include=TRUE,eval=F}
 
 transfer_list <- list("ref"=abm,"query"=my_seu_merge_rpca)
 feats <- SelectIntegrationFeatures(transfer_list)
@@ -972,12 +998,24 @@ transfer_list <- lapply(transfer_list,function(seu,feats){
 
 Identify the anchors between reference and query data sets, using *FindTransferAnchors()*. These are essential to transfer information from our reference to our query. We can then transfer the cell type information. For each cell in query dataset, the score for each given cell type was estimated by the gene expression pattern of anchor genes using the *TransferData()* function. 
 
-```{r sec3_ctAnno_Seurat_tranferAnno,include=TRUE,eval=T}
+```{r sec3_ctAnno_Seurat_tranferAnno,include=TRUE,eval=F}
 anchors <- FindTransferAnchors(reference = transfer_list$ref,
                                query=transfer_list$query,
                                dims=1:30, reference.reduction="pca")
-pred_res <- TransferData(anchorset = anchors, refdata=transfer_list$ref$class_label)
-head(pred_res,2)
+pred_res3 <- TransferData(anchorset = anchors, refdata=transfer_list$ref$class_label)
+```
+
+```{R, eval=F, echo=F}
+saveRDS(pred_res3,file = "data/annotate_df2.rds")
+```
+
+```{R, eval=F, echo=T}
+pred_res3 <- readRDS(file = "data/annotate_df2.rds")
+
+```
+
+```{r}
+head(pred_res3,2)
 ```
 
 ---
@@ -985,7 +1023,7 @@ head(pred_res,2)
 The cell type with highest score was assigned to the given cell. We can visualize this score with a heatmap. 
 
 ```{r}
-mat <- as.matrix(pred_res[,-c(1,5)])
+mat <- as.matrix(pred_res3[,-c(1,5)])
 colnames(mat) <- gsub("prediction.score.","",colnames(mat))
 pheatmap(mat,scale = "row",show_rownames = FALSE)
 ```
@@ -996,9 +1034,13 @@ pheatmap(mat,scale = "row",show_rownames = FALSE)
 
 We can now add our labels back to our original Seurat object by a quick assignment. This then allows us to start reviewing the annotation in the context of UMAPs and also versus our other annotation. 
 
-```{r}
+```{r, eval=F}
 
-my_seu_merge_rpca$abm_seurat_labels <- pred_res$predicted.id
+my_seu_merge_rpca$abm_seurat_labels <- pred_res3$predicted.id
+
+```
+
+```{R}
 
 summ_table <- table(my_seu_merge_rpca$abm_seurat_labels, my_seu_merge_rpca$paper_annot)
 
@@ -1025,6 +1067,7 @@ table(my_seu_merge_rpca$abm_seurat_labels == my_seu_merge_rpca$abm_singleR_label
 tbl <- table(my_seu_merge_rpca$abm_seurat_labels,my_seu_merge_rpca$abm_singleR_labels)
 pheatmap::pheatmap(tbl,scale = "row")
 ```
+
 ---
 ## Seurat vs SingleR annotation
 
