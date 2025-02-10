@@ -47,7 +47,7 @@ library(DropletUtils)
 library(scuttle)
 ```
 
-# Outlines
+## Outlines
 
 - Merge multiple data sets
 - CITE-seq data processing
@@ -128,6 +128,7 @@ if(params$isSlides == "yes"){
 ## An advanced scRNAseq workflow
 
 ![](./imgs/overview3.png)
+
 [overview](./imgs/scRNA_workflow_ver001_20231017.png)
 
 ---
