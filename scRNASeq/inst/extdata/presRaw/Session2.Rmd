@@ -1785,23 +1785,16 @@ seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
 ```
 
 ---
-
 ## Quick re-processing of data
 
   - It's important to re-run dimensionality reduction and re-cluster your cells once you've done filtering
   - Let's use the function quick_clust() we created earlier
-
-
-
-
 
 ```{r}
 seu_filt <- quick_clust(seu_filt)
 
 DimPlot(seu_filt)
 ```
-
-
 
 
 ```{R, eval=F, echo=F}
