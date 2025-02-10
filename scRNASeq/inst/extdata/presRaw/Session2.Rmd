@@ -1520,7 +1520,7 @@ VlnPlot(seu_cbFilt, group.by = "doublet",
 ---
 ## Assessing Doublets
 
-An altearntive visualization of this is an X-Y plot comparing UMIs (nCount) and genes (nFeature).
+An alternative visualization of this is an X-Y plot comparing UMIs (nCount) and genes (nFeature).
 
 ```{r, fig.height=4,fig.width=7}
 FeatureScatter(seu_cbFilt,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",pt.size = 0.1,group.by = "doublet")
