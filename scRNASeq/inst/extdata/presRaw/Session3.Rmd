@@ -490,7 +490,7 @@ DimPlot(seu_merge, group.by = "sample_id")
 
 We can use the *RunHarmony()* function to implement the Harmony correction. 
 
-```{r sec3_mergedata_Harmony_merge,include=TRUE,eval=FALSE}
+```{r sec3_mergedata_Harmony_merge,include=TRUE,eval=T}
 library(harmony)
 seu_merge_harmony <- RunHarmony(seu_merge, group.by.vars= "sample_id", assay.use= "RNA")
 seu_merge_harmony <- RunUMAP(seu_merge_harmony, reduction = "harmony", dims = 1:10, reduction.name = "umap_harmony")
