@@ -195,7 +195,7 @@ jobs:
           BiocManager::install("RockefellerUniversity/compileCourses",subdir="compileCourses")
           BiocManager::install("devtools")
           BiocManager::install("Herper")
-          devtools::install_github('satijalab/seurat-data')
+          #devtools::install_github('satijalab/seurat-data')
         shell: Rscript {0}
 
       - name: Session info
