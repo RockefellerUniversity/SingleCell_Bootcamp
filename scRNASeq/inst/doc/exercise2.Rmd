@@ -21,219 +21,241 @@ toMessage <- ifelse(!is.null(params$toMessage),params$toMessage,FALSE)
 These exercises are about the simple scRNAseq workflow in [session 2](https://rockefelleruniversity.github.io/https://rockefelleruniversity.github.io/SingleCell_Bootcamp/). 
 
 ## Description
-Single-cell transcriptome data of Human Glioblastoma Multiforme (GBM) was fetched on 10X Genomics website [link](https://www.10xgenomics.com/resources/datasets?query=&page=1&configure%5BhitsPerPage%5D=50&configure%5BmaxValuesPerFacet%5D=1000&refinementList%5Bchemistry.version%5D%5B0%5D=3). The Cellranger results of this data was available on DropBox [link](https://www.dropbox.com/scl/fo/fqcutdy89drp5a2lcggwl/h?dl=0&rlkey=un0d27s9odrt294z5eqfw31j8). Please use this dataset to do the following analysis.
 
-## Load data
-- Please read the filtered matrix of CellRanger results and load the counting matrix into a Seurat object. filtering cells with less than 200 expressing gene and genes presensting in less than 10 cells.
-- How many cells detected?
-- How many genes (features) detected?
+Single-cell transcriptome data of Human Glioblastoma Multiforme (GBM) was fetched on 10X Genomics [website](https://www.10xgenomics.com/datasets/human-glioblastoma-multiforme-3-v-3-whole-transcriptome-analysis-3-standard-4-0-0). The CellRanger results from this data is also available on DropBox [link](https://www.dropbox.com/scl/fo/fqcutdy89drp5a2lcggwl/h?dl=0&rlkey=un0d27s9odrt294z5eqfw31j8). Please use this dataset to do the following analysis.
+
+
+https://www.science.org/doi/10.1126/science.aat1699
+
+**Exercise 1** - **Cell Ranger**
+
+- Review the Web Summary Report
+- What version of Cell Ranger was used to process this data?
+```{r, eval=FALSE,echo=toMessage}
+# cellranger-4.0.0
+```
+- How many cells are there?
+
+- What looks problematic about this dataset?
+
+- What steps could we do to to help things?
+
+
+**Exercise 2** - **Create a Seurat Object**
+
+- Read the matrix file in and create a Seurat object. Ensure it is properly annotated. 
+```{r, eval=FALSE,echo=toMessage}
+library(Seurat)
+
+mtx <- Read10X("~/Downloads/4834STDY7002881/GRCh38/")
+
+seu <- CreateSeuratObject(mtx, project="kidney_F6", min.cells=10, min.features=200)
+seu[["dset"]] <- "kidney_F6"
+seu <- Seurat::RenameCells(seu, add.cell.id="kidney_F6")
+
+```
+
+- Run normalization (log) and scaling. What are the top variable features?
+
+```{r, eval=FALSE,echo=toMessage}
+
+seu <- NormalizeData(seu, normalization.method="LogNormalize")
+seu <- FindVariableFeatures(seu, select.method="vst", nfeatures=3000)
+seu <- ScaleData(seu)
+
+top10 <- head(VariableFeatures(seu), 10)
+
+temp_plot <- VariableFeaturePlot(seu)
+plot2 <- LabelPoints(plot = temp_plot, points = top10, repel = TRUE)
+plot2
+```
+
+- Do dimension reduction. Don't forget to check the elbow for PCA to get a good number of PCs. Than run some basic clusetering. No need to optimize that. 
+
+```{r, eval=FALSE,echo=toMessage}
+
+library(dplyr)
+seu <- RunPCA(seu, assay = "RNA", npcs = 50)
+pct <- seu[["pca"]]@stdev / sum(seu[["pca"]]@stdev) * 100
+cumu <- cumsum(pct)
+co1 <- which(cumu > 90 & pct < 5)[1]
+co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1), decreasing = T)[1] + 1
+pc <- min(co1, co2)
+
+plot_df <- data.frame(pct = pct, cumu = cumu,rank = 1:length(pct))
+
+ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pc)) + geom_text() +
+  geom_vline(xintercept = 90, color = "grey") +
+  geom_hline(yintercept = min(pct[pct > 5]), color = "grey") +
+  theme_bw()
+
+seu <- FindNeighbors(seu,dims = 1:pc, reduction = "pca")
+seu <- RunUMAP(seu,dims = 1:pc, reduction = "pca")
+
+seu <- FindClusters(seu, resolution = 0.5)
+seu[["cluster_byDefault"]] <- seu$seurat_clusters
+
+DimPlot(seu)
+```
+
+
+**Exercise 3** - **Basic QC**
+
+- Review the number of counts and features detected. Is there any asymmetry?
+
+```{r, eval=FALSE,echo=toMessage}
+
+VlnPlot(seu,
+        features = c("nCount_RNA","nFeature_RNA"))
+
+FeaturePlot(seu,
+        features = c("nCount_RNA","nFeature_RNA"))
+
+```
+
+- Lets check the mitochondrial content. Review the results. 
 
 ```{r load_data,include=TRUE, eval=FALSE,echo=toMessage}
 library(Seurat)
 
-mtx <- Read10X("/Volumes/JDLuo_Disk/01_scRNA_GBM_20230605/filtered_feature_bc_matrix/")
+seu$percent.mt <- PercentageFeatureSet(seu, pattern = "^MT-")
 
-seu <- CreateSeuratObject(mtx,project="GBM_10X", min.cells=10, min.features=200)
-seu
+VlnPlot(seu,"percent.mt", group.by ="dset")
+
+FeaturePlot(seu,"percent.mt")  + scale_colour_gradient(low="gray",high="blue")
+
+FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "percent.mt")
+
+table(seu$percent.mt>10)
 ```
 
-**Exercise 1**
+- Lets run cell cycle checks?
 
-## data processing
-- Please estimate mitochondrial content
+```{r ccPhase_Seurat,include=TRUE,eval=TRUE, eval=FALSE,echo=toMessage}
+feat_s <- cc.genes$s.genes
+feat_g2m <- cc.genes$g2m.genes
 
-```{r prac1_dataProc_mito, eval=FALSE,echo=toMessage}
-seu[["percent.mt"]] <- PercentageFeatureSet(seu,pattern = "MT-")
-summary(seu$percent.mt)
-```
+seu <- CellCycleScoring(seu, s.features = feat_s, g2m.features = feat_g2m)
 
-- Make log normalization and identify variable features with the following settings
-  + log normalization: *normalization.method="logNormalize"*.
-  + find variable features: *select.method="vst"* and *nfeatures=3000*.
-  
-```{r prac1_dataProc_logNorm,echo=toMessage, eval=F}
-seu <- NormalizeData(seu,normalization.method =  "LogNormalize")
-seu <- FindVariableFeatures(seu,selection.method = "vst",nfeatures = 3000)
-seu
-```
+DimPlot(seu, group.by = "Phase")
 
-## Cell cycle phase estimation
-- Please estimate cell cycle Phases with *Seurat::CellCycleScoring()*.
-```{r prac1_ccEst_seurat, eval=FALSE,echo=toMessage}
-seu <- CellCycleScoring(seu,s.features = cc.genes$s.genes,g2m.features = cc.genes$g2m.genes)
-head(seu,2)
-#
-table(seu$Phase)
-```
+dat_s <- data.frame(cell_id=Cells(seu), cat="S_Score", Phase=seu$Phase, score=seu$S.Score)
 
-- Please estimate cell cycle Phases with *scran::cyclone()*. 
+dat_g2m <- data.frame(cell_id=Cells(seu), cat="G2M_Score", Phase=seu$Phase, score=seu$G2M.Score)
 
-```{r prac1_ccEst_SingleR, eval=FALSE,echo=toMessage}
-# convert data into SingleCellExperiment
+dat <- rbind(dat_s, dat_g2m)
+dat$Phase <- factor(dat$Phase, levels = c("G1","S","G2M"))
+
 library(scran)
-sce <- as.SingleCellExperiment(seu,assay = "RNA")
+
+sce <- as.SingleCellExperiment(seu, assay = "RNA")
 rowData(sce)$SYMBOL <- rownames(sce)
-#
-# prepare reference dataset
-load("/Volumes/JDLuo_Disk/Resource_envRData/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData")
+
+load("data/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData")
 ccGene_hs <- ccGene_mm_hs$human_symbol
-#
-# Estimate cell cycle phases with cylcone
 assignments <- cyclone(sce, ccGene_hs, gene.names=rowData(sce)$SYMBOL)
-#
-# transfer results into seurat object
-seu[["cyclon_Phase"]] <- assignments$phases
-seu[["cyclon_G1Score"]] <- assignments$scores$G1
-seu[["cyclon_SScore"]] <- assignments$scores$S
-seu[["cyclon_G2MScore"]] <- assignments$scores$G2M
+
+seu[["cyclone_Phase"]] <- assignments$phases
+seu[["cyclone_G1Score"]] <- assignments$scores$G1
+seu[["cyclone_SScore"]] <- assignments$scores$S
+seu[["cyclone_G2MScore"]] <- assignments$scores$G2M
+
+DimPlot(seu, group.by = "cyclone_Phase")
+
 ```
 
-- Compare the results between the two methods
+- Lets run scrublet. Review the doublet annotation. Are doublets an issue for this dataset?
 
-
-
-```{r prac1_ccEst_compRes, eval=FALSE,echo=toMessage}
-#Seurat results in row and cyclone results in column
-table(seu$Phase, seu$cyclon_Phase)
-```
-
-## Estimate doubets
-Please estimate doublets with scrublet
-```{r prac1_doubletEst, eval=FALSE,echo=toMessage}
-# Prepare environment
-library(reticulate)
-py_path <- "/Users/JDLuo/opt/anaconda3/envs/reticulate/bin/python"
-Sys.setenv('RETICULATE_PYTHON'=py_path)
-scr <- import("scrublet")
-#
-# Extract counting matrix
-mat <- GetAssayData(seu,assay = "RNA",slot = "counts")
+```{R, eval=FALSE,echo=toMessage}
+scr <- reticulate::import("scrublet")
+mat <- GetAssayData(seu, assay = "RNA", slot = "counts")
 mat <- as.matrix(mat)
-#
-# calculate doubelt scores
 scrub <- scr$Scrublet(t(mat))
 doublet <- scrub$scrub_doublets()
 names(doublet) <- c("doublet_score","doublet")
-#
-# import results into seurat object
+
+
 seu[["doublet_score"]] <- doublet$doublet_score
 seu[["doublet"]] <- doublet$doublet
-#
-summary(seu$doublet_score)
-table(seu$doublet)
+
+
+VlnPlot(seu, group.by = "doublet",
+        features = c("doublet_score", "nCount_RNA","nFeature_RNA"),
+        pt.size = 0)
 ```
 
-## Check QCs and filtering cells
-- Please make a violin plot including the following variables: UMI counts, genes detected, mitochondrial content, and doublet score per cell
-```{r prac1_qcPlot_vlnPlot, eval=FALSE,echo=toMessage}
-VlnPlot(seu,features = c("nCount_RNA","nFeature_RNA","percent.mt","doublet_score"),ncol = 4)
+**Exercise 4** - **Subset and Regress**
+
+- Subset the data and run regression. Review the data and think about what features it is appropriate to regress over.
+
+```{r, eval=FALSE,echo=toMessage}
+seu_filt <- subset(seu, subset=doublet=="FALSE" & 
+                     percent.mt < 10)
+
+# These cells are from a cancer study so there's a good chance there's a high proportion of cycling cells -> Seurat cell cycle assignment seems good. 
+pot_conf <- c("percent.mt","S.Score","G2M.Score")
+seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
+
 ```
 
-- Please use scatter plot to identify potential doublets and coloured by doublets detected with scrublet
-```{r prac1_qcPlot_scatter1, eval=FALSE,echo=toMessage}
-FeatureScatter(seu,feature1 = "nCount_RNA","nFeature_RNA",group.by = "doublet")
-```
+- Rerun PCA, UMAP and clustering. Review the results including QC features. 
 
-- Please use scatter plot to indicate potential cell debris
-```{r prac1_qcPlot_scatter2, eval=FALSE,echo=toMessage}
-FeatureScatter(seu,feature1 = "nCount_RNA","percent.mt")
-```
-
-* Please filtering cells with
-  + doublets
-  + percent.mt >= 10
+```{r, eval=FALSE,echo=toMessage}
+  seu_filt <- RunPCA(seu_filt, npcs=30, verbose=FALSE)
+  seu_filt <- RunUMAP(seu_filt, reduction = "pca", dims = 1:10, verbose=FALSE)
+  seu_filt <- FindNeighbors(seu_filt, reduction = "pca", dims = 1:10, verbose=FALSE)
+  seu_filt <- FindClusters(seu_filt, resolution = 0.5, verbose=FALSE)
   
-```{r prac1_qcPlot_filt, eval=FALSE,echo=toMessage}
-seu[["filtOUT"]] <- seu$doublet == "TRUE" | seu$percent.mt >= 10
-table(seu$filtOUT)
+  DimPlot(seu_filt)
+  DimPlot(seu_filt, group.by ="Phase")
+  FeaturePlot(seu_filt,"percent.mt")  + scale_colour_gradient(low="gray",high="blue")
+  
+  
 ```
 
-* Subset cells and re-scale to *percent.mt* and *cyclon_Phase*
-```{r prac1_qcPlot_reScale, eval=FALSE,echo=toMessage}
-seu <- subset(seu,subset=filtOUT == "FALSE")
-seu <- ScaleData(seu,vars.to.regress = c("percent.mt","cyclon_Phase"))
-```
+**Exercise 4** - **Optimize Clustering and Find Markers**
 
-## Dimensional reduction
-- Please make dimensional reduction with principle component analysis
-```{r prac1_dimRed_PCA, eval=FALSE,echo=toMessage}
-set.seed(1001)
-seu <- RunPCA(seu,npcs = 50)
-```
+- Optimize Clustering
 
-- Select PCs by using elbow plot
-```{r prac1_dimRed_elbow, eval=FALSE,echo=toMessage}
-library(dplyr)
-library(ggplot2)
-# Determine percent of variation associated with each PC
-pct <- seu[["pca"]]@stdev / sum(seu[["pca"]]@stdev) * 100 
-# Calculate cumulative percents for each PC
-cumu <- cumsum(pct) 
-# Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
-co1 <- which(cumu > 90 & pct < 5)[1] 
-# Determine the difference between variation of PC and subsequent PC, last point where change of % of variation is more than 0.1%.
-co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1), decreasing = T)[1] + 1 
-pcs <- min(co1, co2)
-# Create a dataframe with values
-plot_df <- data.frame(pct = pct,cumu = cumu,rank = 1:length(pct))
-#
-ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pcs)) + geom_text() + 
-  geom_vline(xintercept = 90, color = "grey") + 
-  geom_hline(yintercept = min(pct[pct > 5]), color = "grey") +
-  theme_bw()
-#
-pc <- pcs
-pc
-```
-
-- Make non-linear dimensional reduction with UMAP
-```{r prac1_dimRed_UMAP, eval=FALSE,echo=toMessage}
-seu <- FindNeighbors(seu,dims = 1:pc,reduction = "pca")
-seu <- RunUMAP(seu,dims = 1:pc,reduction = "pca")
-#
-DimPlot(seu)
-```
-
-## Clustering
-- Please choose the optimized resolution for clustering with Louvain algorithm
-```{r prac1_clustOPT, eval=FALSE,echo=toMessage}
+```{r, eval=FALSE,echo=toMessage}
 library(clustree)
-library(ggplot2)
-#
-# resolution from 0.1 to 1.0
+
+seu_filt$default_clusters <- seu_filt$seurat_clusters
+
 reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
-reso_res <- lapply(1:length(reso),function(x,seu,reso){
-  seu <- FindClusters(seu,resolution = reso[x])
-  clust <- setNames(seu$seurat_clusters,Cells(seu))
-  return(clust)},seu,reso)
+reso_res <- lapply(1:length(reso), function(x,seu_filt,reso){
+  seu_filt <- FindClusters(seu_filt,resolution = reso[x])
+  clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
+  return(clust)}, seu_filt, reso)
 names(reso_res) <- paste0("k",1:length(reso))
+
+
 k_tab <- do.call(cbind,reso_res)
 k_dat <- as.data.frame(k_tab)
-##
-clustree(k_dat, prefix = "k",node_colour = "sc3_stability")
+
+clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+
+seu_filt <- FindClusters(seu_filt, resolution = 0.2)
+
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+
+DimPlot(seu_filt, group.by = "default_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
+
+
 ```
 
-- Make clustering with the optimized resolution
-```{r prac1_clustOPT_clust, eval=FALSE,echo=toMessage}
-seu <- FindClusters(seu,resolution = 0.5)
-DimPlot(seu,pt.size = 0.2,label = TRUE)+NoLegend()
-```
+- Find Markers
+```{r, eval=FALSE,echo=toMessage}
+library(magrittr)
+markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
+                          min.pct = 0.25, logfc.threshold = 0.25)
 
-## Marker genes for each cluster
-- Identify marker genes for each cluster with default setting
-```{r prac1_markGene_ident, eval=FALSE,echo=toMessage}
-mark_gene <- FindAllMarkers(seu,only.pos = TRUE)
-#
-head(mark_gene)
-```
 
-- Plot top2 marker gene per cluster in a heatmap
-```{r prac1_markGene_heatMap, eval=FALSE,echo=toMessage}
-top_genes <- mark_gene %>% group_by(cluster) %>% 
+top_genes <- markers %>% group_by(cluster) %>%
   slice_max(n = 2, order_by = avg_log2FC)
-#
-DoHeatmap(seu, features = top_genes$gene) + NoLegend()
-```
+head(top_genes)
 
+DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
+```
 
 
