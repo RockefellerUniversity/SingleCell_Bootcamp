@@ -1,6 +1,6 @@
 ---
 title: "Single-cell RNA sequencing ~ Session 2 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
-author: "Rockefeller University, Bioinformatics Resource Centre"
+author: "Rockefeller University, Bioinformatics Resource Center"
 date: "https://rockefelleruniversity.github.io/SingleCell_Bootcamp/"
 output: 
   xaringan::moon_reader:
@@ -20,6 +20,7 @@ output:
 params:
   isSlides: "no"
 ---
+
 ```{r setup, include=FALSE}
 suppressPackageStartupMessages(require(knitr))
 suppressPackageStartupMessages(require(Seurat))
@@ -353,12 +354,10 @@ plot2
 ```
 
 ---
-
 ## SCTransform
 
 ![](./imgs/overview3.png)
 [overview](./imgs/scRNA_workflow_ver001_20231017.png)
-
 
 ---
 ## SCTransform
