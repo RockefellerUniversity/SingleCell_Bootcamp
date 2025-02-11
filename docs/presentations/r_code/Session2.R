@@ -54,7 +54,7 @@ if(params$isSlides == "yes"){
 
 
 
-## ----include=F,echo=T,eval=TRUE-----------------------------------------------
+## ----echo=T,eval=TRUE---------------------------------------------------------
 mtx_dir <- "filtered_gene_bc_matrices/GRCh38"
 
 
@@ -501,7 +501,7 @@ load("data/pbmc8k_cbFilt_20250131_filtered_mtx.RData")
 ## ----include = T, eval = F, echo = T------------------------------------------
 # 
 # 
-# cbFilt_mtx <- Read10X_h5("data/cbFilt_PBMC8K_20250131_filtered.h5")
+# cbFilt_mtx <- Read10X_h5("~/Downloads/cbFilt_PBMC8K_20250131_filtered_forseurat.h5")
 # 
 
 
@@ -723,7 +723,7 @@ lapply(ccGene_hs, function(x){head(x,2)})
 # save(assignments, file="data/pbmc8k_cyclone.RData")
 
 
-## ----echo=T-------------------------------------------------------------------
+## ----echo=F-------------------------------------------------------------------
 
 load("data/pbmc8k_cyclone.RData")
 
