@@ -28,18 +28,41 @@ if(params$isSlides == "yes"){
 
 
 
-## wget -O cellranger-7.2.0.tar.gz "https://cf.10xgenomics.com/releases/cell-exp/cellranger-7.2.0.tar.gz?Expires=1701688001&Key-Pair-Id=APKAI7S6A5RYOXBWRPDA&Signature=Puwpsqsf~wMQz5e~PwTvM2DRQO1XdJ~9zeLCWqX6tVbOx~dnf24hP1bwlmNhybr3SZUQ8C12ywcICMH6Au02wxiCRm1uuTxZ0Uvq8g~s8L8s6XFyhepdi6Qjq8dzXNGoxswg3hModjKWVptTWq-MTHBDZv~yTFB7QAM9lzHHXo6SPWg8Fnx30ngmtGC5tDReVOiJ3DY0hsFvZtG3HaQ-HEbnzEH3lre-0rpWMBlsQu-vZ4RnKE0o3Xv6pQsb6261M19nHcpCsGhDCkFjDDbradx~SNw5rpY-HMxM4SnRuaOOI0rYyDNn7xdTat3eFj7rlgATXRaYx7SYNqDYKSrNWw__"
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
 
-## wget -O https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz
+# Cell Ranger
 
-## tar -xzvf cellranger-7.2.0.tar.gz
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Cell Ranger
+
+---
+"    
+  )
+  
+}
+
+
+
+## wget -O cellranger-8.0.0.tar.gz "https://cf.10xgenomics.com/releases/cell-exp/cellranger-8.0.0.tar.gz?Expires=1711772964&Key-Pair-Id=APKAI7S6A5RYOXBWRPDA&Signature=muvzcbqxba6d-blyYS02MVfLlzwZk6iZNQWXdaoCLnl7owW2nEN-IHwSPwdNoYl-6Xia7rr0S1sLCUQTsekGm2pQKcd0kqK~ndHK0DM7SwSVpXLlRvBV5pXt~EIlsxATVBKVeQLnUy698N-WnRlT~ahjlU-nMdpomX9-lOkF~w8gbgHBdtPXunTWfW87sSJLpHMDVENSF7TFJsXERDwDnsXyQLCuEhfGTCOnupkaATlLEr9kaeCStePKkwGyqgi1m8Ua02NNGHWPIJ6I1mDt695wo~dgptpJF4SDNRTyE-TuXrHfIqRjZB60zhWRJczFo2kpL7FCKwliE-vJ6djcSw__"
+
+## wget "https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2024-A.tar.gz"
+
+## tar -xzvf cellranger-8.0.0.tar.gz
 ## tar -xzvf refdata-gex-GRCh38-2020-A.tar.gz
 
-## export PATH=/PATH_TO_CELLRANGER_DIRECTORY/cellranger-7.1.0:$PATH
+## export PATH=/PATH_TO_CELLRANGER_DIRECTORY/cellranger-8.0.0:$PATH
 
 ## cellranger count --id=my_run_name \
 ##    --fastqs=PATH_TO_FASTQ_DIRECTORY \
 ##    --transcriptome=/PATH_TO_CELLRANGER_DIRECTORY/refdata-gex-GRCh38-2020-A
+##    --create-bam=true
 
 ## cellranger mkgtf Homo_sapiens.GRCh38.ensembl.gtf \
 ## Homo_sapiens.GRCh38.ensembl.filtered.gtf \
@@ -69,7 +92,7 @@ if(params$isSlides == "yes"){
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Cell Ranger -  Output files
+# Output files
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
 
@@ -77,7 +100,7 @@ if(params$isSlides == "yes"){
 "    
   )
 }else{
-  cat("# Cell Ranger - Output files
+  cat("# Output files
 
 ---
 "    
@@ -91,7 +114,7 @@ if(params$isSlides == "yes"){
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Cell Ranger - Web Summary QC
+# Web Summary QC
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
 
@@ -99,7 +122,7 @@ if(params$isSlides == "yes"){
 "    
   )
 }else{
-  cat("# Cell Ranger - Web Summary QC
+  cat("# Web Summary QC
 
 ---
 "    
