@@ -14,7 +14,7 @@
 
 <title>scRNAseq</title>
 
-<script src="site_libs/header-attrs-2.25/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -389,17 +389,6 @@ div.tocify {
         </li>
       </ul>
     </li>
-    <li class="dropdown-submenu">
-      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">exercise3</a>
-      <ul class="dropdown-menu" role="menu">
-        <li>
-          <a href="exercises/exercises/exercise3_exercise.html">Exercise</a>
-        </li>
-        <li>
-          <a href="exercises/answers/exercise3_answers.html">Solution</a>
-        </li>
-      </ul>
-    </li>
   </ul>
 </li>
       </ul>
@@ -437,11 +426,11 @@ class="email">brc@rockefeller.edu</a></h4>
 <p><br></p>
 <div id="course-integrity" class="section level3">
 <h3>Course Integrity</h3>
-<p><strong>This course is compiled automatically on <em>2023-12-07</em>
+<p><strong>This course is compiled automatically on <em>2025-02-11</em>
 </strong> <br> <a
 href="https://github.com/RockefellerUniversity/SingleCell_Bootcamp/actions?query=workflow%3compilation-check"><img src="https://github.com/RockefellerUniversity/SingleCell_Bootcamp/workflows/compilation-check/badge.svg"></a></p>
 <p><strong>The course is tested and available on MacOS, Windows and
-Ubuntu Linux for R version 4.3.0 (2023-04-21)</strong> <br> <a
+Ubuntu Linux for R version 4.4.0 (2024-04-24)</strong> <br> <a
 href="https://github.com/RockefellerUniversity/SingleCell_Bootcamp/actions?query=workflow%3AOS-check"><img src="https://github.com/RockefellerUniversity/SingleCell_Bootcamp/workflows/OS-check/badge.svg"></a></p>
 <p><br> <br></p>
 </div>
@@ -474,20 +463,14 @@ All material is available to download under GPL v2 license.</p>
 <h4>Install R</h4>
 <p>R can be installed from the R-project website.</p>
 <p>The R website can be found here <a href="http://www.r-project.org/"
-class="uri">http://www.r-project.org/</a>.</p>
-<p>The download links and associated installation instructions for
-multiple platforms can be found below provided by Revolution Analytics.
-<a href="https://cran.revolutionanalytics.com"
-class="uri">https://cran.revolutionanalytics.com</a></p>
-<p>We recommend installing R 4.3.0 as this is the version used to
-compile the course. Direct downloads for R 4.3.0 for the main platforms
-can be found below:</p>
+class="uri">http://www.r-project.org/</a>. This website has all the
+latest information about R updates, conferences and installation</p>
+<p>You can use this direct links to the install for each major OS:</p>
 <ul>
+<li><a href="https://cloud.r-project.org/bin/macosx/">Mac</a></li>
 <li><a
-href="https://cran.revolutionanalytics.com/bin/macosx/R-4.3.0.pkg">Mac</a></li>
-<li><a
-href="https://cran.revolutionanalytics.com/bin/windows/base/old/4.3.0/R-4.3.0-win.exe">Windows</a></li>
-<li><a href="https://cran.revolutionanalytics.com">Linux
+href="https://cloud.r-project.org/bin/windows/base/release.html">Windows</a></li>
+<li><a href="https://cloud.r-project.org/bin/linux/">Linux
 platforms</a></li>
 </ul>
 <p><br></p>
@@ -502,21 +485,22 @@ class="uri">http://www.rstudio.com/</a></p>
 class="uri">https://rstudio.com/products/rstudio/download/</a></p>
 <p><br></p>
 </div>
-<div id="install-required-packages" class="section level4">
-<h4><strong>Install required packages</strong></h4>
-<p>Packages can be installed from the course package or from
-CRAN/Bioconductor.</p>
-</div>
-<div id="from-the-course-package" class="section level4">
-<h4>From the course package</h4>
-<pre class="{r}"><code>install.packages(&#39;BiocManager&#39;)
+<div id="install-required-r-packages" class="section level4">
+<h4><strong>Install required R packages</strong></h4>
+<p>R Packages can be installed from the course package <em>or</em> from
+CRAN/Bioconductor. These commands should be written into the R console.
+Once R and RStudio is installed, you can copy and paste these install
+commands into lower left pane of RStudio which should be labelled
+“Console”. If you run into any errors, do this one line at a time.</p>
+<div id="from-the-course-package" class="section level5">
+<h5>From the course package</h5>
+<pre><code>install.packages(&#39;BiocManager&#39;)
 install.packages(&#39;remotes&#39;)
 BiocManager::install(&#39;RockefellerUniversity/SingleCell_Bootcamp&#39;,subdir=&#39;scRNASeq&#39;)</code></pre>
-<p><br></p>
 </div>
-<div id="from-cran-and-bioconductor" class="section level4">
-<h4>From CRAN and Bioconductor</h4>
-<pre class="{r}"><code>install.packages(&#39;BiocManager&#39;)
+<div id="from-cran-and-bioconductor" class="section level5">
+<h5>From CRAN and Bioconductor</h5>
+<pre><code>install.packages(&#39;BiocManager&#39;)
 BiocManager::install(&#39;DropletUtils&#39;)
 BiocManager::install(&#39;scDblFinder&#39;)
 BiocManager::install(&#39;SingleCellExperiment&#39;)
@@ -533,19 +517,18 @@ BiocManager::install(&#39;pheatmap&#39;)
 BiocManager::install(&#39;harmony&#39;)
 BiocManager::install(&#39;SingleR&#39;)
 BiocManager::install(&#39;RCurl&#39;)
-BiocManager::install(&#39;batchelor&#39;)
-BiocManager::install(&#39;slingshot&#39;)
 BiocManager::install(&#39;TSCAN&#39;)
 BiocManager::install(&#39;SoupX&#39;)
 BiocManager::install(&#39;devtools&#39;)
 BiocManager::install(&#39;hdf5r&#39;)
+BiocManager::install(&#39;celldex&#39;)
 BiocManager::install(&#39;irlba&#39;)
 BiocManager::install(&#39;knitr&#39;)
 BiocManager::install(&#39;rmarkdown&#39;)
 BiocManager::install(&#39;testthat&#39;)
 BiocManager::install(&#39;yaml&#39;)
 BiocManager::install(&#39;SeuratData&#39;)</code></pre>
-<p><br></p>
+</div>
 </div>
 <div id="download-the-material" class="section level4">
 <h4><strong>Download the material</strong></h4>
@@ -596,28 +579,6 @@ href="presentations/singlepage/Session2.html"><strong>Single
 Page</strong></a></p>
 <p>The code use in the presentations can be found at <a
 href="presentations/r_code/Session2.R"><strong>R code</strong></a></p>
-<p><br></p>
-</div>
-</div>
-<div id="single-cell-rna-sequencing-session-3" class="section level4">
-<h4><strong>Single-cell RNA sequencing , Session 3</strong></h4>
-<p>In this session we will cover advanced data processing:</p>
-<ul>
-<li>Batch correction</li>
-<li>Ambient RNA removal</li>
-<li>Trajectory analysis</li>
-</ul>
-<iframe src="presentations/slides/Session3.html" width="100%" height="400" title="NA">
-</iframe>
-<div id="links-to-presentations-2" class="section level5">
-<h5><em>Links to presentations:</em></h5>
-<p>The html slide presentation can be found at this link <a
-href="presentations/slides/Session3.html"><strong>Slide</strong></a></p>
-<p>The single page html presentation can be found at this link <a
-href="presentations/singlepage/Session3.html"><strong>Single
-Page</strong></a></p>
-<p>The code use in the presentations can be found at <a
-href="presentations/r_code/Session3.R"><strong>R code</strong></a></p>
 <p><br><br></p>
 </div>
 </div>

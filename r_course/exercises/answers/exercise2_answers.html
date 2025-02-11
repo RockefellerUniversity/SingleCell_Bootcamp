@@ -236,7 +236,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -247,7 +247,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -271,11 +271,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }
 code span.al { color: #ef2929; } 
 code span.an { color: #8f5902; font-weight: bold; font-style: italic; } 
-code span.at { color: #c4a000; } 
+code span.at { color: #204a87; } 
 code span.bn { color: #0000cf; } 
 code span.cf { color: #204a87; font-weight: bold; } 
 code span.ch { color: #4e9a06; } 
-code span.cn { color: #000000; } 
+code span.cn { color: #8f5902; } 
 code span.co { color: #8f5902; font-style: italic; } 
 code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } 
 code span.do { color: #8f5902; font-weight: bold; font-style: italic; } 
@@ -284,14 +284,14 @@ code span.dv { color: #0000cf; }
 code span.er { color: #a40000; font-weight: bold; } 
 code span.ex { } 
 code span.fl { color: #0000cf; } 
-code span.fu { color: #000000; } 
+code span.fu { color: #204a87; font-weight: bold; } 
 code span.im { } 
 code span.in { color: #8f5902; font-weight: bold; font-style: italic; } 
 code span.kw { color: #204a87; font-weight: bold; } 
 code span.op { color: #ce5c00; font-weight: bold; } 
 code span.ot { color: #8f5902; } 
 code span.pp { color: #8f5902; font-style: italic; } 
-code span.sc { color: #000000; } 
+code span.sc { color: #ce5c00; font-weight: bold; } 
 code span.ss { color: #4e9a06; } 
 code span.st { color: #4e9a06; } 
 code span.va { color: #000000; } 
@@ -442,224 +442,212 @@ Centre</h4>
 <div id="description" class="section level2">
 <h2>Description</h2>
 <p>Single-cell transcriptome data of Human Glioblastoma Multiforme (GBM)
-was fetched on 10X Genomics website <a href="https://www.10xgenomics.com/resources/datasets?query=&amp;page=1&amp;configure%5BhitsPerPage%5D=50&amp;configure%5BmaxValuesPerFacet%5D=1000&amp;refinementList%5Bchemistry.version%5D%5B0%5D=3">link</a>.
-The Cellranger results of this data was available on DropBox <a href="https://www.dropbox.com/scl/fo/fqcutdy89drp5a2lcggwl/h?dl=0&amp;rlkey=un0d27s9odrt294z5eqfw31j8">link</a>.
+was fetched on 10X Genomics <a href="https://www.10xgenomics.com/datasets/human-glioblastoma-multiforme-3-v-3-whole-transcriptome-analysis-3-standard-4-0-0">website</a>.
+The CellRanger results from this data is also available on DropBox <a href="https://www.dropbox.com/scl/fo/fqcutdy89drp5a2lcggwl/h?dl=0&amp;rlkey=un0d27s9odrt294z5eqfw31j8">link</a>.
 Please use this dataset to do the following analysis.</p>
-</div>
-<div id="load-data" class="section level2">
-<h2>Load data</h2>
+<p><a href="https://www.science.org/doi/10.1126/science.aat1699" class="uri">https://www.science.org/doi/10.1126/science.aat1699</a></p>
+<p><strong>Exercise 1</strong> - <strong>Cell Ranger</strong></p>
 <ul>
-<li>Please read the filtered matrix of CellRanger results and load the
-counting matrix into a Seurat object. filtering cells with less than 200
-expressing gene and genes presensting in less than 10 cells.</li>
-<li>How many cells detected?</li>
-<li>How many genes (features) detected?</li>
+<li>Review the Web Summary Report</li>
+<li>What version of Cell Ranger was used to process this data?</li>
 </ul>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Seurat)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>mtx <span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="st">&quot;/Volumes/JDLuo_Disk/01_scRNA_GBM_20230605/filtered_feature_bc_matrix/&quot;</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(mtx,<span class="at">project=</span><span class="st">&quot;GBM_10X&quot;</span>, <span class="at">min.cells=</span><span class="dv">10</span>, <span class="at">min.features=</span><span class="dv">200</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>seu</span></code></pre></div>
-<p><strong>Exercise 1</strong></p>
-</div>
-<div id="data-processing" class="section level2">
-<h2>data processing</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># cellranger-4.0.0</span></span></code></pre></div>
 <ul>
-<li>Please estimate mitochondrial content</li>
+<li><p>How many cells are there?</p></li>
+<li><p>What looks problematic about this dataset?</p></li>
+<li><p>What steps could we do to to help things?</p></li>
 </ul>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;percent.mt&quot;</span>]] <span class="ot">&lt;-</span> <span class="fu">PercentageFeatureSet</span>(seu,<span class="at">pattern =</span> <span class="st">&quot;MT-&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(seu<span class="sc">$</span>percent.mt)</span></code></pre></div>
+<p><strong>Exercise 2</strong> - <strong>Create a Seurat
+Object</strong></p>
 <ul>
-<li>Make log normalization and identify variable features with the
-following settings
-<ul>
-<li>log normalization:
-<em>normalization.method=“logNormalize”</em>.</li>
-<li>find variable features: <em>select.method=“vst”</em> and
-<em>nfeatures=3000</em>.</li>
-</ul></li>
+<li>Read the matrix file in and create a Seurat object. Ensure it is
+properly annotated.</li>
 </ul>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">NormalizeData</span>(seu,<span class="at">normalization.method =</span>  <span class="st">&quot;LogNormalize&quot;</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">FindVariableFeatures</span>(seu,<span class="at">selection.method =</span> <span class="st">&quot;vst&quot;</span>,<span class="at">nfeatures =</span> <span class="dv">3000</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>seu</span></code></pre></div>
-</div>
-<div id="cell-cycle-phase-estimation" class="section level2">
-<h2>Cell cycle phase estimation</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(Seurat)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>mtx <span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="st">&quot;~/Downloads/4834STDY7002881/GRCh38/&quot;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(mtx, <span class="at">project=</span><span class="st">&quot;kidney_F6&quot;</span>, <span class="at">min.cells=</span><span class="dv">10</span>, <span class="at">min.features=</span><span class="dv">200</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>seu[[<span class="st">&quot;dset&quot;</span>]] <span class="ot">&lt;-</span> <span class="st">&quot;kidney_F6&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>seu <span class="ot">&lt;-</span> Seurat<span class="sc">::</span><span class="fu">RenameCells</span>(seu, <span class="at">add.cell.id=</span><span class="st">&quot;kidney_F6&quot;</span>)</span></code></pre></div>
 <ul>
-<li>Please estimate cell cycle Phases with
-<em>Seurat::CellCycleScoring()</em>.</li>
+<li>Run normalization (log) and scaling. What are the top variable
+features?</li>
 </ul>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">CellCycleScoring</span>(seu,<span class="at">s.features =</span> cc.genes<span class="sc">$</span>s.genes,<span class="at">g2m.features =</span> cc.genes<span class="sc">$</span>g2m.genes)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(seu,<span class="dv">2</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(seu<span class="sc">$</span>Phase)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">NormalizeData</span>(seu, <span class="at">normalization.method=</span><span class="st">&quot;LogNormalize&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">FindVariableFeatures</span>(seu, <span class="at">select.method=</span><span class="st">&quot;vst&quot;</span>, <span class="at">nfeatures=</span><span class="dv">3000</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">ScaleData</span>(seu)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>top10 <span class="ot">&lt;-</span> <span class="fu">head</span>(<span class="fu">VariableFeatures</span>(seu), <span class="dv">10</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>temp_plot <span class="ot">&lt;-</span> <span class="fu">VariableFeaturePlot</span>(seu)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>plot2 <span class="ot">&lt;-</span> <span class="fu">LabelPoints</span>(<span class="at">plot =</span> temp_plot, <span class="at">points =</span> top10, <span class="at">repel =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>plot2</span></code></pre></div>
 <ul>
-<li>Please estimate cell cycle Phases with
-<em>scran::cyclone()</em>.</li>
+<li>Do dimension reduction. Don’t forget to check the elbow for PCA to
+get a good number of PCs. Than run some basic clusetering. No need to
+optimize that.</li>
 </ul>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert data into SingleCellExperiment</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scran)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>sce <span class="ot">&lt;-</span> <span class="fu">as.SingleCellExperiment</span>(seu,<span class="at">assay =</span> <span class="st">&quot;RNA&quot;</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(sce)<span class="sc">$</span>SYMBOL <span class="ot">&lt;-</span> <span class="fu">rownames</span>(sce)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># prepare reference dataset</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&quot;/Volumes/JDLuo_Disk/Resource_envRData/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData&quot;</span>)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>ccGene_hs <span class="ot">&lt;-</span> ccGene_mm_hs<span class="sc">$</span>human_symbol</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate cell cycle phases with cylcone</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>assignments <span class="ot">&lt;-</span> <span class="fu">cyclone</span>(sce, ccGene_hs, <span class="at">gene.names=</span><span class="fu">rowData</span>(sce)<span class="sc">$</span>SYMBOL)</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># transfer results into seurat object</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;cyclon_Phase&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>phases</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;cyclon_G1Score&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>scores<span class="sc">$</span>G1</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;cyclon_SScore&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>scores<span class="sc">$</span>S</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;cyclon_G2MScore&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>scores<span class="sc">$</span>G2M</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">RunPCA</span>(seu, <span class="at">assay =</span> <span class="st">&quot;RNA&quot;</span>, <span class="at">npcs =</span> <span class="dv">50</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>pct <span class="ot">&lt;-</span> seu[[<span class="st">&quot;pca&quot;</span>]]<span class="sc">@</span>stdev <span class="sc">/</span> <span class="fu">sum</span>(seu[[<span class="st">&quot;pca&quot;</span>]]<span class="sc">@</span>stdev) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>cumu <span class="ot">&lt;-</span> <span class="fu">cumsum</span>(pct)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>co1 <span class="ot">&lt;-</span> <span class="fu">which</span>(cumu <span class="sc">&gt;</span> <span class="dv">90</span> <span class="sc">&amp;</span> pct <span class="sc">&lt;</span> <span class="dv">5</span>)[<span class="dv">1</span>]</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>co2 <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">which</span>((pct[<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(pct) <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">-</span> pct[<span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(pct)]) <span class="sc">&gt;</span> <span class="fl">0.1</span>), <span class="at">decreasing =</span> T)[<span class="dv">1</span>] <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>pc <span class="ot">&lt;-</span> <span class="fu">min</span>(co1, co2)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>plot_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">pct =</span> pct, <span class="at">cumu =</span> cumu,<span class="at">rank =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(pct))</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="fu">ggplot</span>(plot_df, <span class="fu">aes</span>(cumu, pct, <span class="at">label =</span> rank, <span class="at">color =</span> rank <span class="sc">&gt;</span> pc)) <span class="sc">+</span> <span class="fu">geom_text</span>() <span class="sc">+</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">90</span>, <span class="at">color =</span> <span class="st">&quot;grey&quot;</span>) <span class="sc">+</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fu">min</span>(pct[pct <span class="sc">&gt;</span> <span class="dv">5</span>]), <span class="at">color =</span> <span class="st">&quot;grey&quot;</span>) <span class="sc">+</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">FindNeighbors</span>(seu,<span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span>pc, <span class="at">reduction =</span> <span class="st">&quot;pca&quot;</span>)</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">RunUMAP</span>(seu,<span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span>pc, <span class="at">reduction =</span> <span class="st">&quot;pca&quot;</span>)</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(seu, <span class="at">resolution =</span> <span class="fl">0.5</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>seu[[<span class="st">&quot;cluster_byDefault&quot;</span>]] <span class="ot">&lt;-</span> seu<span class="sc">$</span>seurat_clusters</span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="fu">DimPlot</span>(seu)</span></code></pre></div>
+<p><strong>Exercise 3</strong> - <strong>Basic QC</strong></p>
 <ul>
-<li>Compare the results between the two methods</li>
+<li>Review the number of counts and features detected. Is there any
+asymmetry?</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Seurat results in row and cyclone results in column</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(seu<span class="sc">$</span>Phase, seu<span class="sc">$</span>cyclon_Phase)</span></code></pre></div>
-</div>
-<div id="estimate-doubets" class="section level2">
-<h2>Estimate doubets</h2>
-<p>Please estimate doublets with scrublet</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare environment</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>py_path <span class="ot">&lt;-</span> <span class="st">&quot;/Users/JDLuo/opt/anaconda3/envs/reticulate/bin/python&quot;</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="st">&#39;RETICULATE_PYTHON&#39;</span><span class="ot">=</span>py_path)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>scr <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">&quot;scrublet&quot;</span>)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract counting matrix</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">GetAssayData</span>(seu,<span class="at">assay =</span> <span class="st">&quot;RNA&quot;</span>,<span class="at">slot =</span> <span class="st">&quot;counts&quot;</span>)</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(mat)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate doubelt scores</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>scrub <span class="ot">&lt;-</span> scr<span class="sc">$</span><span class="fu">Scrublet</span>(<span class="fu">t</span>(mat))</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>doublet <span class="ot">&lt;-</span> scrub<span class="sc">$</span><span class="fu">scrub_doublets</span>()</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(doublet) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;doublet_score&quot;</span>,<span class="st">&quot;doublet&quot;</span>)</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co"># import results into seurat object</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;doublet_score&quot;</span>]] <span class="ot">&lt;-</span> doublet<span class="sc">$</span>doublet_score</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;doublet&quot;</span>]] <span class="ot">&lt;-</span> doublet<span class="sc">$</span>doublet</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(seu<span class="sc">$</span>doublet_score)</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(seu<span class="sc">$</span>doublet)</span></code></pre></div>
-</div>
-<div id="check-qcs-and-filtering-cells" class="section level2">
-<h2>Check QCs and filtering cells</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">VlnPlot</span>(seu,</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>        <span class="at">features =</span> <span class="fu">c</span>(<span class="st">&quot;nCount_RNA&quot;</span>,<span class="st">&quot;nFeature_RNA&quot;</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">FeaturePlot</span>(seu,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>        <span class="at">features =</span> <span class="fu">c</span>(<span class="st">&quot;nCount_RNA&quot;</span>,<span class="st">&quot;nFeature_RNA&quot;</span>))</span></code></pre></div>
 <ul>
-<li>Please make a violin plot including the following variables: UMI
-counts, genes detected, mitochondrial content, and doublet score per
-cell</li>
+<li>Lets check the mitochondrial content. Review the results.</li>
 </ul>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">VlnPlot</span>(seu,<span class="at">features =</span> <span class="fu">c</span>(<span class="st">&quot;nCount_RNA&quot;</span>,<span class="st">&quot;nFeature_RNA&quot;</span>,<span class="st">&quot;percent.mt&quot;</span>,<span class="st">&quot;doublet_score&quot;</span>),<span class="at">ncol =</span> <span class="dv">4</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">library</span>(Seurat)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>seu<span class="sc">$</span>percent.mt <span class="ot">&lt;-</span> <span class="fu">PercentageFeatureSet</span>(seu, <span class="at">pattern =</span> <span class="st">&quot;^MT-&quot;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">VlnPlot</span>(seu,<span class="st">&quot;percent.mt&quot;</span>, <span class="at">group.by =</span><span class="st">&quot;dset&quot;</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">FeaturePlot</span>(seu,<span class="st">&quot;percent.mt&quot;</span>)  <span class="sc">+</span> <span class="fu">scale_colour_gradient</span>(<span class="at">low=</span><span class="st">&quot;gray&quot;</span>,<span class="at">high=</span><span class="st">&quot;blue&quot;</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="fu">FeatureScatter</span>(seu, <span class="at">feature1 =</span> <span class="st">&quot;nCount_RNA&quot;</span>, <span class="at">feature2 =</span> <span class="st">&quot;percent.mt&quot;</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="fu">table</span>(seu<span class="sc">$</span>percent.mt<span class="sc">&gt;</span><span class="dv">10</span>)</span></code></pre></div>
 <ul>
-<li>Please use scatter plot to identify potential doublets and coloured
-by doublets detected with scrublet</li>
+<li>Lets run cell cycle checks?</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">FeatureScatter</span>(seu,<span class="at">feature1 =</span> <span class="st">&quot;nCount_RNA&quot;</span>,<span class="st">&quot;nFeature_RNA&quot;</span>,<span class="at">group.by =</span> <span class="st">&quot;doublet&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>feat_s <span class="ot">&lt;-</span> cc.genes<span class="sc">$</span>s.genes</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>feat_g2m <span class="ot">&lt;-</span> cc.genes<span class="sc">$</span>g2m.genes</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">CellCycleScoring</span>(seu, <span class="at">s.features =</span> feat_s, <span class="at">g2m.features =</span> feat_g2m)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">DimPlot</span>(seu, <span class="at">group.by =</span> <span class="st">&quot;Phase&quot;</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>dat_s <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">cell_id=</span><span class="fu">Cells</span>(seu), <span class="at">cat=</span><span class="st">&quot;S_Score&quot;</span>, <span class="at">Phase=</span>seu<span class="sc">$</span>Phase, <span class="at">score=</span>seu<span class="sc">$</span>S.Score)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>dat_g2m <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">cell_id=</span><span class="fu">Cells</span>(seu), <span class="at">cat=</span><span class="st">&quot;G2M_Score&quot;</span>, <span class="at">Phase=</span>seu<span class="sc">$</span>Phase, <span class="at">score=</span>seu<span class="sc">$</span>G2M.Score)</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">rbind</span>(dat_s, dat_g2m)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>dat<span class="sc">$</span>Phase <span class="ot">&lt;-</span> <span class="fu">factor</span>(dat<span class="sc">$</span>Phase, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;G1&quot;</span>,<span class="st">&quot;S&quot;</span>,<span class="st">&quot;G2M&quot;</span>))</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="fu">library</span>(scran)</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>sce <span class="ot">&lt;-</span> <span class="fu">as.SingleCellExperiment</span>(seu, <span class="at">assay =</span> <span class="st">&quot;RNA&quot;</span>)</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="fu">rowData</span>(sce)<span class="sc">$</span>SYMBOL <span class="ot">&lt;-</span> <span class="fu">rownames</span>(sce)</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&quot;data/ccGene_mouse_human_geneSymbol_ensemblID_20220817.RData&quot;</span>)</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>ccGene_hs <span class="ot">&lt;-</span> ccGene_mm_hs<span class="sc">$</span>human_symbol</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>assignments <span class="ot">&lt;-</span> <span class="fu">cyclone</span>(sce, ccGene_hs, <span class="at">gene.names=</span><span class="fu">rowData</span>(sce)<span class="sc">$</span>SYMBOL)</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>seu[[<span class="st">&quot;cyclone_Phase&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>phases</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>seu[[<span class="st">&quot;cyclone_G1Score&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>scores<span class="sc">$</span>G1</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>seu[[<span class="st">&quot;cyclone_SScore&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>scores<span class="sc">$</span>S</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>seu[[<span class="st">&quot;cyclone_G2MScore&quot;</span>]] <span class="ot">&lt;-</span> assignments<span class="sc">$</span>scores<span class="sc">$</span>G2M</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="fu">DimPlot</span>(seu, <span class="at">group.by =</span> <span class="st">&quot;cyclone_Phase&quot;</span>)</span></code></pre></div>
 <ul>
-<li>Please use scatter plot to indicate potential cell debris</li>
+<li>Lets run scrublet. Review the doublet annotation. Are doublets an
+issue for this dataset?</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">FeatureScatter</span>(seu,<span class="at">feature1 =</span> <span class="st">&quot;nCount_RNA&quot;</span>,<span class="st">&quot;percent.mt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>scr <span class="ot">&lt;-</span> reticulate<span class="sc">::</span><span class="fu">import</span>(<span class="st">&quot;scrublet&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">GetAssayData</span>(seu, <span class="at">assay =</span> <span class="st">&quot;RNA&quot;</span>, <span class="at">slot =</span> <span class="st">&quot;counts&quot;</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(mat)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>scrub <span class="ot">&lt;-</span> scr<span class="sc">$</span><span class="fu">Scrublet</span>(<span class="fu">t</span>(mat))</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>doublet <span class="ot">&lt;-</span> scrub<span class="sc">$</span><span class="fu">scrub_doublets</span>()</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="fu">names</span>(doublet) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;doublet_score&quot;</span>,<span class="st">&quot;doublet&quot;</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>seu[[<span class="st">&quot;doublet_score&quot;</span>]] <span class="ot">&lt;-</span> doublet<span class="sc">$</span>doublet_score</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>seu[[<span class="st">&quot;doublet&quot;</span>]] <span class="ot">&lt;-</span> doublet<span class="sc">$</span>doublet</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="fu">VlnPlot</span>(seu, <span class="at">group.by =</span> <span class="st">&quot;doublet&quot;</span>,</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>        <span class="at">features =</span> <span class="fu">c</span>(<span class="st">&quot;doublet_score&quot;</span>, <span class="st">&quot;nCount_RNA&quot;</span>,<span class="st">&quot;nFeature_RNA&quot;</span>),</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>        <span class="at">pt.size =</span> <span class="dv">0</span>)</span></code></pre></div>
+<p><strong>Exercise 4</strong> - <strong>Subset and Regress</strong></p>
 <ul>
-<li>Please filtering cells with
-<ul>
-<li>doublets</li>
-<li>percent.mt &gt;= 10</li>
-</ul></li>
+<li>Subset the data and run regression. Review the data and think about
+what features it is appropriate to regress over.</li>
 </ul>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>seu[[<span class="st">&quot;filtOUT&quot;</span>]] <span class="ot">&lt;-</span> seu<span class="sc">$</span>doublet <span class="sc">==</span> <span class="st">&quot;TRUE&quot;</span> <span class="sc">|</span> seu<span class="sc">$</span>percent.mt <span class="sc">&gt;=</span> <span class="dv">10</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(seu<span class="sc">$</span>filtOUT)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>seu_filt <span class="ot">&lt;-</span> <span class="fu">subset</span>(seu, <span class="at">subset=</span>doublet<span class="sc">==</span><span class="st">&quot;FALSE&quot;</span> <span class="sc">&amp;</span> </span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>                     percent.mt <span class="sc">&lt;</span> <span class="dv">10</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co"># These cells are from a cancer study so there&#39;s a good chance there&#39;s a high proportion of cycling cells -&gt; Seurat cell cycle assignment seems good. </span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>pot_conf <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;percent.mt&quot;</span>,<span class="st">&quot;S.Score&quot;</span>,<span class="st">&quot;G2M.Score&quot;</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>seu_filt <span class="ot">&lt;-</span> <span class="fu">ScaleData</span>(seu_filt, <span class="at">vars.to.regress =</span> pot_conf)</span></code></pre></div>
 <ul>
-<li>Subset cells and re-scale to <em>percent.mt</em> and
-<em>cyclon_Phase</em></li>
+<li>Rerun PCA, UMAP and clustering. Review the results including QC
+features.</li>
 </ul>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">subset</span>(seu,<span class="at">subset=</span>filtOUT <span class="sc">==</span> <span class="st">&quot;FALSE&quot;</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">ScaleData</span>(seu,<span class="at">vars.to.regress =</span> <span class="fu">c</span>(<span class="st">&quot;percent.mt&quot;</span>,<span class="st">&quot;cyclon_Phase&quot;</span>))</span></code></pre></div>
-</div>
-<div id="dimensional-reduction" class="section level2">
-<h2>Dimensional reduction</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>  seu_filt <span class="ot">&lt;-</span> <span class="fu">RunPCA</span>(seu_filt, <span class="at">npcs=</span><span class="dv">30</span>, <span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  seu_filt <span class="ot">&lt;-</span> <span class="fu">RunUMAP</span>(seu_filt, <span class="at">reduction =</span> <span class="st">&quot;pca&quot;</span>, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  seu_filt <span class="ot">&lt;-</span> <span class="fu">FindNeighbors</span>(seu_filt, <span class="at">reduction =</span> <span class="st">&quot;pca&quot;</span>, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  seu_filt <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(seu_filt, <span class="at">resolution =</span> <span class="fl">0.5</span>, <span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  </span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="fu">DimPlot</span>(seu_filt)</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  <span class="fu">DimPlot</span>(seu_filt, <span class="at">group.by =</span><span class="st">&quot;Phase&quot;</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  <span class="fu">FeaturePlot</span>(seu_filt,<span class="st">&quot;percent.mt&quot;</span>)  <span class="sc">+</span> <span class="fu">scale_colour_gradient</span>(<span class="at">low=</span><span class="st">&quot;gray&quot;</span>,<span class="at">high=</span><span class="st">&quot;blue&quot;</span>)</span></code></pre></div>
+<p><strong>Exercise 4</strong> - <strong>Optimize Clustering and Find
+Markers</strong></p>
 <ul>
-<li>Please make dimensional reduction with principle component
-analysis</li>
+<li>Optimize Clustering</li>
 </ul>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1001</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">RunPCA</span>(seu,<span class="at">npcs =</span> <span class="dv">50</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">library</span>(clustree)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>seu_filt<span class="sc">$</span>default_clusters <span class="ot">&lt;-</span> seu_filt<span class="sc">$</span>seurat_clusters</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>reso <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.1</span>,<span class="fl">0.2</span>,<span class="fl">0.3</span>,<span class="fl">0.4</span>,<span class="fl">0.5</span>,<span class="fl">0.6</span>,<span class="fl">0.7</span>,<span class="fl">0.8</span>,<span class="fl">0.9</span>,<span class="dv">1</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>reso_res <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(reso), <span class="cf">function</span>(x,seu_filt,reso){</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  seu_filt <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(seu_filt,<span class="at">resolution =</span> reso[x])</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  clust <span class="ot">&lt;-</span> <span class="fu">setNames</span>(seu_filt<span class="sc">$</span>seurat_clusters,<span class="fu">Cells</span>(seu_filt))</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="fu">return</span>(clust)}, seu_filt, reso)</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="fu">names</span>(reso_res) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;k&quot;</span>,<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(reso))</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>k_tab <span class="ot">&lt;-</span> <span class="fu">do.call</span>(cbind,reso_res)</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>k_dat <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(k_tab)</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="fu">clustree</span>(k_dat, <span class="at">prefix =</span> <span class="st">&quot;k&quot;</span>, <span class="at">node_colour =</span> <span class="st">&quot;sc3_stability&quot;</span>)</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>seu_filt <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(seu_filt, <span class="at">resolution =</span> <span class="fl">0.2</span>)</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="fu">DimPlot</span>(seu_filt, <span class="at">group.by =</span> <span class="st">&quot;seurat_clusters&quot;</span>,<span class="at">label =</span> <span class="cn">TRUE</span>,<span class="at">pt.size =</span> <span class="fl">0.2</span>) <span class="sc">+</span> <span class="fu">NoLegend</span>() <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Optimized Clusters&quot;</span>)</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a><span class="fu">DimPlot</span>(seu_filt, <span class="at">group.by =</span> <span class="st">&quot;default_clusters&quot;</span>,<span class="at">label =</span> <span class="cn">TRUE</span>,<span class="at">pt.size =</span> <span class="fl">0.2</span>) <span class="sc">+</span> <span class="fu">NoLegend</span>() <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Default Clusters&quot;</span>)</span></code></pre></div>
 <ul>
-<li>Select PCs by using elbow plot</li>
+<li>Find Markers</li>
 </ul>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Determine percent of variation associated with each PC</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>pct <span class="ot">&lt;-</span> seu[[<span class="st">&quot;pca&quot;</span>]]<span class="sc">@</span>stdev <span class="sc">/</span> <span class="fu">sum</span>(seu[[<span class="st">&quot;pca&quot;</span>]]<span class="sc">@</span>stdev) <span class="sc">*</span> <span class="dv">100</span> </span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate cumulative percents for each PC</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>cumu <span class="ot">&lt;-</span> <span class="fu">cumsum</span>(pct) </span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>co1 <span class="ot">&lt;-</span> <span class="fu">which</span>(cumu <span class="sc">&gt;</span> <span class="dv">90</span> <span class="sc">&amp;</span> pct <span class="sc">&lt;</span> <span class="dv">5</span>)[<span class="dv">1</span>] </span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Determine the difference between variation of PC and subsequent PC, last point where change of % of variation is more than 0.1%.</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>co2 <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">which</span>((pct[<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(pct) <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">-</span> pct[<span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(pct)]) <span class="sc">&gt;</span> <span class="fl">0.1</span>), <span class="at">decreasing =</span> T)[<span class="dv">1</span>] <span class="sc">+</span> <span class="dv">1</span> </span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>pcs <span class="ot">&lt;-</span> <span class="fu">min</span>(co1, co2)</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a dataframe with values</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>plot_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">pct =</span> pct,<span class="at">cumu =</span> cumu,<span class="at">rank =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(pct))</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(plot_df, <span class="fu">aes</span>(cumu, pct, <span class="at">label =</span> rank, <span class="at">color =</span> rank <span class="sc">&gt;</span> pcs)) <span class="sc">+</span> <span class="fu">geom_text</span>() <span class="sc">+</span> </span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">90</span>, <span class="at">color =</span> <span class="st">&quot;grey&quot;</span>) <span class="sc">+</span> </span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fu">min</span>(pct[pct <span class="sc">&gt;</span> <span class="dv">5</span>]), <span class="at">color =</span> <span class="st">&quot;grey&quot;</span>) <span class="sc">+</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>pc <span class="ot">&lt;-</span> pcs</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>pc</span></code></pre></div>
-<ul>
-<li>Make non-linear dimensional reduction with UMAP</li>
-</ul>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">FindNeighbors</span>(seu,<span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span>pc,<span class="at">reduction =</span> <span class="st">&quot;pca&quot;</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">RunUMAP</span>(seu,<span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span>pc,<span class="at">reduction =</span> <span class="st">&quot;pca&quot;</span>)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">DimPlot</span>(seu)</span></code></pre></div>
-</div>
-<div id="clustering" class="section level2">
-<h2>Clustering</h2>
-<ul>
-<li>Please choose the optimized resolution for clustering with Louvain
-algorithm</li>
-</ul>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(clustree)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># resolution from 0.1 to 1.0</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>reso <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.1</span>,<span class="fl">0.2</span>,<span class="fl">0.3</span>,<span class="fl">0.4</span>,<span class="fl">0.5</span>,<span class="fl">0.6</span>,<span class="fl">0.7</span>,<span class="fl">0.8</span>,<span class="fl">0.9</span>,<span class="dv">1</span>)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>reso_res <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(reso),<span class="cf">function</span>(x,seu,reso){</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  seu <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(seu,<span class="at">resolution =</span> reso[x])</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  clust <span class="ot">&lt;-</span> <span class="fu">setNames</span>(seu<span class="sc">$</span>seurat_clusters,<span class="fu">Cells</span>(seu))</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(clust)},seu,reso)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(reso_res) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;k&quot;</span>,<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(reso))</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>k_tab <span class="ot">&lt;-</span> <span class="fu">do.call</span>(cbind,reso_res)</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>k_dat <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(k_tab)</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="do">##</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">clustree</span>(k_dat, <span class="at">prefix =</span> <span class="st">&quot;k&quot;</span>,<span class="at">node_colour =</span> <span class="st">&quot;sc3_stability&quot;</span>)</span></code></pre></div>
-<ul>
-<li>Make clustering with the optimized resolution</li>
-</ul>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>seu <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(seu,<span class="at">resolution =</span> <span class="fl">0.5</span>)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">DimPlot</span>(seu,<span class="at">pt.size =</span> <span class="fl">0.2</span>,<span class="at">label =</span> <span class="cn">TRUE</span>)<span class="sc">+</span><span class="fu">NoLegend</span>()</span></code></pre></div>
-</div>
-<div id="marker-genes-for-each-cluster" class="section level2">
-<h2>Marker genes for each cluster</h2>
-<ul>
-<li>Identify marker genes for each cluster with default setting</li>
-</ul>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>mark_gene <span class="ot">&lt;-</span> <span class="fu">FindAllMarkers</span>(seu,<span class="at">only.pos =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(mark_gene)</span></code></pre></div>
-<ul>
-<li>Plot top2 marker gene per cluster in a heatmap</li>
-</ul>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>top_genes <span class="ot">&lt;-</span> mark_gene <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(cluster) <span class="sc">%&gt;%</span> </span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="at">n =</span> <span class="dv">2</span>, <span class="at">order_by =</span> avg_log2FC)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">DoHeatmap</span>(seu, <span class="at">features =</span> top_genes<span class="sc">$</span>gene) <span class="sc">+</span> <span class="fu">NoLegend</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">library</span>(magrittr)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>markers <span class="ot">&lt;-</span> <span class="fu">FindAllMarkers</span>(seu_filt, <span class="at">only.pos =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>                          <span class="at">min.pct =</span> <span class="fl">0.25</span>, <span class="at">logfc.threshold =</span> <span class="fl">0.25</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>top_genes <span class="ot">&lt;-</span> markers <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(cluster) <span class="sc">%&gt;%</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="at">n =</span> <span class="dv">2</span>, <span class="at">order_by =</span> avg_log2FC)</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="fu">head</span>(top_genes)</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="fu">DoHeatmap</span>(seu_filt, <span class="at">features =</span> top_genes<span class="sc">$</span>gene) <span class="sc">+</span> <span class="fu">NoLegend</span>()</span></code></pre></div>
 </div>
 
 

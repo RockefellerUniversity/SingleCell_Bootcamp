@@ -342,91 +342,52 @@ Centre</h4>
 <div id="description" class="section level2">
 <h2>Description</h2>
 <p>Single-cell transcriptome data of Human Glioblastoma Multiforme (GBM)
-was fetched on 10X Genomics website <a href="https://www.10xgenomics.com/resources/datasets?query=&amp;page=1&amp;configure%5BhitsPerPage%5D=50&amp;configure%5BmaxValuesPerFacet%5D=1000&amp;refinementList%5Bchemistry.version%5D%5B0%5D=3">link</a>.
-The Cellranger results of this data was available on DropBox <a href="https://www.dropbox.com/scl/fo/fqcutdy89drp5a2lcggwl/h?dl=0&amp;rlkey=un0d27s9odrt294z5eqfw31j8">link</a>.
+was fetched on 10X Genomics <a href="https://www.10xgenomics.com/datasets/human-glioblastoma-multiforme-3-v-3-whole-transcriptome-analysis-3-standard-4-0-0">website</a>.
+The CellRanger results from this data is also available on DropBox <a href="https://www.dropbox.com/scl/fo/fqcutdy89drp5a2lcggwl/h?dl=0&amp;rlkey=un0d27s9odrt294z5eqfw31j8">link</a>.
 Please use this dataset to do the following analysis.</p>
-</div>
-<div id="load-data" class="section level2">
-<h2>Load data</h2>
+<p><a href="https://www.science.org/doi/10.1126/science.aat1699" class="uri">https://www.science.org/doi/10.1126/science.aat1699</a></p>
+<p><strong>Exercise 1</strong> - <strong>Cell Ranger</strong></p>
 <ul>
-<li>Please read the filtered matrix of CellRanger results and load the
-counting matrix into a Seurat object. filtering cells with less than 200
-expressing gene and genes presensting in less than 10 cells.</li>
-<li>How many cells detected?</li>
-<li>How many genes (features) detected?</li>
+<li><p>Review the Web Summary Report</p></li>
+<li><p>What version of Cell Ranger was used to process this
+data?</p></li>
+<li><p>How many cells are there?</p></li>
+<li><p>What looks problematic about this dataset?</p></li>
+<li><p>What steps could we do to to help things?</p></li>
 </ul>
-<p><strong>Exercise 1</strong></p>
-</div>
-<div id="data-processing" class="section level2">
-<h2>data processing</h2>
+<p><strong>Exercise 2</strong> - <strong>Create a Seurat
+Object</strong></p>
 <ul>
-<li><p>Please estimate mitochondrial content</p></li>
-<li><p>Make log normalization and identify variable features with the
-following settings</p>
-<ul>
-<li>log normalization:
-<em>normalization.method=“logNormalize”</em>.</li>
-<li>find variable features: <em>select.method=“vst”</em> and
-<em>nfeatures=3000</em>.</li>
-</ul></li>
+<li><p>Read the matrix file in and create a Seurat object. Ensure it is
+properly annotated.</p></li>
+<li><p>Run normalization (log) and scaling. What are the top variable
+features?</p></li>
+<li><p>Do dimension reduction. Don’t forget to check the elbow for PCA
+to get a good number of PCs. Than run some basic clusetering. No need to
+optimize that.</p></li>
 </ul>
-</div>
-<div id="cell-cycle-phase-estimation" class="section level2">
-<h2>Cell cycle phase estimation</h2>
+<p><strong>Exercise 3</strong> - <strong>Basic QC</strong></p>
 <ul>
-<li><p>Please estimate cell cycle Phases with
-<em>Seurat::CellCycleScoring()</em>.</p></li>
-<li><p>Please estimate cell cycle Phases with
-<em>scran::cyclone()</em>.</p></li>
-<li><p>Compare the results between the two methods</p></li>
+<li><p>Review the number of counts and features detected. Is there any
+asymmetry?</p></li>
+<li><p>Lets check the mitochondrial content. Review the
+results.</p></li>
+<li><p>Lets run cell cycle checks?</p></li>
+<li><p>Lets run scrublet. Review the doublet annotation. Are doublets an
+issue for this dataset?</p></li>
 </ul>
-</div>
-<div id="estimate-doubets" class="section level2">
-<h2>Estimate doubets</h2>
-<p>Please estimate doublets with scrublet</p>
-</div>
-<div id="check-qcs-and-filtering-cells" class="section level2">
-<h2>Check QCs and filtering cells</h2>
+<p><strong>Exercise 4</strong> - <strong>Subset and Regress</strong></p>
 <ul>
-<li><p>Please make a violin plot including the following variables: UMI
-counts, genes detected, mitochondrial content, and doublet score per
-cell</p></li>
-<li><p>Please use scatter plot to identify potential doublets and
-coloured by doublets detected with scrublet</p></li>
-<li><p>Please use scatter plot to indicate potential cell
-debris</p></li>
-<li><p>Please filtering cells with</p>
-<ul>
-<li>doublets</li>
-<li>percent.mt &gt;= 10</li>
-</ul></li>
-<li><p>Subset cells and re-scale to <em>percent.mt</em> and
-<em>cyclon_Phase</em></p></li>
+<li><p>Subset the data and run regression. Review the data and think
+about what features it is appropriate to regress over.</p></li>
+<li><p>Rerun PCA, UMAP and clustering. Review the results including QC
+features.</p></li>
 </ul>
-</div>
-<div id="dimensional-reduction" class="section level2">
-<h2>Dimensional reduction</h2>
+<p><strong>Exercise 4</strong> - <strong>Optimize Clustering and Find
+Markers</strong></p>
 <ul>
-<li><p>Please make dimensional reduction with principle component
-analysis</p></li>
-<li><p>Select PCs by using elbow plot</p></li>
-<li><p>Make non-linear dimensional reduction with UMAP</p></li>
-</ul>
-</div>
-<div id="clustering" class="section level2">
-<h2>Clustering</h2>
-<ul>
-<li><p>Please choose the optimized resolution for clustering with
-Louvain algorithm</p></li>
-<li><p>Make clustering with the optimized resolution</p></li>
-</ul>
-</div>
-<div id="marker-genes-for-each-cluster" class="section level2">
-<h2>Marker genes for each cluster</h2>
-<ul>
-<li><p>Identify marker genes for each cluster with default
-setting</p></li>
-<li><p>Plot top2 marker gene per cluster in a heatmap</p></li>
+<li><p>Optimize Clustering</p></li>
+<li><p>Find Markers</p></li>
 </ul>
 </div>
 
