@@ -2188,8 +2188,8 @@ DefaultAssay(seu_obj) &lt;- "SCT"
 
 ```
 ##             used  (Mb) gc trigger   (Mb)  max used  (Mb)
-## Ncells   4838669 258.5    9555305  510.4   7710649 411.8
-## Vcells 128361121 979.4  187385352 1429.7 128576836 981.0
+## Ncells   4838669 258.5    9555288  510.4   7710649 411.8
+## Vcells 128361125 979.4  187385352 1429.7 128576840 981.0
 ```
 
 
@@ -2427,19 +2427,19 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 00:29:09 UMAP embedding parameters a = 0.9922 b = 1.112
+## 01:01:17 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 00:29:09 Read 8381 rows and found 17 numeric columns
+## 01:01:17 Read 8381 rows and found 17 numeric columns
 ```
 
 ```
-## 00:29:09 Using Annoy for neighbor search, n_neighbors = 30
+## 01:01:17 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 00:29:09 Building Annoy index with metric = cosine, n_trees = 50
+## 01:01:17 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -2452,13 +2452,13 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 00:29:10 Writing NN index file to temp file /tmp/Rtmp2tqolc/file2fcf36ec8841
-## 00:29:10 Searching Annoy index using 1 thread, search_k = 3000
-## 00:29:12 Annoy recall = 100%
-## 00:29:12 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 00:29:13 Initializing from normalized Laplacian + noise (using RSpectra)
-## 00:29:14 Commencing optimization for 500 epochs, with 353242 positive edges
-## 00:29:21 Optimization finished
+## 01:01:18 Writing NN index file to temp file /tmp/RtmpQLmiyc/file2fcf73ecbc1e
+## 01:01:18 Searching Annoy index using 1 thread, search_k = 3000
+## 01:01:20 Annoy recall = 100%
+## 01:01:21 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 01:01:22 Initializing from normalized Laplacian + noise (using RSpectra)
+## 01:01:22 Commencing optimization for 500 epochs, with 353242 positive edges
+## 01:01:30 Optimization finished
 ```
 
 ---
@@ -3035,7 +3035,7 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  5279620 282.0    9555305  510.4   9555305  510.4
+## Ncells  5279634 282.0    9555288  510.4   9555288  510.4
 ## Vcells 64339530 490.9  259274470 1978.2 281846856 2150.4
 ```
 
