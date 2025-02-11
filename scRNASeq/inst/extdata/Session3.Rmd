@@ -1083,6 +1083,14 @@ This isn't always the case. As a general rule we find:
 * Seurat: Wins on speed
 * SingleR: More reliable and consistent
 
+---
+## LLM annotation
+
+There have also been some interesting efforts to use LLMs or Deep Learning to annotate cells, either with specialized models or generic models like [ChatGPT](https://www.nature.com/articles/s41592-024-02235-4).
+
+We have not exhaustively tested these, but the consensus is that they provide a good quick estimate, especially when you do not have a reliable reference dataset. 
+
+Often domain specific knowledge and good reference datasets will outperform the more general LLM approaches. 
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
