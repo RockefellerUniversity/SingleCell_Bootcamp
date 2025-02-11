@@ -73,13 +73,11 @@ Practicals with answers as HTML pages and R code solutions.
   - SCT normalization
 - Dimension reduction and clustering with Seurat
 - CellBender and other tools for ambient RNA correction
-
 - Calculate mitochondrial content
 - Estimate cell cycle phases with Seurat and cyclone
 - Evaluate Doublets with scrublet
 - QC plots
 - Filtering, regression and review 
-
 - Evaluate results - cell type specific clusters
 - Identify marker genes by clusters
 - Loupe Browser
@@ -89,13 +87,11 @@ Practicals with answers as HTML pages and R code solutions.
 * An R toolkit for single cell genomics [link](https://satijalab.org/seurat/index.html)
 * The workflow we used in this section was orginally based on Seurat vignette [link](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html).
 * References
-  + **Seurat V5**, Hao et al., *Nature Biotechnology* ** (2023)[link](https://www.nature.com/articles/s41587-023-01767-y)
+  + **Seurat V5**, Hao et al., *Nature Biotechnology* (2023) [link](https://www.nature.com/articles/s41587-023-01767-y)
   + **Seurat V4**, Hao, Hao et al., *Cell* (2021) [link](https://doi.org/10.1016/j.cell.2021.04.048)
   + **Seurat V3**, Stuart, Butler et al., *Cell* (2019) [link](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
   + **Seurat V2**, Butler, et al., *Nat Biotechnol* (2018) [link](https://doi.org/10.1038/nbt.4096)
   + **Seurat V1**, Satija, Farrell, et al., *Nat Biotechnol* (2015) [link](https://doi.org/10.1038/nbt.3192)
-* Demo data used in this section was the **10k Human PBMC data** from *10X Genomics* [link](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high).
-
 
 ---
 ## What is our data?
@@ -2186,11 +2182,6 @@ DefaultAssay(seu_obj) &lt;- "SCT"
 ```
 
 
-```
-##             used  (Mb) gc trigger   (Mb)  max used  (Mb)
-## Ncells   4838707 258.5    9555337  510.4   7710688 411.8
-## Vcells 128361786 979.4  187386304 1429.7 128577501 981.0
-```
 
 
 ---
@@ -2427,19 +2418,19 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 01:40:55 UMAP embedding parameters a = 0.9922 b = 1.112
+## 02:42:43 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 01:40:55 Read 8381 rows and found 17 numeric columns
+## 02:42:43 Read 8381 rows and found 17 numeric columns
 ```
 
 ```
-## 01:40:55 Using Annoy for neighbor search, n_neighbors = 30
+## 02:42:43 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 01:40:55 Building Annoy index with metric = cosine, n_trees = 50
+## 02:42:43 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -2452,13 +2443,13 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 01:40:56 Writing NN index file to temp file /tmp/Rtmp5CmAcp/file2fd027c7fc97
-## 01:40:56 Searching Annoy index using 1 thread, search_k = 3000
-## 01:40:58 Annoy recall = 100%
-## 01:40:59 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 01:41:00 Initializing from normalized Laplacian + noise (using RSpectra)
-## 01:41:00 Commencing optimization for 500 epochs, with 353242 positive edges
-## 01:41:08 Optimization finished
+## 02:42:43 Writing NN index file to temp file /tmp/RtmpOefEqn/file1954b364c62
+## 02:42:43 Searching Annoy index using 1 thread, search_k = 3000
+## 02:42:46 Annoy recall = 100%
+## 02:42:46 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 02:42:47 Initializing from normalized Laplacian + noise (using RSpectra)
+## 02:42:47 Commencing optimization for 500 epochs, with 353242 positive edges
+## 02:42:55 Optimization finished
 ```
 
 ---
@@ -2548,24 +2539,7 @@ To identify the best resolution for each dataset we iteratively test potential r
 
 ``` r
 library(clustree)
-```
 
-```
-## Loading required package: ggraph
-```
-
-```
-## 
-## Attaching package: 'ggraph'
-```
-
-```
-## The following object is masked from 'package:sp':
-## 
-##     geometry
-```
-
-``` r
 reso &lt;- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 reso_res &lt;- lapply(1:length(reso), function(x, seu_obj, reso) {
     seu_obj &lt;- FindClusters(seu_obj, resolution = reso[x])
@@ -2809,7 +2783,7 @@ class: inverse, center, middle
 ---
 ## Droplet processing
 
-Often empty droplets can still make their way past Cell Ranger, or we might see an issue in the Cell Ranger web report itself. If this happens we might want to do custom filtering outside of Cell Ranger.
+Often empty droplets can still make their way past Cell Ranger, or we might see an issue in the Cell Ranger web report itself (or in downstream steps). If this happens we might want to do custom filtering outside of Cell Ranger.
 
 One cause of these issues could be ambient RNAs. Ambient RNAs from lysed cells make empty droplets seem like they contain a cell or contaminate droplets that already have a cell. 
 
@@ -2829,7 +2803,9 @@ In the current version, it contains remove-background module, which is applied t
 ---
 ## CellBender command
 
-We take the raw matrices from Cell Ranger and run CellBender. The cuda argument will speed up the function, but rquires your run it on a GPU.
+We take the raw matrices from Cell Ranger and run CellBender. The cuda argument will speed up the function, but requires your run it on a GPU.
+
+[This would be run through Terminal on a HPC]
 
 
 ``` sh
@@ -2915,42 +2891,9 @@ quick_clust &lt;- function(seu) {
 
 ``` r
 message("processing matrix from CellBender")
-```
-
-```
-## processing matrix from CellBender
-```
-
-``` r
 seu &lt;- CreateSeuratObject(cbFilt_mtx)
-```
-
-```
-## Warning: Feature names cannot have underscores ('_'), replacing with dashes
-## ('-')
-```
-
-``` r
 seu &lt;- data_proc(seu)
-```
-
-```
-## Normalizing layer: counts
-```
-
-```
-## Finding variable features for layer counts
-```
-
-``` r
 seu &lt;- ScaleData(seu)
-```
-
-```
-## Centering and scaling data matrix
-```
-
-``` r
 seu &lt;- quick_clust(seu)
 seu_cbFilt &lt;- seu
 ```
@@ -3035,8 +2978,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  5279691 282.0    9555337  510.4   9555337  510.4
-## Vcells 64340191 490.9  259275785 1978.2 281847517 2150.4
+## Ncells  5279755 282.0    9555342  510.4   9555342  510.4
+## Vcells 64340624 490.9  259276148 1978.2 281848026 2150.4
 ```
 
 ---
@@ -3083,6 +3026,7 @@ class: inverse, center, middle
 Like everything scRNAseq is imperfect. Often cellular debris makes its way into a droplet. 
 
 We can find a lot of these bad droplets by looking for a high percentage of mitochondrial counts.
+
 
 ---
 ## Estimate mitochondrial proportion
@@ -3267,7 +3211,8 @@ ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_violin() + labs(x = 
 
 An alternative approach is to use the *cyclone()* function in scran. This is **much slower** than *CellCycleScoring()* in Seurat. 
 
-The first step is to convert our Seurat object to a SinlgeCellExperiment object.
+The first step is to convert our Seurat object to a SinlgeCellExperiment object. This is a Bioconductor specific format for single cell data. 
+
 
 
 ``` r
@@ -3489,9 +3434,8 @@ table(seu_cbFilt$Phase, seu_cbFilt$cyclon_Phase)
 ## Compare the two strategies
 
 - *cyclone* assigned more cells to G1 phase. It is typically much more conservative. This is good for cells that have a low cycle rate i.e. Neurons. 
-- *cyclone* spends more time than *CellCycleScoring*.
-- It will likely be worth to process both methods and evaluate which results make more sense for your own dataset
-
+- *cyclone* takes much more time than *CellCycleScoring*.
+- It will likely be worth to process both methods and evaluate which results make more sense for your own dataset. 
 
 ---
 class: inverse, center, middle
@@ -3792,7 +3736,7 @@ seu_filt &lt;- subset(seu_cbFilt, subset = doublet == "FALSE" &amp; percent.mt &
   - UMI content (e.g. : nCount_RNA &gt; 500 &amp; nCount_RNA &lt; 5000 )
   - Removing all mitochondrial content
   - CITEseq: doublets and hashthag negative cells
-  - cells with a high ribosomal percentage
+  - Cells with a high ribosomal percentage
 
 ---
 class: inverse, center, middle
@@ -4129,6 +4073,8 @@ loupeR::setup()
 
 We can then create a loupe file from our seurat object really easily using the *create_loupe_from_seurat()* function.
 
+The exported Loupe file will contain all dsicrete annotations we have added to our Seurat object i.e. Cell Cycle Phase, Cluster etc. 
+
 
 ``` r
 library(loupeR)
@@ -4144,8 +4090,9 @@ create_loupe_from_seurat(seu_filt, output_dir = "loupe", output_name = "seu_filt
 
 Having downloaded the Loupe browser we can load our cloupe files directly in and rapidly visually interrogate our data.
 
-In todays session we will review some of the features available in Loupe using the PBMC example data set.
+We have a full guide into how to use and work with Loupe Browser [here](https://rockefelleruniversity.github.io/LoupeBrowser/)
 
+  ]
 
 .pull-right[
  &lt;div align="center"&gt;

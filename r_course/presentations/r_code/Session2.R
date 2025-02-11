@@ -236,7 +236,7 @@ DefaultAssay(seu_obj) <- "RNA"
 DefaultAssay(seu_obj) <- "SCT"
 
 
-## ----echo=FALSE---------------------------------------------------------------
+## ----include=F,warning=F, message=F, echo=FALSE-------------------------------
 rm(SCT_assay)
 gc()
 
@@ -410,7 +410,7 @@ DimPlot(seu_obj, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLege
 
 
 
-## ----clust_resoEval,include=TRUE,eval=T---------------------------------------
+## ----clust_resoEval,include=TRUE,eval=T, warning=FALSE, message=FALSE---------
 library(clustree)
 
 reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
@@ -452,7 +452,7 @@ DimPlot(seu_obj, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLe
 DimPlot(seu_obj, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
 
 
-## -----------------------------------------------------------------------------
+## ----fig.height=4,fig.width=6-------------------------------------------------
 
 FeaturePlot(seu_obj,features = "LYZ",pt.size = 0)
 
@@ -522,7 +522,7 @@ quick_clust <- function(seu){
   return(seu)}
 
 
-## ----sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T-----------------------
+## ----sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T, message=F, warning=F----
 
 message("processing matrix from CellBender")
 seu <- CreateSeuratObject(cbFilt_mtx)
@@ -539,15 +539,15 @@ gc()
   
 
 
-## -----------------------------------------------------------------------------
+## ----fig.height=4,fig.width=6-------------------------------------------------
 DimPlot(seu_obj ,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
 
 
-## -----------------------------------------------------------------------------
+## ----fig.height=4,fig.width=6-------------------------------------------------
 DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
 
 
-## -----------------------------------------------------------------------------
+## ----fig.height=4,fig.width=7-------------------------------------------------
 
 mark_gene <- c("LYZ","HLA-DRA")
 
@@ -555,20 +555,20 @@ FeaturePlot(seu_obj,features = mark_gene,pt.size = 0)
 
 
 
-## -----------------------------------------------------------------------------
+## ----fig.height=3,fig.width=7-------------------------------------------------
 
 
 VlnPlot(seu_obj,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 
 
-## -----------------------------------------------------------------------------
+## ----fig.height=4,fig.width=7-------------------------------------------------
 
 FeaturePlot(seu_cbFilt,features = mark_gene,pt.size = 0)
 
 
 
-## -----------------------------------------------------------------------------
+## ----fig.height=3,fig.width=7-------------------------------------------------
 
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
@@ -1014,7 +1014,7 @@ if(params$isSlides == "yes"){
 # 
 
 
-## -----------------------------------------------------------------------------
+## ----fig.height=3,fig.width=7-------------------------------------------------
 seu_filt <- quick_clust(seu_filt)
 
 DimPlot(seu_filt)
