@@ -36,11 +36,23 @@ You can also download it from [DropBox](https://www.dropbox.com/scl/fo/1k4y3fvfb
 # cellranger-4.0.0
 ```
 - How many cells are there?
+```{r, eval=FALSE,echo=toMessage}
+# 1,049
+```
 
 - What looks problematic about this dataset?
+```{r, eval=FALSE,echo=toMessage}
+# Low fraction read in cells
+# Low quality reads
+#
+```
+
 
 - What steps could we do to to help things?
-
+```{r, eval=FALSE,echo=toMessage}
+# Cell Bender may help
+#
+```
 
 **Exercise 2** - **Create a Seurat Object**
 
@@ -71,6 +83,12 @@ plot2 <- LabelPoints(plot = temp_plot, points = top10, repel = TRUE)
 plot2
 ```
 
+
+```{r, eval=T, echo=F}
+load("data/myplots.RData")
+plot2
+```
+
 - Do dimension reduction. Don't forget to check the elbow for PCA to get a good number of PCs. Than run some basic clusetering. No need to optimize that. 
 
 ```{r, eval=FALSE,echo=toMessage}
@@ -85,10 +103,11 @@ pc <- min(co1, co2)
 
 plot_df <- data.frame(pct = pct, cumu = cumu,rank = 1:length(pct))
 
-ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pc)) + geom_text() +
+my_elbow <- ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pc)) + geom_text() +
   geom_vline(xintercept = 90, color = "grey") +
   geom_hline(yintercept = min(pct[pct > 5]), color = "grey") +
   theme_bw()
+my_elbow 
 
 seu <- FindNeighbors(seu,dims = 1:pc, reduction = "pca")
 seu <- RunUMAP(seu,dims = 1:pc, reduction = "pca")
@@ -96,9 +115,16 @@ seu <- RunUMAP(seu,dims = 1:pc, reduction = "pca")
 seu <- FindClusters(seu, resolution = 0.5)
 seu[["cluster_byDefault"]] <- seu$seurat_clusters
 
-DimPlot(seu)
+umap_1 <- DimPlot(seu)
+umap_1
 ```
 
+
+```{r, eval=T, echo=F}
+pc <- 19
+my_elbow
+umap_1
+```
 
 **Exercise 3** - **Basic QC**
 
@@ -106,29 +132,46 @@ DimPlot(seu)
 
 ```{r, eval=FALSE,echo=toMessage}
 
-VlnPlot(seu,
+vln_1 <- VlnPlot(seu,
         features = c("nCount_RNA","nFeature_RNA"))
+vln_1
 
-FeaturePlot(seu,
+feat_1 <- FeaturePlot(seu,
         features = c("nCount_RNA","nFeature_RNA"))
+feat_1
+```
 
+```{r, eval=T, echo=F}
+vln_1
+feat_1
 ```
 
 - Lets check the mitochondrial content. Review the results. 
 
 ```{r load_data,include=TRUE, eval=FALSE,echo=toMessage}
-library(Seurat)
 
 seu$percent.mt <- PercentageFeatureSet(seu, pattern = "^MT-")
 
-VlnPlot(seu,"percent.mt", group.by ="dset")
+vln_2 <- VlnPlot(seu,"percent.mt", group.by ="dset")
+vln_2
 
-FeaturePlot(seu,"percent.mt")  + scale_colour_gradient(low="gray",high="blue")
+feat_2 <-  FeaturePlot(seu,"percent.mt")  + scale_colour_gradient(low="gray",high="blue")
+feat_2 
 
-FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "percent.mt")
+feat_3 <- FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "percent.mt")
+feat_3
 
-table(seu$percent.mt>10)
+tab<-table(seu$percent.mt>10)
+tab
 ```
+
+```{r, eval=T, echo=F}
+vln_2
+feat_2
+feat_3
+tab
+```
+
 
 - Lets run cell cycle checks?
 
@@ -138,14 +181,8 @@ feat_g2m <- cc.genes$g2m.genes
 
 seu <- CellCycleScoring(seu, s.features = feat_s, g2m.features = feat_g2m)
 
-DimPlot(seu, group.by = "Phase")
-
-dat_s <- data.frame(cell_id=Cells(seu), cat="S_Score", Phase=seu$Phase, score=seu$S.Score)
-
-dat_g2m <- data.frame(cell_id=Cells(seu), cat="G2M_Score", Phase=seu$Phase, score=seu$G2M.Score)
-
-dat <- rbind(dat_s, dat_g2m)
-dat$Phase <- factor(dat$Phase, levels = c("G1","S","G2M"))
+umap_2 <- DimPlot(seu, group.by = "Phase")
+umap_2
 
 library(scran)
 
@@ -161,9 +198,17 @@ seu[["cyclone_G1Score"]] <- assignments$scores$G1
 seu[["cyclone_SScore"]] <- assignments$scores$S
 seu[["cyclone_G2MScore"]] <- assignments$scores$G2M
 
-DimPlot(seu, group.by = "cyclone_Phase")
-
+umap_3 <- DimPlot(seu, group.by = "cyclone_Phase")
+umap_3
 ```
+
+```{r, eval=T, echo=F}
+umap_2
+umap_3
+```
+
+
+
 
 - Lets run scrublet. Review the doublet annotation. Are doublets an issue for this dataset?
 
@@ -180,14 +225,28 @@ seu[["doublet_score"]] <- doublet$doublet_score
 seu[["doublet"]] <- doublet$doublet
 
 
-VlnPlot(seu, group.by = "doublet",
+vln_3 <- VlnPlot(seu, group.by = "doublet",
         features = c("doublet_score", "nCount_RNA","nFeature_RNA"),
         pt.size = 0)
+
+vln_3
+
+umap_4 <- DimPlot(seu, group.by = "doublet") 
+umap_4
+
 ```
+
+```{r, eval=T, echo=F}
+vln_3
+umap_4
+```
+
+
+
 
 **Exercise 4** - **Subset and Regress**
 
-- Subset the data and run regression. Review the data and think about what features it is appropriate to regress over.
+- Subset the data and run regression. Review the data and think about what features it is appropriate to regress over. How many cells are left?
 
 ```{r, eval=FALSE,echo=toMessage}
 seu_filt <- subset(seu, subset=doublet=="FALSE" & 
@@ -197,6 +256,13 @@ seu_filt <- subset(seu, subset=doublet=="FALSE" &
 pot_conf <- c("percent.mt","S.Score","G2M.Score")
 seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
 
+filt_number <- c(ncol(seu),ncol(seu_filt))
+filt_number 
+```
+
+
+```{r, eval=T, echo=F}
+filt_number 
 ```
 
 - Rerun PCA, UMAP and clustering. Review the results including QC features. 
@@ -207,16 +273,26 @@ seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
   seu_filt <- FindNeighbors(seu_filt, reduction = "pca", dims = 1:10, verbose=FALSE)
   seu_filt <- FindClusters(seu_filt, resolution = 0.5, verbose=FALSE)
   
-  DimPlot(seu_filt)
-  DimPlot(seu_filt, group.by ="Phase")
-  FeaturePlot(seu_filt,"percent.mt")  + scale_colour_gradient(low="gray",high="blue")
-  
+  umap_5 <- DimPlot(seu_filt)
+  umap_5
+  umap_6 <- DimPlot(seu_filt, group.by ="Phase")
+  umap_6
+  feat_4 <- FeaturePlot(seu_filt,"percent.mt")  + scale_colour_gradient(low="gray",high="blue")
+  feat_4
   
 ```
 
+```{r, eval=T, echo=F}
+umap_5
+umap_6
+feat_4
+```
+
+
+
 **Exercise 4** - **Optimize Clustering and Find Markers**
 
-- Optimize Clustering
+- Optimize Clustering. 
 
 ```{r, eval=FALSE,echo=toMessage}
 library(clustree)
@@ -234,16 +310,26 @@ names(reso_res) <- paste0("k",1:length(reso))
 k_tab <- do.call(cbind,reso_res)
 k_dat <- as.data.frame(k_tab)
 
-clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+clust_tree <- clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+clust_tree
 
-seu_filt <- FindClusters(seu_filt, resolution = 0.2)
 
-DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+seu_filt <- FindClusters(seu_filt, resolution = 0.3)
 
-DimPlot(seu_filt, group.by = "default_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
+umap_7 <- DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+umap_7
 
+umap_8 <- DimPlot(seu_filt, group.by = "default_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
+umap_8 
+```
+
+```{r, eval=T, echo=F}
+clust_tree
+umap_7
+umap_8
 
 ```
+
 
 - Find Markers
 ```{r, eval=FALSE,echo=toMessage}
@@ -251,12 +337,23 @@ library(magrittr)
 markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
                           min.pct = 0.25, logfc.threshold = 0.25)
 
-
 top_genes <- markers %>% group_by(cluster) %>%
   slice_max(n = 2, order_by = avg_log2FC)
 head(top_genes)
 
-DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
+heat_1 <- DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
+heat_1
+```
+
+```{r, eval=T, echo=F}
+top_genes
+heat_1
+
+```
+
+```{r, eval=F, echo=F}
+save(plot2,umap_1,umap_2,umap_3,umap_4,umap_5,umap_6,umap_7,umap_8,vln_1,vln_2,vln_3, feat_1,feat_2,feat_3, feat_4, tab,filt_number,clust_tree, my_elbow,top_genes,heat_1,pct, file = "data/myplots.RData")
+
 ```
 
 
