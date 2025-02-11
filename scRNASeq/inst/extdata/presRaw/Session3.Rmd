@@ -902,7 +902,7 @@ pred_res2 <- SingleR(ref = GetAssayData(abm), test = my_seu_merge_rpca_mat, labe
 saveRDS(pred_res2,file = "data/annotate_df1.rds")
 ```
 
-```{R, eval=F, echo=T}
+```{R, eval=T, echo=T}
 pred_res2 <- readRDS(file = "data/annotate_df1.rds")
 my_seu_merge_rpca <- readRDS(file = "data/annotated.rds")
 ```
