@@ -120,9 +120,14 @@ umap_1
 ```
 
 
-```{r, eval=T, echo=F}
+```{r, eval=F, echo=F}
 pc <- 19
-my_elbow
+
+ggplot(my_elbow$data, aes(cumu, pct, label = rank, color = rank > 19)) + geom_text() +
+  geom_vline(xintercept = 90, color = "grey") +
+  geom_hline(yintercept = min(pct[pct > 5]), color = "grey") +
+  theme_bw()
+
 umap_1
 ```
 
