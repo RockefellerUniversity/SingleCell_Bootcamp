@@ -149,7 +149,7 @@ if(params$isSlides == "yes"){
 
 ## Load cellranger matrix into matrix
 
-```{r,include=F,echo=T,eval=TRUE}
+```{r,echo=T,eval=TRUE}
 mtx_dir <- "filtered_gene_bc_matrices/GRCh38"
 
 
@@ -909,7 +909,7 @@ load("data/pbmc8k_cbFilt_20250131_filtered_mtx.RData")
 ```{r, include = T, eval = F, echo = T}
 
 
-cbFilt_mtx <- Read10X_h5("data/cbFilt_PBMC8K_20250131_filtered.h5") 
+cbFilt_mtx <- Read10X_h5("~/Downloads/cbFilt_PBMC8K_20250131_filtered_forseurat.h5") 
 
 ```
 
@@ -1295,7 +1295,7 @@ assignments <- cyclone(sce, ccGene_hs, gene.names=rowData(sce)$SYMBOL)
 save(assignments, file="data/pbmc8k_cyclone.RData")
 ```
 
-```{r, echo=T}
+```{r, echo=F}
 
 load("data/pbmc8k_cyclone.RData")
 ```
