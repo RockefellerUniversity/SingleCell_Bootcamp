@@ -72,13 +72,11 @@ Practicals with answers as HTML pages and R code solutions.
   - SCT normalization
 - Dimension reduction and clustering with Seurat
 - CellBender and other tools for ambient RNA correction
-
 - Calculate mitochondrial content
 - Estimate cell cycle phases with Seurat and cyclone
 - Evaluate Doublets with scrublet
 - QC plots
 - Filtering, regression and review 
-
 - Evaluate results - cell type specific clusters
 - Identify marker genes by clusters
 - Loupe Browser
@@ -88,13 +86,11 @@ Practicals with answers as HTML pages and R code solutions.
 * An R toolkit for single cell genomics [link](https://satijalab.org/seurat/index.html)
 * The workflow we used in this section was orginally based on Seurat vignette [link](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html).
 * References
-  + **Seurat V5**, Hao et al., *Nature Biotechnology* ** (2023)[link](https://www.nature.com/articles/s41587-023-01767-y)
+  + **Seurat V5**, Hao et al., *Nature Biotechnology* (2023) [link](https://www.nature.com/articles/s41587-023-01767-y)
   + **Seurat V4**, Hao, Hao et al., *Cell* (2021) [link](https://doi.org/10.1016/j.cell.2021.04.048)
   + **Seurat V3**, Stuart, Butler et al., *Cell* (2019) [link](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
   + **Seurat V2**, Butler, et al., *Nat Biotechnol* (2018) [link](https://doi.org/10.1038/nbt.4096)
   + **Seurat V1**, Satija, Farrell, et al., *Nat Biotechnol* (2015) [link](https://doi.org/10.1038/nbt.3192)
-* Demo data used in this section was the **10k Human PBMC data** from *10X Genomics* [link](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high).
-
 
 ---
 ## What is our data?
@@ -427,7 +423,7 @@ DefaultAssay(seu_obj) <- "RNA"
 DefaultAssay(seu_obj) <- "SCT"
 ```
 
-```{r, echo=FALSE}
+```{r, include=F,warning=F, message=F, echo=FALSE}
 rm(SCT_assay)
 gc()
 
@@ -714,7 +710,7 @@ DimPlot(seu_obj, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLege
 
 To identify the best resolution for each dataset we iteratively test potential resolutions using clustree.
 
-```{r clust_resoEval,include=TRUE,eval=T}
+```{r clust_resoEval,include=TRUE,eval=T, warning=FALSE, message=FALSE}
 library(clustree)
 
 reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
@@ -800,7 +796,7 @@ DimPlot(seu_obj, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + No
 - Although the expression of LYZ is specific, there seems to be some background expression 
 
 
-```{r}
+```{r, fig.height=4,fig.width=6}
 
 FeaturePlot(seu_obj,features = "LYZ",pt.size = 0)
 
@@ -848,7 +844,7 @@ if(params$isSlides == "yes"){
 ---
 ## Droplet processing
 
-Often empty droplets can still make their way past Cell Ranger, or we might see an issue in the Cell Ranger web report itself. If this happens we might want to do custom filtering outside of Cell Ranger.
+Often empty droplets can still make their way past Cell Ranger, or we might see an issue in the Cell Ranger web report itself (or in downstream steps). If this happens we might want to do custom filtering outside of Cell Ranger.
 
 One cause of these issues could be ambient RNAs. Ambient RNAs from lysed cells make empty droplets seem like they contain a cell or contaminate droplets that already have a cell. 
 
@@ -868,7 +864,9 @@ In the current version, it contains remove-background module, which is applied t
 ---
 ## CellBender command
 
-We take the raw matrices from Cell Ranger and run CellBender. The cuda argument will speed up the function, but rquires your run it on a GPU.
+We take the raw matrices from Cell Ranger and run CellBender. The cuda argument will speed up the function, but requires your run it on a GPU.
+
+[This would be run through Terminal on a HPC]
 
 ```{sh sec3_dropProc_cbFilt_code,engine="bash",include=TRUE,eval=F}
 input_h5=the_raw_matrix_in_h5_format_from_cellranger #essential
@@ -952,7 +950,7 @@ quick_clust <- function(seu){
 ---
 ## Data processing
 
-```{r sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T}
+```{r sec3_dropProc_cb_Filt_dataPRoc,include=TRUE,eval=T, message=F, warning=F}
 
 message("processing matrix from CellBender")
 seu <- CreateSeuratObject(cbFilt_mtx)
@@ -974,7 +972,7 @@ gc()
 
 - Without CellBender
 
-```{r}
+```{r, fig.height=4,fig.width=6}
 DimPlot(seu_obj ,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
 ```
 
@@ -983,7 +981,7 @@ DimPlot(seu_obj ,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLege
 
 - With CellBender
 
-```{r}
+```{r, fig.height=4,fig.width=6}
 DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
 ```
 
@@ -992,7 +990,7 @@ DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLe
 
 - Without CellBender
 
-```{r}
+```{r, fig.height=4,fig.width=7}
 
 mark_gene <- c("LYZ","HLA-DRA")
 
@@ -1005,7 +1003,7 @@ FeaturePlot(seu_obj,features = mark_gene,pt.size = 0)
 
 - Without CellBender
 
-```{r}
+```{r, fig.height=3,fig.width=7}
 
 
 VlnPlot(seu_obj,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
@@ -1017,7 +1015,7 @@ VlnPlot(seu_obj,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 - With CellBender
 
-```{r}
+```{r, fig.height=4,fig.width=7}
 
 FeaturePlot(seu_cbFilt,features = mark_gene,pt.size = 0)
 
@@ -1028,7 +1026,7 @@ FeaturePlot(seu_cbFilt,features = mark_gene,pt.size = 0)
 
 - With CellBender
 
-```{r}
+```{r, fig.height=3,fig.width=7}
 
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 ```
@@ -1097,6 +1095,7 @@ if(params$isSlides == "yes"){
 Like everything scRNAseq is imperfect. Often cellular debris makes its way into a droplet. 
 
 We can find a lot of these bad droplets by looking for a high percentage of mitochondrial counts.
+
 
 ---
 ## Estimate mitochondrial proportion
@@ -1248,7 +1247,8 @@ ggplot(dat,aes(x=Phase, y=score, fill=Phase))+geom_violin()+
 
 An alternative approach is to use the *cyclone()* function in scran. This is **much slower** than *CellCycleScoring()* in Seurat. 
 
-The first step is to convert our Seurat object to a SinlgeCellExperiment object.
+The first step is to convert our Seurat object to a SinlgeCellExperiment object. This is a Bioconductor specific format for single cell data. 
+
 
 ```{r ccPhase_cyclon_prep,include=TRUE,eval=TRUE, warning=F, message=F}
 library(scran)
@@ -1377,9 +1377,8 @@ table(seu_cbFilt$Phase,seu_cbFilt$cyclon_Phase)
 ## Compare the two strategies
 
 - *cyclone* assigned more cells to G1 phase. It is typically much more conservative. This is good for cells that have a low cycle rate i.e. Neurons. 
-- *cyclone* spends more time than *CellCycleScoring*.
-- It will likely be worth to process both methods and evaluate which results make more sense for your own dataset
-
+- *cyclone* takes much more time than *CellCycleScoring*.
+- It will likely be worth to process both methods and evaluate which results make more sense for your own dataset. 
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1738,7 +1737,7 @@ rm(seu_cbFilt)
   - UMI content (e.g. : nCount_RNA > 500 & nCount_RNA < 5000 )
   - Removing all mitochondrial content
   - CITEseq: doublets and hashthag negative cells
-  - cells with a high ribosomal percentage
+  - Cells with a high ribosomal percentage
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1791,7 +1790,7 @@ seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
   - It's important to re-run dimensionality reduction and re-cluster your cells once you've done filtering
   - Let's use the function quick_clust() we created earlier
 
-```{r}
+```{r, fig.height=3,fig.width=7}
 seu_filt <- quick_clust(seu_filt)
 
 DimPlot(seu_filt)
@@ -2080,6 +2079,8 @@ loupeR::setup()
 
 We can then create a loupe file from our seurat object really easily using the *create_loupe_from_seurat()* function.
 
+The exported Loupe file will contain all dsicrete annotations we have added to our Seurat object i.e. Cell Cycle Phase, Cluster etc. 
+
 ```{r, eval=F}
 library(loupeR)
 create_loupe_from_seurat(seu_filt, 
@@ -2097,8 +2098,9 @@ create_loupe_from_seurat(seu_filt,
 
 Having downloaded the Loupe browser we can load our cloupe files directly in and rapidly visually interrogate our data.
 
-In todays session we will review some of the features available in Loupe using the PBMC example data set.
+We have a full guide into how to use and work with Loupe Browser [here](https://rockefelleruniversity.github.io/LoupeBrowser/)
 
+  ]
 
 .pull-right[
  <div align="center">
