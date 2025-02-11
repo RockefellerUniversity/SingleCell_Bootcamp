@@ -479,3 +479,88 @@ pheatmap(summ_table, scale="column", fontsize_row = 5)
 DimPlot(my_seu_merge_rpca, group.by = "abm_singleR_labels")
 
 
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Annotation with Seurat
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Annotation with Seurat
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----sec3_ctAnno_Seurat_gatherData,include=TRUE,eval=F------------------------
+# 
+# transfer_list <- list("ref"=abm,"query"=my_seu_merge_rpca)
+# feats <- SelectIntegrationFeatures(transfer_list)
+# 
+# transfer_list <- lapply(transfer_list,function(seu,feats){
+#   seu <- ScaleData(seu,features=feats,verbose=FALSE)
+#   seu <- RunPCA(seu,features=feats,verbose=FALSE)
+#   return(seu)}, feats)
+# 
+
+
+## ----sec3_ctAnno_Seurat_tranferAnno,include=TRUE,eval=F-----------------------
+# anchors <- FindTransferAnchors(reference = transfer_list$ref,
+#                                query=transfer_list$query,
+#                                dims=1:30, reference.reduction="pca")
+# pred_res3 <- TransferData(anchorset = anchors, refdata=transfer_list$ref$class_label)
+
+
+## ----eval=F, echo=F-----------------------------------------------------------
+# saveRDS(pred_res3,file = "data/annotate_df2.rds")
+
+
+## ----eval=T, echo=F-----------------------------------------------------------
+pred_res3 <- readRDS(file = "data/annotate_df2.rds")
+
+
+
+## -----------------------------------------------------------------------------
+head(pred_res3,2)
+
+
+## -----------------------------------------------------------------------------
+mat <- as.matrix(pred_res3[,-c(1,5)])
+colnames(mat) <- gsub("prediction.score.","",colnames(mat))
+pheatmap(mat,scale = "row",show_rownames = FALSE)
+
+
+## ----eval=F-------------------------------------------------------------------
+# 
+# my_seu_merge_rpca$abm_seurat_labels <- pred_res3$predicted.id
+# 
+
+
+## -----------------------------------------------------------------------------
+
+summ_table <- table(my_seu_merge_rpca$abm_seurat_labels, my_seu_merge_rpca$paper_annot)
+
+pheatmap(summ_table, scale="column", fontsize_row = 5)
+
+
+## -----------------------------------------------------------------------------
+DimPlot(my_seu_merge_rpca, group.by = "abm_seurat_labels")
+
+
+
+## -----------------------------------------------------------------------------
+
+table(my_seu_merge_rpca$abm_seurat_labels == my_seu_merge_rpca$abm_singleR_labels)
+tbl <- table(my_seu_merge_rpca$abm_seurat_labels,my_seu_merge_rpca$abm_singleR_labels)
+pheatmap::pheatmap(tbl,scale = "row")
+
