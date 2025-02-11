@@ -1035,6 +1035,162 @@ DimPlot(my_seu_merge_rpca, group.by = "abm_singleR_labels")
 
 ![](Session3_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
 
+---
+class: inverse, center, middle
+
+# Annotation with Seurat
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+---
+## Anotation with Seurat
+  
+Seurat uses a similar appraoch to integration to be able to fnid anchors between datasets. It can then use this to transfer label information from a reference to a test dataset.
+
+A restriction of this approach is both datasets have to be Seurat objects and therefore single cell datasets. We will use the Allen Brain Map again for this analysis. 
+
+---
+## Reference and query datasets
+  
+As with integration, we find integration features in common, then scale and run PCA in the context of these specific features. 
+
+
+``` r
+transfer_list &lt;- list(ref = abm, query = my_seu_merge_rpca)
+feats &lt;- SelectIntegrationFeatures(transfer_list)
+
+transfer_list &lt;- lapply(transfer_list, function(seu, feats) {
+    seu &lt;- ScaleData(seu, features = feats, verbose = FALSE)
+    seu &lt;- RunPCA(seu, features = feats, verbose = FALSE)
+    return(seu)
+}, feats)
+```
+
+---
+## Predict cell types for query
+  
+Identify the anchors between reference and query data sets, using *FindTransferAnchors()*. These are essential to transfer information from our reference to our query. We can then transfer the cell type information. For each cell in query dataset, the score for each given cell type was estimated by the gene expression pattern of anchor genes using the *TransferData()* function. 
+
+
+``` r
+anchors &lt;- FindTransferAnchors(reference = transfer_list$ref, query = transfer_list$query,
+    dims = 1:30, reference.reduction = "pca")
+pred_res3 &lt;- TransferData(anchorset = anchors, refdata = transfer_list$ref$class_label)
+```
+
+
+
+
+
+
+``` r
+head(pred_res3, 2)
+```
+
+```
+##                       predicted.id prediction.score.GABAergic
+## AAACCCACAGCTGAAG-1_C1 Non-Neuronal                          0
+## AAACGAAAGGTCGTAG-1_C1 Non-Neuronal                          0
+##                       prediction.score.Glutamatergic
+## AAACCCACAGCTGAAG-1_C1                      0.3253133
+## AAACGAAAGGTCGTAG-1_C1                      0.1247228
+##                       prediction.score.Non.Neuronal prediction.score.max
+## AAACCCACAGCTGAAG-1_C1                     0.6746867            0.6746867
+## AAACGAAAGGTCGTAG-1_C1                     0.8752772            0.8752772
+```
+
+---
+## Predict cell types for query
+The cell type with highest score was assigned to the given cell. We can visualize this score with a heatmap. 
+
+
+``` r
+mat &lt;- as.matrix(pred_res3[, -c(1, 5)])
+colnames(mat) &lt;- gsub("prediction.score.", "", colnames(mat))
+pheatmap(mat, scale = "row", show_rownames = FALSE)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-57-1.png)&lt;!-- --&gt;
+
+
+--
+## Annotation with SingleR
+  
+We can now add our labels back to our original Seurat object by a quick assignment. This then allows us to start reviewing the annotation in the context of UMAPs and also versus our other annotation. 
+
+
+``` r
+my_seu_merge_rpca$abm_seurat_labels &lt;- pred_res3$predicted.id
+```
+
+
+``` r
+summ_table &lt;- table(my_seu_merge_rpca$abm_seurat_labels, my_seu_merge_rpca$paper_annot)
+
+pheatmap(summ_table, scale = "column", fontsize_row = 5)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-59-1.png)&lt;!-- --&gt;
+
+---
+## Annotation with SingleR
+  
+
+``` r
+DimPlot(my_seu_merge_rpca, group.by = "abm_seurat_labels")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-60-1.png)&lt;!-- --&gt;
+
+
+---
+## Seurat vs SingleR annotation
+  
+  Next we can compare our two annotations:
+  
+
+``` r
+table(my_seu_merge_rpca$abm_seurat_labels == my_seu_merge_rpca$abm_singleR_labels)
+```
+
+```
+## 
+## FALSE  TRUE 
+##  3437  6581
+```
+
+``` r
+tbl &lt;- table(my_seu_merge_rpca$abm_seurat_labels, my_seu_merge_rpca$abm_singleR_labels)
+pheatmap::pheatmap(tbl, scale = "row")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-61-1.png)&lt;!-- --&gt;
+
+---
+## Seurat vs SingleR annotation
+  
+  The results are similar but there is a clear difference in the identification of the OPC group. These are Oligodendrocyte precursor cells, and are considered non-neural.
+
+In this case it seems that Seurat has done a better job. But maybe with a different reference, or with the more specific group labels SingleR may perform better. 
+
+---
+  ## Seurat vs SingleR annotation
+  
+  This isn't always the case. As a general rule we find:
+
+* Seurat: Wins on speed
+* SingleR: More reliable and consistent
+
+---
+## LLM annotation
+
+There have also been some interesting efforts to use LLMs or Deep Learning to annotate cells, either with specialized models or generic models like [ChatGPT](https://www.nature.com/articles/s41592-024-02235-4).
+
+We have not exhaustively tested these, but the consensus is that they provide a good quick estimate, especially when you do not have a reliable reference dataset. 
+
+Often domain specific knowledge and good reference datasets will outperform the more general LLM approaches. 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
