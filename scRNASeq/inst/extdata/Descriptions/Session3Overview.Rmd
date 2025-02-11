@@ -5,5 +5,5 @@
 In this session we will cover advanced data processing:
 
 * Batch correction
-* Ambient RNA removal
-* Trajectory analysis
+* Cell Type Annotation
+* Differentials
