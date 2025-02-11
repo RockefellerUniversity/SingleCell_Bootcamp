@@ -68,7 +68,7 @@ jobs:
           imagename="bioconductor/bioconductor_docker"
           echo $imagename
           ## Save the information for the next job
-          echo "::set-output name=imagename::${imagename}"
+          echo "imagename::${imagename}" >> $GITHUB_OUTPUT
   compilation-check:
     ## This job then checks the R package using the Bioconductor docker that
     ## was defined by the previous job. This job will determine what version of
