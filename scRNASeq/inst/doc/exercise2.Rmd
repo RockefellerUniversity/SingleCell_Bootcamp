@@ -22,10 +22,11 @@ These exercises are about the simple scRNAseq workflow in [session 2](https://ro
 
 ## Description
 
-Single-cell transcriptome data of Human Glioblastoma Multiforme (GBM) was fetched on 10X Genomics [website](https://www.10xgenomics.com/datasets/human-glioblastoma-multiforme-3-v-3-whole-transcriptome-analysis-3-standard-4-0-0). The CellRanger results from this data is also available on DropBox [link](https://www.dropbox.com/scl/fo/fqcutdy89drp5a2lcggwl/h?dl=0&rlkey=un0d27s9odrt294z5eqfw31j8). Please use this dataset to do the following analysis.
+We will use data from this [study](https://www.science.org/doi/10.1126/science.aat1699) on renal cancer from human cancer. 
 
+The full dataset is on [ArrayExpress](https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-7407). We will use just one sample for now: 4834STDY7002881.
 
-https://www.science.org/doi/10.1126/science.aat1699
+You can also download it from [DropBox](https://www.dropbox.com/scl/fo/1k4y3fvfbissu1vds5kru/AN-CDAVfqa7H5pJT4wCchj0?rlkey=xi9fvilmqjt5j5er73cbocnui&st=zwlvcf6e&dl=0). 
 
 **Exercise 1** - **Cell Ranger**
 
