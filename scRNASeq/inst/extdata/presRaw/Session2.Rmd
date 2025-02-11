@@ -31,8 +31,6 @@ suppressPackageStartupMessages(require(ggplot2))
 knitr::opts_chunk$set(echo = TRUE, tidy = T)
 ```
 
-
-
 ## Set Up
 
 All prerequisites, links to material and slides for this course can be found on github. At this point hopefully everyone has installed the required packages listed on our homepage. 
