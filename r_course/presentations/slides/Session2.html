@@ -3,7 +3,7 @@
   <head>
     <title>Single-cell RNA sequencing ~ Session 2    </title>
     <meta charset="utf-8" />
-    <meta name="author" content="Rockefeller University, Bioinformatics Resource Centre" />
+    <meta name="author" content="Rockefeller University, Bioinformatics Resource Center" />
     <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link rel="stylesheet" href="metropolisCustom.css" type="text/css" />
@@ -21,13 +21,14 @@ class: center, middle, inverse, title-slide
 </html>
 ]
 .author[
-### Rockefeller University, Bioinformatics Resource Centre
+### Rockefeller University, Bioinformatics Resource Center
 ]
 .date[
 ### <a href="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" class="uri">https://rockefelleruniversity.github.io/SingleCell_Bootcamp/</a>
 ]
 
 ---
+
 
 
 
@@ -2132,12 +2133,10 @@ plot2
 ![](Session2_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
 
 ---
-
 ## SCTransform
 
 ![](./imgs/overview3.png)
 [overview](./imgs/scRNA_workflow_ver001_20231017.png)
-
 
 ---
 ## SCTransform
@@ -2423,19 +2422,19 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 17:16:32 UMAP embedding parameters a = 0.9922 b = 1.112
+## 21:45:09 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 17:16:32 Read 8381 rows and found 17 numeric columns
+## 21:45:09 Read 8381 rows and found 17 numeric columns
 ```
 
 ```
-## 17:16:32 Using Annoy for neighbor search, n_neighbors = 30
+## 21:45:09 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 17:16:32 Building Annoy index with metric = cosine, n_trees = 50
+## 21:45:09 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -2448,13 +2447,13 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 17:16:33 Writing NN index file to temp file /tmp/RtmpcV2pTO/file1954111fdbbf
-## 17:16:33 Searching Annoy index using 1 thread, search_k = 3000
-## 17:16:36 Annoy recall = 100%
-## 17:16:36 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 17:16:37 Initializing from normalized Laplacian + noise (using RSpectra)
-## 17:16:37 Commencing optimization for 500 epochs, with 353242 positive edges
-## 17:16:45 Optimization finished
+## 21:45:10 Writing NN index file to temp file /tmp/RtmphBhZhI/file195359e5159c
+## 21:45:10 Searching Annoy index using 1 thread, search_k = 3000
+## 21:45:13 Annoy recall = 100%
+## 21:45:13 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 21:45:14 Initializing from normalized Laplacian + noise (using RSpectra)
+## 21:45:14 Commencing optimization for 500 epochs, with 353242 positive edges
+## 21:45:22 Optimization finished
 ```
 
 ---
@@ -2983,8 +2982,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  5279696 282.0    9555347  510.4   9555347  510.4
-## Vcells 64340213 490.9  259276265 1978.2 281847615 2150.4
+## Ncells  5279703 282.0    9555357  510.4   9555357  510.4
+## Vcells 64340247 490.9  259276332 1978.2 281847645 2150.4
 ```
 
 ---

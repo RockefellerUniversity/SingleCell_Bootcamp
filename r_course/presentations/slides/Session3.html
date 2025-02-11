@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Single-cell RNA sequencing ~ Session 3    </title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Rockefeller University, Bioinformatics Resource Center" />
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="metropolisCustom.css" type="text/css" />
+    <link rel="stylesheet" href="metropolis-fontsCustom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Single-cell RNA sequencing ~ Session 3<br />
+<html><br />
+<br />
+<hr color='#EB811B' size=1px width=796px><br />
+</html>
+]
+.author[
+### Rockefeller University, Bioinformatics Resource Center
+]
+.date[
+### <a href="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" class="uri">https://rockefelleruniversity.github.io/SingleCell_Bootcamp/</a>
+]
+
+---
+
+
+
+
+
+
+## Outlines
+
+- Merge multiple data sets
+- Cell Type Annotation 
+- CITE-seq data processing
+
+
+---
+## A more advanced scRNAseq workflow
+
+![overview](./imgs/scRNA_workflow_ver001_20231017.png)
+
+
+## A more advanced scRNAseq workflow
+
+Full image here of workflow is here: [overview](./imgs/scRNA_workflow_ver001_20231017.png)
+
+scRNA seq is a very variable process and each dataset has unique QC problems. Though our simplified approach often works, we also need many more tools in our toolbox to handle more complex datasets. Often it is a case of trial and error to see what approaches work best for your data.
+
+---
+## Create some functions
+
+We are going to try out a few tools and approaches. We want to wrap some of our analysis steps into a function to simplify rerunning things.
+
+Normalization: 
+  * Log normalization with scale factor = 10,000
+  * Find Variable features with vst, select top 2000 variable features
+  
+
+``` r
+data_proc &lt;- function(seu) {
+    seu &lt;- NormalizeData(seu, normalization.method = "LogNormalize", scale.factor = 10000)
+    seu &lt;- FindVariableFeatures(seu, select.method = "vst", nfeatures = 2000)
+    return(seu)
+}
+```
+
+---
+## Create some functions
+
+Make clusters:
+  * Scale data with *ScaleData()*
+  * Principle Component Analysis by using *RunPCA()* with npcs=30 PCs
+  * Make non-linear dimensional reduction in UMAP by using *RunUMAP()* with dims=1:10
+  * Estimate Neighbors by using *FindNeighbors()* with dims=1:10
+  * Identify clusters with *FindClusters()* by using resolution=0.5
+  
+
+``` r
+quick_clust &lt;- function(seu) {
+    set.seed(42)
+    seu &lt;- ScaleData(seu, verbose = FALSE)
+    seu &lt;- RunPCA(seu, npcs = 30, verbose = FALSE)
+    seu &lt;- RunUMAP(seu, reduction = "pca", dims = 1:10, verbose = FALSE)
+    seu &lt;- FindNeighbors(seu, reduction = "pca", dims = 1:10, verbose = FALSE)
+    seu &lt;- FindClusters(seu, resolution = 0.5, verbose = FALSE)
+    return(seu)
+}
+```
+
+---
+class: inverse, center, middle
+
+# Merging Datasets
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## An advanced scRNAseq workflow
+
+![](./imgs/overview3.png)
+
+[overview](./imgs/scRNA_workflow_ver001_20231017.png)
+
+---
+## Merge multiple datasets
+We will discuss a number of approaches and methods we may need to use to merge datasets.
+
+- No corrections
+- Reciprocal Principle Component Analysis (rPCA)
+- Harmony
+
+---
+## Example dataset
+
+We will be using a dataset containing 4 snRNAseq samples. This is from a [preprint](https://www.biorxiv.org/content/10.1101/2024.12.31.630881v3) studying Alzheimers disease. Though this dataset has 10 samples, we will be using 4 for our example. There are 2 AD samples and 2 Control samples from the entorhinal cortex taht have been collected post-mortem.
+
+You could access the raw data from [GE0: GSE287652](https://www.ncbi.nlm.nih.gov/gds/?term=GSE287652). But we have it here already loaded into a Seurat object and after some preprocessing. 
+
+
+``` r
+my_seu_list &lt;- readRDS("data/to_integrate.rds")
+```
+
+---
+## Example dataset
+
+Each dataset has been individually processed, QC'd and reviewed prior to combining into a list. Sotring everything in a list will make our life easier later. 
+
+1) Load into Seurat object. 
+2) Log Normalized and scaled. 
+3) Filtered based on MT levels (2.5%).
+4) Filtered based on doublets (Scrublet).  
+5) Regressed to MT. 
+6) PCA. 
+7) Clusters. 
+8) UMAP. 
+
+---
+class: inverse, center, middle
+
+# Simple Merge
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Concatenate the datasets
+
+We can use *merge()* function to integrate multiple data sets, as they are. We need to provide a single seurat object as our first argument, and a list containing the rest of our Seurat objects as the second. We also need to provide *Group* information and a *name* for the project as arguments. 
+
+
+
+``` r
+seu_merge &lt;- merge(my_seu_list[[1]], my_seu_list[2:4], add.cell.ids = c("AD2b", "AD4",
+    "C1", "C3"), project = "Merge")
+head(seu_merge, 4)
+```
+
+```
+##                               orig.ident nCount_RNA nFeature_RNA percent.mt
+## AD2b_AAACCCACAGCTGAAG-1_C1 SeuratProject        763          390 0.39318480
+## AD2b_AAACGAAAGGTCGTAG-1_C1 SeuratProject       1030          501 0.00000000
+## AD2b_AAACGAAGTCTTGAGT-1_C1 SeuratProject       3556         2272 0.61797753
+## AD2b_AAACGAATCACCTCGT-1_C1 SeuratProject       3091         1863 0.03234153
+##                            scrubletScore sample_id paper_cluster group
+## AD2b_AAACCCACAGCTGAAG-1_C1    0.03906250        C1             0     C
+## AD2b_AAACGAAAGGTCGTAG-1_C1    0.08771930        C1             0     C
+## AD2b_AAACGAAGTCTTGAGT-1_C1    0.06688963        C1            12     C
+## AD2b_AAACGAATCACCTCGT-1_C1    0.04857143        C1            29     C
+##                                   paper_annot
+## AD2b_AAACCCACAGCTGAAG-1_C1 Excitatory Neurons
+## AD2b_AAACGAAAGGTCGTAG-1_C1 Excitatory Neurons
+## AD2b_AAACGAAGTCTTGAGT-1_C1 Inhibitory Neurons
+## AD2b_AAACGAATCACCTCGT-1_C1 Inhibitory Neurons
+```
+
+---
+## Process and make clusters
+
+Now that our data is merged we need to reprocess it. This ensures nromalization and scaling is done in a globally context. We can use our processing and clustering functions to analyse our merged dataset. 
+
+
+``` r
+seu_merge &lt;- data_proc(seu_merge)
+seu_merge &lt;- quick_clust(seu_merge)
+```
+
+---
+## UMAP
+
+Our UMAP shows our cells are quite similar. Bu there are a few regions that are distinct depending on the condition. 
+
+
+``` r
+DimPlot(seu_merge, group.by = "sample_id", pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+
+---
+## Our samples don't group
+
+* This result indicates there is a difference between our 4 samples groups.
+* Is this a true biological phenomena or is it a batch effect?
+
+---
+## Our samples don't group
+
+
+![](./imgs/merge.gif)
+[(Slowikowski, 2019)](https://github.com/slowkow/harmonypy)
+
+
+---
+class: inverse, center, middle
+
+# Merge with reciprocal PCA
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Merge with reciprocal PCA
+
+Reciprocal PCA minimizes the batch effects while merging different data sets.
+
+The steps involved in rPCA:
+
+* Each dataset’s PCA embeddings are reciprocally projected onto the other dataset’s principal components.
+* Then nearest neighbors are found mutually across datasets.
+* These nearest neighbors serve as anchors, which are used to align datasets.
+
+---
+## Merge with reciprocal PCA
+
+![](./imgs/rpca_1.png)
+
+[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
+
+---
+## Merge with reciprocal PCA
+
+![](./imgs/rpca_2.png)
+
+[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
+
+---
+## RPCA workflow
+
+  1. Normalize data sets. We can use our *data_proc()*. 
+  2. Select features for integration by using *SelectIntegrationFeatures()*.
+  3. Scale data and process PCA by using the features identified for integration
+  4. Identify Anchors for integration by using *FindIntegrationAnchors()*
+  5. Integrate data by using *IntegratedData()*
+  6. Process *quick_cluster()* and evaluate results with UMAP
+
+---
+## Prepare for RPCA merge
+
+First we need to identify features for integration. We do this on our list of Seurat objects. This is similar to the VariableFeatures function we ran on a single dataset, but works across all 4 datasets. We will then run scaling and PCA, using these features.
+
+
+``` r
+feats &lt;- SelectIntegrationFeatures(my_seu_list)
+
+my_seu_list_rpca &lt;- lapply(my_seu_list, function(seu, feats) {
+    seu &lt;- ScaleData(seu, features = feats, verbose = FALSE)
+    seu &lt;- RunPCA(seu, features = feats, verbose = FALSE)
+    return(seu)
+}, feats)
+```
+
+---
+## Integrating data in RPCA merge
+
+We can then identify anchors. These are the features through which we will integrate our data. Once we have these features, we can then integrate our data sets together.
+
+
+``` r
+anchors &lt;- FindIntegrationAnchors(my_seu_list_rpca, anchor.features = feats, reduction = "rpca")
+
+my_seu_merge_rpca &lt;- IntegrateData(anchorset = anchors)
+
+my_seu_merge_rpca
+```
+
+```
+## An object of class Seurat 
+## 28110 features across 10018 samples within 2 assays 
+## Active assay: integrated (2000 features, 2000 variable features)
+##  1 layer present: data
+##  1 other assay present: RNA
+```
+
+
+---
+## Evaluating RPCA using clusters
+
+To evaluate how well the merge has worked we must check the clustering. Again we must scale, and then use our *quick_clust* function. 
+
+
+``` r
+my_seu_merge_rpca &lt;- ScaleData(my_seu_merge_rpca)
+my_seu_merge_rpca &lt;- quick_clust(my_seu_merge_rpca)
+```
+
+---
+## Assesing Integration
+
+To assess the integration we can use similar metrics to assessing the QC of the datasets in general. 
+
+- Are there discrete clusters?
+- Are there distinct markers (and do they make sense)?
+
+We also check the overlap of our datasets. Generally we expect most cells between samples to overlap, butt this can be very experiment dependent. 
+
+---
+## Evaluating RPCA using clusters
+
+We can see that our data sets overlay with each other. It looks slightly better than before. The dataset looked pretty good before, but now the overlap is tighter.
+
+
+``` r
+DimPlot(my_seu_merge_rpca, group.by = "sample_id", pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+---
+## UMAP - Clusters
+
+Our UMAP shows our cell clusters are fairly distinct, though not perfect (and the clustering itself could do with some optimization). 
+
+
+``` r
+DimPlot(my_seu_merge_rpca, group.by = "seurat_clusters", pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+## Heatmap - clusters
+
+We can check the numbers in each cluster. Broadly, there are similar numbers per cluster now. To do this we make a heatmap and then scale it along the row to accunt for the different number of cells in each sample.  
+
+
+``` r
+library(pheatmap)
+tbl &lt;- table(my_seu_merge_rpca$sample_id, my_seu_merge_rpca$seurat_clusters)
+pheatmap(tbl, scale = "row")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
+
+---
+## UMAP - Markers
+
+A given cell type should often be clustered together. This means marker genes should be specific. This oligodendrocyte marker has quite specific distribution.
+
+
+``` r
+FeaturePlot(my_seu_merge_rpca, "MOBP", pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+---
+## UMAP - Annotation
+
+This dataset also has some annotation in the *paper_annot* slot. We can check the distribution of the labels. Our UMAP shows our cell types are distinct.
+
+
+``` r
+DimPlot(my_seu_merge_rpca, group.by = "paper_annot", pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+---
+## Evaluating RPCA using cell types
+
+Using heatmaps we can also check how specific each cluster is to each cell type.
+
+
+``` r
+library(pheatmap)
+
+tbl &lt;- table(my_seu_merge_rpca$seurat_clusters, my_seu_merge_rpca$paper_annot)
+pheatmap(tbl, scale = "row")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+---
+class: inverse, center, middle
+
+# Merge data with Harmony
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+
+## Harmony
+- Harmony is an R package for single-cell data integration [liike](https://www.nature.com/articles/s41592-019-0619-0).
+- There is also a python implementation of this [package](https://github.com/slowkow/harmonypy). 
+- Harmony works well with Seurat objects to directly so we can easily add it into our workflow. 
+
+---
+## Harmony
+
+Harmony works in a different way to rPCA. 
+
+1) Fuzzy clustering - It will assign clusters, but allow cells to belong to multiple clusters, and caluclate the strength of assingmetn to each cluster. 
+
+2) During clustering there is a penalty term, to maintain diversity of groups i.e. a cluster with just one sample is penalized. This means any structure due to a batch effect is not hard. 
+
+3) The centroid of each cluster is calculated for all cells and each individual sample, then a correction factor for each sample based on these centroids. 
+
+4) Cells are then moved based on the dataset correction factor, weighted by their individual assignment scores for each clsuter
+
+5) Repeat iteratviely until convergence. 
+
+---
+## Harmony
+
+![](./imgs/harmony.png)
+
+
+[(Korsunksy et al, 2020)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6884693/)
+
+---
+## Prepare data for Harmony
+We can prepare for Harmony in much the same way as we prepare for the simple Seurat merge: merge, normalize, scale, PCA and UMAP.
+
+
+``` r
+seu_merge &lt;- merge(my_seu_list[[1]], my_seu_list[2:4], add.cell.ids = c("C1", "C3",
+    "AD2b", "AD4"), project = "Merge")
+seu_merge &lt;- data_proc(seu_merge)
+seu_merge &lt;- ScaleData(seu_merge)
+seu_merge &lt;- RunPCA(seu_merge)
+seu_merge &lt;- RunUMAP(seu_merge, reduction = "pca", dims = 1:10, reduction.name = "umap")
+```
+
+---
+## Prepare data for Harmony
+
+As you can see we are back with our completely separate groups. 
+
+
+``` r
+DimPlot(seu_merge, group.by = "sample_id")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+---
+## Merge data with Harmony
+
+We can use the *RunHarmony()* function to implement the Harmony correction. 
+
+
+``` r
+library(harmony)
+seu_merge_harmony &lt;- RunHarmony(seu_merge, group.by.vars = "sample_id", assay.use = "RNA")
+seu_merge_harmony &lt;- RunUMAP(seu_merge_harmony, reduction = "harmony", dims = 1:10,
+    reduction.name = "umap_harmony")
+seu_merge_harmony &lt;- FindNeighbors(seu_merge_harmony, reduction = "harmony")
+seu_merge_harmony &lt;- FindClusters(seu_merge_harmony)
+```
+
+```
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 10018
+## Number of edges: 338251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.9148
+## Number of communities: 21
+## Elapsed time: 1 seconds
+```
+
+---
+## Evaluating Harmony using clusters
+
+We can see that our data sets overlay with each other. Again, it looks slightly better than before. The dataset looked pretty good before, but now the overlap is tighter.
+
+
+``` r
+DimPlot(seu_merge_harmony, group.by = "sample_id", reduction = "umap_harmony", pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+---
+## UMAP - Clusters
+
+Our UMAP shows our cell clusters are fairly distinct, though not perfect (and the clustering itself could do with some optimization). 
+
+
+``` r
+DimPlot(seu_merge_harmony, group.by = "seurat_clusters", reduction = "umap_harmony",
+    pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+---
+## Heatmap - clusters
+
+We can check the numbers in each cluster. Broadly, there are similar numbers per cluster now. To do this we make a heatmap and then scale it along the row to account for the different number of cells in each sample.  
+
+
+``` r
+library(pheatmap)
+tbl &lt;- table(seu_merge_harmony$sample_id, seu_merge_harmony$seurat_clusters)
+pheatmap(tbl, scale = "row")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+---
+## UMAP - Markers
+
+A given cell type should often be clustered together. This means marker genes should be specific. This oligodendrocyte marker has quite specific distribution.
+
+
+``` r
+FeaturePlot(seu_merge_harmony, "MOBP", pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+---
+## UMAP - Annotation
+
+This dataset also has some annotation in the *paper_annot* slot. We can check the distribution of the labels. Our UMAP shows our cell types are distinct.
+
+
+``` r
+DimPlot(seu_merge_harmony, group.by = "paper_annot", pt.size = 0.2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+---
+## Evaluating RPCA using cell types
+
+Using heatmaps we can also check how specific each cluster is to each cell type.
+
+
+``` r
+tbl &lt;- table(seu_merge_harmony$seurat_clusters, seu_merge_harmony$paper_annot)
+pheatmap(tbl, scale = "row")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+
+
+---
+## Comparing our results
+
+
+Broadly it seems like rPCA may be the best option in this case. Why?:
+
+1) The integration in general is subtle and rPCA is more conservative
+2) Sample UMAP looks cleanest
+3) The number of cells per cluster seems more equal
+4) The annotation seems cleaner
+
+---
+## Compare
+
+.pull-left[
+![](Session3_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+  ]
+  
+.pull-right[
+![](Session3_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+  ]
+
+---
+## Compare
+
+.pull-left[
+![](Session3_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+  ]
+  
+.pull-right[
+![](Session3_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
+  ]
+  
+---
+## Compare
+
+.pull-left[
+![](Session3_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
+  ]
+  
+.pull-right[
+![](Session3_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+  ]
+
+---
+## Data Integration Compared
+
+- Harmony 
+ * Works at the cluster level
+ * Iterative nature pushes to convergence so can be a heavy handed
+ * Allows for more complex model terms for batch correction
+ * Fast and scalable
+
+- rPCA 
+  * Working at the single cell level
+  * Preserves biological structure, by being More lenient and allowing unique groups
+
+---
+## Data Integration Compared
+
+Though Harmony and rPCA are our main workhorses for integration. There are many other alternatives too.  
+
+* MNN - Like rPCA it uses MNN across datasets and corrects batch effects while preserving structure (we have code for this in prior version of [course](https://github.com/RockefellerUniversity/SingleCell_Bootcamp/releases/tag/v1.0))
+* Liger - Factorizes gene expression into shared and dataset-specific components, so very god at maintaining dataset specific patterns, but it will need some tuning.
+* Scanorama	-	Also uses a MNN based approach.	Good for datasets with little overlap, but it is computationally expensive.
+* ComBat (from sva package)	Batch Correction - Uses a more traditional linear modeling approach that has been adapted from bulk methods. Good for systematic differences, but less nuanced and tendency to over correct. 
+* BBKNN (Batch-Balanced kNN) - Works on neighbor graphs, not counts/PCA. Simple, fast, good for clustering and visual, but there's no depper integration/correction of data.
+* scVI (Single-cell Variational Inference) - Uses a deep generative model (VAE) to learn a representation without batch effects. Powerful, scalable, handles missing data	but requires GPU for efficiency.
+
+For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.gov/articles/PMC9982060/).
+
+---
+## An advanced scRNAseq workflow
+
+![](./imgs/overview3.png)
+[overview](./imgs/scRNA_workflow_ver001_20231017.png)
+
+
+
+
+---
+class: inverse, center, middle
+
+# Cell type annotation
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Manual Annotation
+
+As mentioned before this dataset has been manually annotated. 
+
+
+``` r
+DimPlot(my_seu_merge_rpca, group.by = "paper_annot")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-29-1.png)&lt;!-- --&gt;
+
+---
+## Manual Annotation
+
+This was done by careful assessment of the marker genes. Here we are look at Oligodendrocyte markers. 
+
+
+``` r
+FeaturePlot(my_seu_merge_rpca, c("MOBP", "MAG"))
+```
+
+![](Session3_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
+
+
+## Automated annotation
+
+To annotate the Single-cell data sets, we can evaluate the gene expression pattern of well known cell-type specific marker genes and make a manual annotation. This is time consuming and not systematic.
+
+Here, we will introduce two more strategies to make cell type annotations automatically:
+  1. Mapping and annotating query datasets with Seurat using a reference data set.  [link](https://satijalab.org/seurat/articles/integration_mapping.html)
+  2. Make annotation with SingleR [link](https://bioconductor.org/packages/release/bioc/html/SingleR.html)
+
+---
+## Cell type annotation
+
+For this we need a reference dataset and a query dataset. Our annotation ends up being only as good as our reference dataset. There are many sources for reference data. 
+
+* R packages:
+  - [celldex](https://bioconductor.org/packages/release/data/experiment/html/celldex.html)
+  - [ExperimentHub](https://www.bioconductor.org/packages/release/bioc/html/ExperimentHub.html)
+  
+* Consortium data i.e. [Allen Brain Map](https://portal.brain-map.org)
+* Papers (though this can be variable) - [Adipose](https://gitlab.com/rosen-lab/white-adipose-atlas) or [Neuronal](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE287652)
+
+Depending on the format of the data, you may be set to go straightaway, need to do some light processing, or reanalyze the whole thing. 
+
+
+---
+class: inverse, center, middle
+
+# Annotation with SingleR
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+
+## Annotation with SingleR
+
+[SingleR](https://bioconductor.org/packages/release/bioc/vignettes/SingleR/inst/doc/SingleR.html) is Bioconductor package which can be used to predict annotations of a single-cell dataset. It is maybe the most flexible way of annotating your data, as it will accept a variety of kinds of reference data including bulk and scRNAseq experiments. 
+SingleR works with a very simple method: calculate a spearman rank correlation between reference and test dataset for each label.
+
+Despite this simplicity, there is also scope to do more complex annotation with some advacned features i.e. to improve resolution of related labels or using multiple references. You can dig into this further in the [singleR book](https://bioconductor.org/books/release/SingleRBook/).
+
+---
+## Annotation with SingleR
+
+Lets start out by using the [Human Primary Cell Atlas](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-14-632). This is a collection of microarray datasets from human primary cells that have been aggregated together. To access this data we will use the *celldex* package. 
+
+
+``` r
+library(celldex)
+hpcad &lt;- HumanPrimaryCellAtlasData()
+```
+
+---
+## Annotation with SingleR
+
+In this case the data is stored as a SummarizedExpriment; a specialized Bioconductor format designed for holding data matrices and their metadata. The reference data for SingleR can either be in this format or as a SingleCellExpriment (another Bioconductor format specific to single cell analysis). 
+
+
+``` r
+hpcad
+```
+
+```
+## class: SummarizedExperiment 
+## dim: 19363 713 
+## metadata(0):
+## assays(1): logcounts
+## rownames(19363): A1BG A1BG-AS1 ... ZZEF1 ZZZ3
+## rowData names(0):
+## colnames(713): GSM112490 GSM112491 ... GSM92233 GSM92234
+## colData names(3): label.main label.fine label.ont
+```
+
+---
+## Annotation with SingleR
+
+At the moment our *test* data is a Seurat object which is not Bioconductor friendly. 
+
+
+``` r
+my_seu_merge_rpca
+```
+
+```
+## An object of class Seurat 
+## 28110 features across 10018 samples within 2 assays 
+## Active assay: integrated (2000 features, 2000 variable features)
+##  2 layers present: data, scale.data
+##  1 other assay present: RNA
+##  2 dimensional reductions calculated: pca, umap
+```
+
+We can simply extract out a data matrix containing count information. This is good for SingleR. 
+
+
+``` r
+my_seu_merge_rpca_mat &lt;- GetAssayData(my_seu_merge_rpca)
+
+my_seu_merge_rpca_mat[1:5, 1:5]
+```
+
+```
+## 5 x 5 sparse Matrix of class "dgCMatrix"
+##            AAACCCACAGCTGAAG-1_C1 AAACGAAAGGTCGTAG-1_C1 AAACGAAGTCTTGAGT-1_C1
+## ADAMTSL1              0.39228540            0.37254012            1.11566489
+## THSD7B                0.02286489            0.05190584           -0.01465315
+## IL1RAPL2             -0.01904459           -0.08152581            0.12641628
+## RELN                 -0.45800974           -0.30815332           -0.64158447
+## AC093607.1            0.06373820            0.06256471            0.01170564
+##            AAACGAATCACCTCGT-1_C1 AAACGAATCTCCGAAA-1_C1
+## ADAMTSL1            -0.063393072           -0.05680296
+## THSD7B               0.092400788           -0.02638186
+## IL1RAPL2            -0.172235822           -0.00585319
+## RELN                 3.338650923            0.15192283
+## AC093607.1           0.007405319           -0.03035472
+```
+
+---
+## Annotation with SingleR
+
+We are almost ready to run SingleR. We have our test and reference data. The last part we need is labels. This can just be a vector containing all the labels. We can grab this easily from our reference dataset. We can see there are several options here. Let's just stick to *label.main*.
+
+
+``` r
+colData(hpcad)
+```
+
+```
+## DataFrame with 713 rows and 3 columns
+##            label.main             label.fine   label.ont
+##           &lt;character&gt;            &lt;character&gt; &lt;character&gt;
+## GSM112490          DC DC:monocyte-derived:..  CL:0000840
+## GSM112491          DC DC:monocyte-derived:..  CL:0000840
+## GSM112540          DC DC:monocyte-derived:..  CL:0000840
+## GSM112541          DC DC:monocyte-derived:..  CL:0000451
+## GSM112661          DC DC:monocyte-derived:..  CL:0000451
+## ...               ...                    ...         ...
+## GSM556665    Monocyte Monocyte:S._typhimur..  CL:0000576
+## GSM92231      Neurons   Neurons:Schwann_cell  CL:0002573
+## GSM92232      Neurons   Neurons:Schwann_cell  CL:0002573
+## GSM92233      Neurons   Neurons:Schwann_cell  CL:0002573
+## GSM92234      Neurons   Neurons:Schwann_cell  CL:0002573
+```
+
+
+
+``` r
+library(SingleR)
+
+pred_res &lt;- SingleR(ref = hpcad, test = my_seu_merge_rpca_mat, labels = hpcad$label.main)
+```
+
+The score is generated comparing the expression levels of a cell in query dataset and the expression pattern of certain group (eg. cell types) in reference dataset. A cell would be assigned as the cell type which has highest score
+
+
+``` r
+head(pred_res, 2)
+```
+
+```
+## DataFrame with 2 rows and 4 columns
+##                                                    scores      labels
+##                                                  &lt;matrix&gt; &lt;character&gt;
+## AAACCCACAGCTGAAG-1_C1 0.0699139:0.0443145: 0.00782103:...     Neurons
+## AAACGAAAGGTCGTAG-1_C1 0.0605863:0.0201250:-0.00486433:...         MSC
+##                       delta.next pruned.labels
+##                        &lt;numeric&gt;   &lt;character&gt;
+## AAACCCACAGCTGAAG-1_C1 0.01087697       Neurons
+## AAACGAAAGGTCGTAG-1_C1 0.00253192           MSC
+```
+
+
+---
+## Annotation with SingleR
+By converting to a matrix, we can check the cell type scoring using a heatmap. 
+
+
+``` r
+mat &lt;- as.matrix(pred_res$scores)
+rownames(mat) &lt;- rownames(pred_res)
+pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE, fontsize_col = 5)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-39-1.png)&lt;!-- --&gt;
+
+---
+## Annotation with SingleR
+
+We can now add our labels back to our original Seurat object by a quick assignment. This then allows us to start reviewing the annotation in the context of UMAPs and also versus our other annotation. 
+
+
+``` r
+my_seu_merge_rpca$hpcad_singleR_labels &lt;- pred_res$labels
+
+summ_table &lt;- table(my_seu_merge_rpca$hpcad_singleR_labels, my_seu_merge_rpca$paper_annot)
+
+pheatmap(summ_table, scale = "column", fontsize_row = 5)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-40-1.png)&lt;!-- --&gt;
+
+---
+## Annotation with SingleR
+
+
+``` r
+DimPlot(my_seu_merge_rpca, group.by = "hpcad_singleR_labels")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-41-1.png)&lt;!-- --&gt;
+
+---
+## Annotation with SingleR
+
+Lets try an alternative dataset. Often we will have data from other Seurat objects that we want to use as a reference. Here we have a processed version of human data from the [Allen Brain Map](https://portal.brain-map.org/atlases-and-data/rnaseq). This is 10X data from 2020. 
+
+
+``` r
+abm &lt;- readRDS("data/abm.rds")
+```
+
+---
+## Annotation with SingleR
+
+There are several interesting labels associated with this data. Lets focus on the *class_label*.
+
+
+``` r
+head(abm)
+```
+
+
+```
+##                                        orig.ident nCount_RNA nFeature_RNA
+## AAACCCAAGGATTTCC-LKTX_190129_01_A01 SeuratProject      14396         4815
+## AAACCCAAGTATGGCG-LKTX_190129_01_A01 SeuratProject      12027         4372
+## AAACCCACAAAGTGTA-LKTX_190129_01_A01 SeuratProject      16112         5280
+## AAACCCACACTACTTT-LKTX_190129_01_A01 SeuratProject       2994         1649
+## AAACCCACAGTGAGCA-LKTX_190129_01_A01 SeuratProject       5202         2499
+## AAACCCAGTCACCCTT-LKTX_190129_01_A01 SeuratProject      26504         6381
+## AAACCCAGTGTCCACG-LKTX_190129_01_A01 SeuratProject      21668         5470
+## AAACCCATCATAAGGA-LKTX_190129_01_A01 SeuratProject      30141         7131
+## AAACCCATCTGTCCCA-LKTX_190129_01_A01 SeuratProject      31944         6864
+## AAACGAAGTATGAAGT-LKTX_190129_01_A01 SeuratProject      32476         7328
+##                                     percent.mt   class_label
+## AAACCCAAGGATTTCC-LKTX_190129_01_A01          0     GABAergic
+## AAACCCAAGTATGGCG-LKTX_190129_01_A01          0 Glutamatergic
+## AAACCCACAAAGTGTA-LKTX_190129_01_A01          0 Glutamatergic
+## AAACCCACACTACTTT-LKTX_190129_01_A01          0 Glutamatergic
+## AAACCCACAGTGAGCA-LKTX_190129_01_A01          0  Non-Neuronal
+## AAACCCAGTCACCCTT-LKTX_190129_01_A01          0 Glutamatergic
+## AAACCCAGTGTCCACG-LKTX_190129_01_A01          0 Glutamatergic
+## AAACCCATCATAAGGA-LKTX_190129_01_A01          0 Glutamatergic
+## AAACCCATCTGTCCCA-LKTX_190129_01_A01          0 Glutamatergic
+## AAACGAAGTATGAAGT-LKTX_190129_01_A01          0 Glutamatergic
+##                                                   cluster_label subclass_label
+## AAACCCAAGGATTTCC-LKTX_190129_01_A01          Inh L1-2 SST CCNJL            Sst
+## AAACCCAAGTATGGCG-LKTX_190129_01_A01     Exc L5-6 FEZF2 IFNG-AS1        L5/6 NP
+## AAACCCACAAAGTGTA-LKTX_190129_01_A01     Exc L3-5 RORB LINC01202          L5 IT
+## AAACCCACACTACTTT-LKTX_190129_01_A01      Exc L2 LINC00507 GLRA3        L2/3 IT
+## AAACCCACAGTGAGCA-LKTX_190129_01_A01    Oligo L2-6 OPALIN FTH1P3          Oligo
+## AAACCCAGTCACCCTT-LKTX_190129_01_A01 Exc L5-6 FEZF2 C9orf135-AS1          L6 CT
+## AAACCCAGTGTCCACG-LKTX_190129_01_A01        Exc L3-5 FEZF2 ASGR2          L5 ET
+## AAACCCATCATAAGGA-LKTX_190129_01_A01          Exc L3-5 RORB LNX2          L5 IT
+## AAACCCATCTGTCCCA-LKTX_190129_01_A01          Exc L3-5 RORB LNX2          L5 IT
+## AAACGAAGTATGAAGT-LKTX_190129_01_A01         Exc L5 THEMIS RGPD6          L6 CT
+##                                           cell_type_alias_label
+## AAACCCAAGGATTTCC-LKTX_190129_01_A01          Inh L1-2 SST CCNJL
+## AAACCCAAGTATGGCG-LKTX_190129_01_A01     Exc L5-6 FEZF2 IFNG-AS1
+## AAACCCACAAAGTGTA-LKTX_190129_01_A01     Exc L3-5 RORB LINC01202
+## AAACCCACACTACTTT-LKTX_190129_01_A01      Exc L2 LINC00507 GLRA3
+## AAACCCACAGTGAGCA-LKTX_190129_01_A01    Oligo L2-6 OPALIN FTH1P3
+## AAACCCAGTCACCCTT-LKTX_190129_01_A01 Exc L5-6 FEZF2 C9orf135-AS1
+## AAACCCAGTGTCCACG-LKTX_190129_01_A01        Exc L3-5 FEZF2 ASGR2
+## AAACCCATCATAAGGA-LKTX_190129_01_A01          Exc L3-5 RORB LNX2
+## AAACCCATCTGTCCCA-LKTX_190129_01_A01          Exc L3-5 RORB LNX2
+## AAACGAAGTATGAAGT-LKTX_190129_01_A01         Exc L5 THEMIS RGPD6
+```
+
+---
+## Annotation with SingleR
+
+As our reference data is in a Seurat format we can just extract out the data matrix of counts. We also already have our matrix from our test data. 
+
+
+``` r
+pred_res2 &lt;- SingleR(ref = GetAssayData(abm), test = my_seu_merge_rpca_mat, labels = abm$class_label)
+```
+
+
+
+
+
+
+``` r
+head(pred_res2, 2)
+```
+
+```
+## DataFrame with 2 rows and 4 columns
+##                                            scores        labels delta.next
+##                                          &lt;matrix&gt;   &lt;character&gt;  &lt;numeric&gt;
+## AAACCCACAGCTGAAG-1_C1 0.138210:0.142565:0.0505849 Glutamatergic  0.0050974
+## AAACGAAAGGTCGTAG-1_C1 0.218222:0.253712:0.0876373 Glutamatergic  0.0347486
+##                       pruned.labels
+##                         &lt;character&gt;
+## AAACCCACAGCTGAAG-1_C1 Glutamatergic
+## AAACGAAAGGTCGTAG-1_C1 Glutamatergic
+```
+
+---
+## Annotation with SingleR
+
+By converting to a matrix, we can check the cell type scoring using a heatmap. 
+
+
+``` r
+mat &lt;- as.matrix(pred_res2$scores)
+rownames(mat) &lt;- rownames(pred_res2)
+pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE, fontsize_col = 5)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-49-1.png)&lt;!-- --&gt;
+
+---
+## Annotation with SingleR
+
+We can now add our labels back to our original Seurat object by a quick assignment. This then allows us to start reviewing the annotation in the context of UMAPs and also versus our other annotation. 
+
+
+``` r
+my_seu_merge_rpca$abm_singleR_labels &lt;- pred_res2$labels
+```
+
+
+``` r
+summ_table &lt;- table(my_seu_merge_rpca$abm_singleR_labels, my_seu_merge_rpca$paper_annot)
+
+pheatmap(summ_table, scale = "column", fontsize_row = 5)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
+
+---
+## Annotation with SingleR
+
+
+``` r
+DimPlot(my_seu_merge_rpca, group.by = "abm_singleR_labels")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
