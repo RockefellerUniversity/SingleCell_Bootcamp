@@ -1043,6 +1043,7 @@ gc()
 ## Other ambient RNA removal methods
 
 - There are other popular software used for ambient RNA removal, most which you can use in R
+- We have code for running soupX in a previous version of this [course](https://github.com/RockefellerUniversity/SingleCell_Bootcamp/releases/tag/v1.0).
 - Here are the pros and cons of each method:
 
 ![](./imgs/ambient_rna_comparisons.png)
