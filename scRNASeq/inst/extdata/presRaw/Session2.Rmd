@@ -42,6 +42,8 @@ Or can be downloaded as a zip archive from here.
 
 * [Download zip](https://github.com/rockefelleruniversity/SingleCell_Bootcamp/zipball/master)
 
+* Many of the raw and intermediate files can be found on [DropBox](https://www.dropbox.com/scl/fo/1k4y3fvfbissu1vds5kru/AN-CDAVfqa7H5pJT4wCchj0?rlkey=xi9fvilmqjt5j5er73cbocnui&st=zwlvcf6e&dl=0).
+
 ---
 ## Course materials
 
