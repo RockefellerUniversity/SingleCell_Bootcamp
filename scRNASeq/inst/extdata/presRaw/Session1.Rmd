@@ -311,7 +311,7 @@ The output matrix is often stored in a compressed format such as:-
 
 This is an example of a directory produced by Cell Ranger. 
 
-
+---
 
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
@@ -574,7 +574,7 @@ This BAM file is sometimes used in downstream analysis such as scSplit/Velocyto 
 
 .pull-right[
  <div align="center">
-<img src="imgs/sam1.png" alt="igv" height="200" width="100">
+<img src="imgs/sam1.png" alt="igv" height="200" width="450">
 </div>
  <div align="center">
 <img src="imgs/sam2.png" alt="igv" height="150" width="450">
@@ -980,6 +980,7 @@ By reviewing the curve of the down sampled metrics we can assess whether we are 
 </div>
 ]
 
+---
 
 ## QC issues going forward?
 
@@ -1060,7 +1061,6 @@ For example, ScaleBio uses sample fixation, followed by library construction in 
 
 
 ---
-
 ## How spatial works - Visium from 10X
 
 .pull-left[
