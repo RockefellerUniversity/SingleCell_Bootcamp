@@ -226,7 +226,11 @@ jobs:
         run: |
           mkdir -p docs
           rm -r r_course/*/*/*_cache
-          cp -r  r_course/* docs/
+          cp -r r_course/exercises/ docs/
+          cp -r r_course/presentations/ docs/
+          cp -r r_course/index.html docs/
+          cp -r r_course/_site.yml docs/
+          cp -r r_course/site_libs docs/
           echo "Copied to docs"
         shell:
           bash {0}
