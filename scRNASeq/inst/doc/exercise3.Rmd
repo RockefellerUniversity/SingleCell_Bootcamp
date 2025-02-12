@@ -1,5 +1,5 @@
 ---
-title: "Exercise 3 - Bioconductor"
+title: "Exercise 3 - Single-cell RNA sequencing"
 author: "Rockefeller University, Bioinformatics Resource Centre"
 date: "https://rockefelleruniversity.github.io/scRNA-seq"
 output: 

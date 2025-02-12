@@ -1144,17 +1144,16 @@ if(params$isSlides == "yes"){
 
 ## Differential expression analysis
 
-We will keep using the RPCA integrated object from earlier lecture, or you can read in the *integrated.rds* object from dropbox
+We will use the rPCA integrated object from earlier lecture, and you can read it in from dropbox. It is the object called *integrated.rds*.
 
 
 ```{r, echo=T, eval=F}
-seu_obj <- my_seu_merge_rpca
+# downloaded from dropbox
+seu_obj <- readRDS("~/Downloads/integrated.rds")
 seu_obj
 ```
 
-OR...
-
-```{r, echo=T, eval=T}
+```{r, echo=F, eval=T}
 seu_obj <- readRDS("./data/integrated.rds")
 seu_obj
 ```
@@ -1165,7 +1164,7 @@ seu_obj
 
 Compared to bulk analysis, single cell RNAseq data presents several opportunities and challenges when doing differential gene expression.
 
-As we've explored so far, we can understand differences between cell types and find markers for cell types within a population of cells.
+As we've explored so far, we can identify different cell types and then find markers for these cell types within a population of cells. We did this with the Seurat *FindAllMarkers* function. 
 
 
 ```{r, results='hide',include=T,echo=T, eval=T, fig.height=4}
@@ -1177,9 +1176,9 @@ p_all
 ---
 ## Differentials within cell types
 
-Contrary to bulk RNAseq, expression data from individual cells allows us to compare conditions *within* important subsets of cells, such as interesting cell types. 
+In this section we will compare conditions *within* important subsets of cells, such as interesting cell types. We will look at gene expression differences between AD and control cells. 
 
-We will look at gene expression differences between AD and control cells. First, we add metadata columns that will eventually allow us to set up these comparisons.
+First, we add metadata columns that will eventually allow us to set up these comparisons.
 
 ```{r seu_setup,include=T,echo=T, fig.height=3, fig.width=6}
 # metadata column for condition
