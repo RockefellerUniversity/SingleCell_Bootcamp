@@ -264,4 +264,210 @@ save(a,b,c,dim_1,dim_2,dim_3,dim_4,dim_5, dim_6,dim_7,dim_8,d,e,f,g,h,i, file = 
 
 ```
 
+**Exercise 3** - **Differential expression**
 
+- **Set up**: Using the integrated Seurat object from the AD samples from our lecture, we will look at differentially expressed genes between AD and control subjects in cluster #4 from the 'seurat_clusters' metadata group. **This object is on dropbox as *integrated.rds***
+
+- Generate a list of differentially expressed genes for AD vs control in cluster #4 using a Wilcoxon rank sum test. Note: Confirm you are using the 'seurat_clusters' group, not the 'paper_cluster' group that also exists in the object.
+
+[Hint: Make sure you have the Seurat object properly set up for differential analysis. Are you using the correct assay? Are the integrated layers joined?]
+```{r, eval=FALSE,echo=toMessage}
+seu <- readRDS("~/Downloads/integrated.rds")
+```
+
+```{r, eval=FALSE,echo=toMessage}
+library(Seurat)
+library(tibble)
+library(dplyr)
+
+# metadata column for condition
+seu$condition <- ifelse(grepl("AD", seu$sample_id), "AD", "CON")
+
+# metadata column for condition + cell type
+seu$cluster_condition <- paste(seu$seurat_clusters, seu$condition, sep = "_")
+
+# set default assay to be RNA (currently is 'integrated')
+DefaultAssay(seu) <- "RNA"
+
+seu <- JoinLayers(seu)
+
+Idents(seu) <- "cluster_condition"
+de_wilcox_c4 <- FindMarkers(seu, ident.1 = "4_AD", ident.2 = "4_CON", logfc.threshold = 0)  %>% 
+  tibble::rownames_to_column("geneID")
+```
+
+- Generate a list of genes with differential expression statistics for AD vs control in cluster #4 using MAST. Note: Again, confirm you are using the 'seurat_clusters' group, not the 'paper_cluster' group that also exists in the object. Sort the table of genes by the 'FDR' column. 
+  + Add the cellular detection rate (CDR) to the model
+  + Does CDR correlate with any PCs? [Hint: you may need to go beyond PC1 and PC2 when looking at correlations]
+  + Do you think that Sex is a confounding variable for these cells? [Hint: Are there sex specific genes that drive your differential expression?]
+
+```{r, eval=FALSE,echo=toMessage}
+library(MAST)
+seu_c4 <- subset(seu, seurat_clusters == 4)
+seu_c4_data <- GetAssayData(seu_c4, assay = "RNA", layer = "data")
+# create SingleCellAssay for MAST
+sca_c4 <- MAST::FromMatrix(exprsArray = as.matrix(seu_c4_data),
+                           cData = seu_c4@meta.data,
+                           fData = data.frame(gene_id = rownames(seu_c4))
+)
+
+cdr_c4 <- colSums(assay(sca_c4)>0)
+cdr_scale_c4 <- scale(cdr_c4)
+
+colData(sca_c4)$ngeneson <- cdr_scale_c4
+cond <- factor(colData(sca_c4)$condition,
+               levels = c("AD","CON"))
+cond <- relevel(cond,"CON")
+colData(sca_c4)$Group <- cond
+
+# Does ngeneson correlate with a PC?
+
+pca_embed <- data.frame(seu_c4[["pca"]]@cell.embeddings)
+
+pca_vars <-  seu_c4[["pca"]]@stdev^2 # variance for each pc
+total_var <- sum(pca_vars) # total variance
+pct_var_explained <- pca_vars/total_var * 100 
+pct_var_explained <- round(pct_var_explained, 1)
+
+for_plot <- data.frame(colData(sca_c4))
+for_plot <- merge(for_plot, pca_embed, by = 0)
+
+library(ggpubr)
+p1 <- ggplot(for_plot, aes(x = ngeneson, y = PC_1, color = condition)) + geom_point() + ylab(paste0("PC_1 (", pct_var_explained[1],"%)")) 
+p2 <- ggplot(for_plot, aes(x = ngeneson, y = PC_2, color = condition)) + geom_point() + ylab(paste0("PC_2 (", pct_var_explained[2],"%)")) 
+p3 <- ggplot(for_plot, aes(x = ngeneson, y = PC_3, color = condition)) + geom_point() + ylab(paste0("PC_3 (", pct_var_explained[3],"%)")) 
+ggarrange(p1, p2, p3, nrow = 1, common.legend = TRUE, legend="bottom")
+
+# run MAST
+zlmCond_c4 <- zlm(~ngeneson + Group, sca_c4)
+sumZLM_c4 <- summary(zlmCond_c4,
+                  doLRT=paste0("Group","AD"))
+sumDT_c4 <- sumZLM_c4$datatable
+
+# turn the outpput into a nice DE dataframe
+de_mast_c4 <- merge(sumDT_c4[sumDT_c4$component=="H"&sumDT_c4$contrast==paste0("Group","AD"),],
+               sumDT_c4[sumDT_c4$component=="logFC"&sumDT_c4$contrast==paste0("Group","AD"),],by='primerid')
+de_mast_c4 <- dplyr::select(de_mast_c4,primerid,coef.y,z.y,`Pr(>Chisq).x`)
+names(de_mast_c4) <- c("geneID","log2Fc","z","pvalue")
+de_mast_c4$FDR <- p.adjust(de_mast_c4$pvalue,'fdr')
+de_mast_c4 <- de_mast_c4[order(de_mast_c4$FDR),]
+de_mast_c4
+
+# should we include Sex as a confounding factor?
+# Check for the sex specific XIST gene expression
+# not differentiall expressed - good!
+de_mast_c4[de_mast_c4$geneID == "XIST", ]
+
+# these plots show that there is not a strong overlap between XIST and a particular group
+# bias doesn't seem to be as strong as in the excitatory neuronsm so probably don't need to regress it out
+FeaturePlot(seu_c4, features = "XIST")
+DimPlot(seu_c4, split.by = "condition")
+
+```
+
+```{r, eval=FALSE, echo=F}
+head(de_mast_c4)
+
+de_mast_c4[de_mast_c4$geneID == "XIST", ]
+
+FeaturePlot(seu_c4, features = "XIST")
+
+DimPlot(seu_c4, split.by = "condition")
+
+```
+
+
+ - Make one or separate violin plots for the top 5 genes that are going up in AD in this cluster of cells
+ 
+```{r, eval=FALSE,echo=toMessage}
+top_up_AD <- head(de_mast_c4[de_mast_c4$log2Fc > 0, ], 5)
+vln_mast <- VlnPlot(seu_c4, features = top_up_AD$geneID, stack = T, flip = T, pt.size = 1)  + scale_x_discrete(labels=c('CON', 'AD'))
+```
+
+```{r, eval=FALSE, echo=F}
+vln_mast
+```
+
+ 
+- Generate a list of genes with differential expression statistics for AD vs control in cluster #4 using a pseudobulk strategy. Use DESeq2 and sort the table by the 'pvalue' column from the DESeq2 results. 
+  + Extra: Make a PCA plot with the aggregated cell counts to support or adjust the decision made about including sex as a confounding variable.
+
+```{r, eval=FALSE,echo=toMessage}
+seu_c4_aggr <- Seurat::AggregateExpression(seu_c4, return.seurat = T, group.by = c("sample_id", "condition"))
+# get the raw un-normalized counts
+counts_aggr <- as.matrix(seu_c4_aggr[["RNA"]]$counts)
+
+library(DESeq2)
+column_meta <- data.frame(
+  row.names = colnames(counts_aggr),
+  condition = ifelse(grepl("AD", colnames(counts_aggr)), "AD", "CON")
+)
+column_meta$condition <- factor(column_meta$condition, levels = c("CON", "AD"))
+
+
+dds_pseudo_c4 <- DESeqDataSetFromMatrix(countData = counts_aggr, colData = column_meta, design = ~condition)
+colData(dds_pseudo_c4)
+
+# filter lowly expressed genes
+smallestGroupSize <- 2
+keep <- rowSums(counts(dds_pseudo_c4) >= 10) >= smallestGroupSize
+table(keep)
+dds_pseudo_c4 <- dds_pseudo_c4[keep,]
+
+# run deseq2
+dds_pseudo_c4 <- DESeq(dds_pseudo_c4)
+resultsNames(dds_pseudo_c4)
+res_pseudo_c4 <- results(dds_pseudo_c4, name = "condition_AD_vs_CON")
+
+de_pseudo_c4 <- res_pseudo_c4 %>%
+  data.frame %>%
+  arrange(pvalue) %>%
+  rownames_to_column(var = "geneID") 
+
+# Make PCA plot of aggregates count matrix ans color by condition and sex
+
+sample_ids <- rownames(colData(dds_pseudo_c4))
+colData(dds_pseudo_c4)$sex <- ifelse(sample_ids == "AD2b_AD", "female", 
+                                      ifelse(sample_ids == "AD4_AD", "male",
+                                             ifelse(sample_ids == "C1_CON", "male",
+                                                    ifelse(sample_ids == "C3_CON", "female", "none!"))))
+
+p_cond <- plotPCA(rlog(dds_pseudo_c4), intgroup = "condition")  + coord_cartesian() + theme_bw() + ggtitle("PCA")
+p_sex <- plotPCA(rlog(dds_pseudo_c4), intgroup = "sex")  + coord_cartesian() + theme_bw() + ggtitle("PCA")
+```
+
+```{r, eval=FALSE, echo=F}
+head(de_pseudo_c4)
+p_cond 
+p_sex
+```
+
+- Compare the differential expression resutls between MAST and pseudobulk
+  + How many differential genes overlap between the methods?
+  + Do the pvalues and fold changes correlate?
+
+```{r, eval=FALSE,echo=toMessage}
+de_pseudo_c4$sig <- de_pseudo_c4$padj < 0.05
+de_mast_c4$sig <- de_mast_c4$FDR < 0.05
+
+mast_pseudo <- merge(de_mast_c4, de_pseudo_c4, by = "geneID", suffixes = c("_mast", "_pseudo"))
+
+# see overlap in significantly changing genes
+de_compare <- table(mast_pseudo$sig_mast, mast_pseudo$sig_pseudo)
+rownames(de_compare) <- c("mast_false", "mast_true")
+colnames(de_compare) <- c("pseudo_false", "pseudo_true")
+de_compare
+
+
+# correlate -log10p
+p_logp <- ggplot(mast_pseudo, aes(x = -log10(FDR), y = -log10(padj))) + geom_point() + xlab("-log10(FDR) for MAST")  + ylab("-log10(padj) for DESeq2")
+
+p_fc <- ggplot(mast_pseudo, aes(x = log2Fc, y = log2FoldChange)) + geom_point() + xlab("log2FC for MAST")  + ylab("log2FC for DESeq2")
+```
+
+
+```{r, eval=FALSE, echo=F}
+de_compare
+p_logp 
+p_fc
+```
