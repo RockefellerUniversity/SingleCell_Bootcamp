@@ -1125,7 +1125,7 @@ if(params$isSlides == "yes"){
 
 ## Differential expression analysis
 
-We will keep using the RPCA integrated object from earlier lecture, or you can read in the *integrated.rds* object from dropbox
+We will keep using the rPCA integrated object from earlier lecture, or you can read in the *integrated.rds* object from dropbox
 
 
 ```{r, echo=T, eval=T}
