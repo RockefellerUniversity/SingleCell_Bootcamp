@@ -1,5 +1,5 @@
 ---
-title: "Exercise 2 - Bioconductor"
+title: "Exercise 3 - Bioconductor"
 author: "Rockefeller University, Bioinformatics Resource Centre"
 date: "https://rockefelleruniversity.github.io/scRNA-seq"
 output: 
@@ -18,7 +18,7 @@ toMessage <- ifelse(!is.null(params$toMessage),params$toMessage,FALSE)
 ```
 
 <p>&nbsp;</p>
-These exercises are about the simple scRNAseq workflow in [session 2](https://rockefelleruniversity.github.io/https://rockefelleruniversity.github.io/SingleCell_Bootcamp/). 
+These exercises are about the integration and annotation in [session 3](https://rockefelleruniversity.github.io/https://rockefelleruniversity.github.io/SingleCell_Bootcamp/). 
 
 ## Description
 
