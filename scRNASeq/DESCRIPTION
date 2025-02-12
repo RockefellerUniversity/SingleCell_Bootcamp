@@ -11,7 +11,7 @@ biocViews: Training
 Remotes: satijalab/seurat-wrappers
 Depends: DropletUtils, scDblFinder, SingleCellExperiment, scran, scater, Seurat, 
     dplyr, scuttle, biomaRt, Herper, clustree, ggplot2, pheatmap, harmony, 
-    SingleR, RCurl,TSCAN, SoupX, clustree, devtools, hdf5r, celldex, irlba
+    SingleR, RCurl,TSCAN, SoupX, clustree, devtools, hdf5r, celldex, irlba, ggpubr, DESeq2, dplyr, tibble, MAST
 Suggests: knitr,
     rmarkdown,
     testthat,
