@@ -1236,7 +1236,6 @@ actin_counts <- counts_mat[rownames(counts_mat) == "ACTB"]
 hist(actin_counts, breaks = 50)
 ```
 
-
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
@@ -1424,8 +1423,6 @@ sca_exn
 ```
 
 
-
-
 ---
 ## Using MAST - calculate CDR
 
@@ -1540,7 +1537,6 @@ de_mast_exn <- de_mast_exn[order(de_mast_exn$FDR),]
 
 head(de_mast_exn, 3)
 ```
-
 
 
 ---
@@ -1998,7 +1994,6 @@ p_pseudo <- ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10
 
 ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend="bottom")
 ```
-
 
 ---
 ## Seurat FindMarkers for MAST
