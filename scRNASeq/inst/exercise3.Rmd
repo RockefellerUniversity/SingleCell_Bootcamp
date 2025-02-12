@@ -222,8 +222,6 @@ i
 
 ```
 
-
-
 **Exercise 2** - **Annotation**
 
 - Use the harmony results. Lets annotate using the HumanPrimaryCellAtlasData and ImmGen from celldex. Use singleR.
