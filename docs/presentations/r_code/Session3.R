@@ -852,15 +852,9 @@ ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
 de_mast_exn_df <- data.frame(de_mast_exn)
 de_mast_exn_df <- na.omit(de_mast_exn_df)
 de_mast_exn_sig <- de_mast_exn_df[de_mast_exn_df$FDR < 0.05, ]
-
 top_down_AD <- head(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
 
-
-
-## ----mast_violin1, echo=T, eval=T, fig.width=7--------------------------------
-
 VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD')) + NoLegend()
-
 
 
 

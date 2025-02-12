@@ -377,6 +377,53 @@ the count matrix]</p>
 <li>Lets try annotation using the Allen Brain Map. Use singleR and
 transfer anchors.</li>
 </ul>
+<p><strong>Exercise 3</strong> - <strong>Differential
+expression</strong></p>
+<ul>
+<li><p><strong>Set up</strong>: Using the integrated Seurat object from
+the AD samples from our lecture, we will look at differentially
+expressed genes between AD and control subjects in cluster #4 from the
+‘seurat_clusters’ metadata group. <strong>This object is on dropbox as
+<em>integrated.rds</em></strong></p></li>
+<li><p>Generate a list of differentially expressed genes for AD vs
+control in cluster #4 using a Wilcoxon rank sum test. Note: Confirm you
+are using the ‘seurat_clusters’ group, not the ‘paper_cluster’ group
+that also exists in the object.</p></li>
+</ul>
+<p>[Hint: Make sure you have the Seurat object properly set up for
+differential analysis. Are you using the correct assay? Are the
+integrated layers joined?]</p>
+<ul>
+<li><p>Generate a list of genes with differential expression statistics
+for AD vs control in cluster #4 using MAST. Note: Again, confirm you are
+using the ‘seurat_clusters’ group, not the ‘paper_cluster’ group that
+also exists in the object. Sort the table of genes by the ‘FDR’
+column.</p>
+<ul>
+<li>Add the cellular detection rate (CDR) to the model</li>
+<li>Does CDR correlate with any PCs? [Hint: you may need to go beyond
+PC1 and PC2 when looking at correlations]</li>
+<li>Do you think that Sex is a confounding variable for these cells?
+[Hint: Are there sex specific genes that drive your differential
+expression?]</li>
+</ul></li>
+<li><p>Make one or separate violin plots for the top 5 genes that are
+going up in AD in this cluster of cells</p></li>
+<li><p>Generate a list of genes with differential expression statistics
+for AD vs control in cluster #4 using a pseudobulk strategy. Use DESeq2
+and sort the table by the ‘pvalue’ column from the DESeq2 results.</p>
+<ul>
+<li>Extra: Make a PCA plot with the aggregated cell counts to support or
+adjust the decision made about including sex as a confounding
+variable.</li>
+</ul></li>
+<li><p>Compare the differential expression resutls between MAST and
+pseudobulk</p>
+<ul>
+<li>How many differential genes overlap between the methods?</li>
+<li>Do the pvalues and fold changes correlate?</li>
+</ul></li>
+</ul>
 </div>
 
 

@@ -663,8 +663,8 @@ For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.g
 
 ```
 ##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  12402372  662.4   24672925 1317.7   24672925 1317.7
-## Vcells 443274594 3382.0 1235188934 9423.8 1227265735 9363.3
+## Ncells  12402338  662.4   24672834 1317.7   24672834 1317.7
+## Vcells 443274480 3382.0 1235188934 9423.8 1227265619 9363.3
 ```
 
 ---
@@ -1212,8 +1212,8 @@ Often domain specific knowledge and good reference datasets will outperform the 
 
 ```
 ##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  13478311  719.9   24672925 1317.7   24672925 1317.7
-## Vcells 311949675 2380.0  988151148 7539.0 1227265735 9363.3
+## Ncells  13478277  719.9   24672834 1317.7   24672834 1317.7
+## Vcells 311949560 2380.0  988151148 7539.0 1227265619 9363.3
 ```
 
 ---
@@ -1441,7 +1441,7 @@ class: inverse, center, middle
 
 This is a non-parametric test that is used by default in the Seurat *FindMarkers* function. It is very fast and generally works well when finding markers of different and distinct cell types that have been identified through clustering. 
 
-It can also be used to find differences between conditions, **though this is likely not the best choice for this comparison**.
+It can also be used to find differences between conditions, though this is likely not the best choice for this comparison.
 
 
 ``` r
@@ -1739,28 +1739,19 @@ ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) + geom_poi
 ---
 ## Visualize top DE genes
 
-Look at the genes that go down in AD (up in control) in a feature plot
+Look at the genes that go down in AD (up in control) in a violin plot
 
 ``` r
 de_mast_exn_df &lt;- data.frame(de_mast_exn)
 de_mast_exn_df &lt;- na.omit(de_mast_exn_df)
 de_mast_exn_sig &lt;- de_mast_exn_df[de_mast_exn_df$FDR &lt; 0.05, ]
-
 top_down_AD &lt;- head(de_mast_exn_sig[de_mast_exn_sig$log2Fc &lt; 0, ], 5)
-```
 
-
----
-## Visualize top DE genes
-
-Look at the genes that go down in AD (up in control) with a violin plot
-
-``` r
 VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) +
     scale_x_discrete(labels = c("CON", "AD")) + NoLegend()
 ```
 
-![](Session3_files/figure-html/mast_violin1-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/mast_topSig-1.png)&lt;!-- --&gt;
 
 ---
 ## Visualize (sorta) DE genes
@@ -2359,12 +2350,12 @@ Currently (Seurat v5.0) the fold change information from DESeq2 or MAST is not o
 
 Also, using the packages directly allow for a higher level of fine tuning for more complex parameters (e.g random effect in MAST). 
 
-
+---
 
 ```
 ##             used   (Mb) gc trigger    (Mb)   max used   (Mb)
-## Ncells  14091688  752.6   24706777  1319.5   24706777 1319.5
-## Vcells 579981451 4425.0 1423128670 10857.7 1227265735 9363.3
+## Ncells  14091653  752.6   24690953  1318.7   24690953 1318.7
+## Vcells 579981338 4425.0 1423128460 10857.7 1227265619 9363.3
 ```
 
 ---
