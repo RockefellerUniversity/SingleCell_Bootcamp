@@ -1123,244 +1123,19 @@ if(params$isSlides == "yes"){
 
 ```
 
-# Differential Gene Expression
+## Differential expression analysis
+
+We will keep using the RPCA integrated object from earlier lecture, or you can read in the *integrated.rds* object from dropbox
 
 
-
----
-```{r, results='asis',include=TRUE,echo=FALSE}
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
-# Differential Cell Counts
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-  
-  ---
-  "    
-  )
-}else{
-  cat("# Differential Cell Counts
-
----
-  "    
-  )
-  
-}
-
-```  
-
-
-# Differential Cell Counts
-
-
-
----
-```{r, results='asis',include=TRUE,echo=FALSE}
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
-# CITE-Seq 
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-  
-  ---
-  "    
-  )
-}else{
-  cat("# CITE-Seq 
-
----
-  "    
-  )
-  
-}
-
-```
-
-## CITE-Seq
-
-The CITE-Seq method labels different types of cells or different samples with hashtag-labeled antibodies. Then, the cells can be pooled together into a single library and for sequencing at the same time. After sequencing, the cells can be separated by the different antibody hashtags.
-
-- Here, we will use a dataset from Seurat vignette [link](https://satijalab.org/seurat/articles/hashing_vignette.html)
-
----
-## Load data
-
-```{r sec3_CITE_prep,include=TRUE,eval=T}
-
-rna.mat <- readRDS("data/pbmc_umi_mtx.rds")
-dim(rna.mat)
-
-hto.mat <- readRDS("data/pbmc_hto_mtx.rds")
-dim(hto.mat)
-rownames(hto.mat)
-```
-
-
----
-## Prepare data
-
-```{r}
-seu_obj <- CreateSeuratObject(counts=rna.mat,project="citeSeq_demo")
-seu_obj[["HTO"]] <- CreateAssayObject(counts=hto.mat)
+```{r, echo=T, eval=T}
+seu_obj <- my_seu_merge_rpca
 seu_obj
 ```
 
-```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+OR...
 
-rm(hto.mat, rna.mat )
-gc()
-```
-
----
-## Cluster with regular workflow
-```{r sec3_CITE_clust,include=TRUE,eval=T}
-
-DefaultAssay(seu_obj) <- "RNA"
-seu_obj <- data_proc(seu_obj)
-seu_obj <- ScaleData(seu_obj)
-```
-
----
-## Cluster with regular workflow
-
-```{R}
-seu_obj <- quick_clust(seu_obj)
-DimPlot(seu_obj,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
-```
-
-
----
-## Centered log-ratio transformation
-
-* Hashtag counts are a kind of [compositional data](https://en.wikipedia.org/wiki/Compositional_data), which define the proportion of hashtags in each cell barcode.
-* CLR is a method to process compositional data. It is a log-ratio transformation that centers the data around the geometric mean of each cell barcode.
-
-```{r sec3_CITE_hto,include=TRUE,eval=T}
-DefaultAssay(seu_obj) <- "HTO"
-seu_obj <- NormalizeData(seu_obj, assay="HTO", normalization.method="CLR")
-
-```
-
----
-## Differentiate Hashtags
-
-- Demultiplex HTOs with *HTODemux()*
-- Threshold for positive call: *0.99 quantile*
-
-```{r}
-seu_obj <- HTODemux(seu_obj, assay = "HTO", positive.quantile = 0.99)
-
-head(seu_obj,2)
-```
-
----
-## Decide postive hashtags
-
-* Use the "negative" distribution to calculate cut-off value (99% quantile).
-* Every cell barcode with HTO-A >= cut-off was assigned as HTO-A positive.
-
-```{r CITESeq_posEG,include=TRUE,eval=TRUE,dpi=300}
-# Distribution of HTO-A level
-RidgePlot(seu_obj,features = "HTO-A",group.by = "orig.ident")+NoLegend()
-```
-
----
-## Demutiplex result
-
-* The demultiplex results are in the column *HTO_classification.global* and *hash.ID*
-* In the HTO_classification.global:
-  + The *Singlet* means the cell barcode with only one particular hashtag. It can be applied to further analysis.
-  + The *Negative* means no hashtags passed cut-off in the cell barcodes.
-  + The *Doublet* means multiple hashtags passed cut-off in the cell bacodes.
-    + The Doublets here didn't mean multiple cells in a single droplet.
-* In the column hash.ID, particular hashtag for each cell barcode assigned in the column *hash.ID*. The *Negative* or *Doublet* were the same as in the column *HTO_classification.global*.
-
----
-## Demutiplex result
-
-```{r CITESeq_posEG2,include=TRUE,eval=TRUE,dpi=300}
-RidgePlot(seu_obj,
-          features = c("HTO-A","HTO-B"),
-          group.by = "hash.ID")+NoLegend()
-#
-table(seu_obj$HTO_classification.global)
-#
-table(seu_obj$hash.ID)
-#
-table(seu_obj$HTO_classification.global,seu_obj$hash.ID)
-```
-
----
-## UMAP ~ split by Hashtags
-
-```{r CITESeq_spltUMAP,include=TRUE,eval=TRUE,dpi=300}
-DimPlot(seu_obj,group.by = "seurat_clusters",label = TRUE,pt.size = 0.2,split.by = "hash.ID",ncol = 5)+NoLegend()
-```
-
----
-## Unassigned cells
-
-* The cell barcodes with *Negative or Doublet* would not be used for further analysis directly.
-  + Generally, the mis-labeled rate in CITE-Seq would be ranged from 10% ~ 80% (avg 30%).
-  + If you use hashtag to label cell types, we could try to rescue the mis-labeled cells by using the clustering in UMAP. [assume a given cell type shall group together]
-  + If you use hashtags to label samples, it would be safer to exclude these cells for following analysis.
-  
-
----
-```{r, results='asis',include=TRUE,echo=FALSE}
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
-# Review
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-  
-  ---
-  "    
-  )
-}else{
-  cat("# Review
-
----
-  "    
-  )
-  
-}
-
-```
-
-
-![overview](./imgs/scRNA_workflow_ver001_20231017.png)
-
-```{r, results='asis',include=TRUE,echo=FALSE}
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
-# Differential expression analysis
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-
----
-"    
-  )
-}else{
-  cat("# Differential expression analysis
-
----
-"    
-  )
-  
-}
-
-```
-
-## Differential expression analysis
-
-Read in object after integration from dropbox 
-
-```{r, echo=T, eval=T}
+```{r, echo=T, eval=F}
 seu_obj <- readRDS("./data/integrated.rds")
 seu_obj
 ```
@@ -2267,6 +2042,217 @@ ggarrange(p_seuM, p_mast, common.legend = TRUE, legend="bottom")
 Currently (Seurat v5.0) the fold change information from DESeq2 or MAST is not obtained by *FindMarkers*. When defining gene sets with fold change cutoffs or visualizing gene expression changes, by not using the fold changes that account for normalization done by that algorithm, you can get funky results.
 
 Also, using the packages directly allow for a higher level of fine tuning for more complex parameters (e.g random effect in MAST). 
+
+
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Differential Cell Counts
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+  
+  ---
+  "    
+  )
+}else{
+  cat("# Differential Cell Counts
+
+---
+  "    
+  )
+  
+}
+
+```  
+
+
+# Differential Cell Counts
+
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# CITE-Seq 
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+  
+  ---
+  "    
+  )
+}else{
+  cat("# CITE-Seq 
+
+---
+  "    
+  )
+  
+}
+
+```
+
+## CITE-Seq
+
+The CITE-Seq method labels different types of cells or different samples with hashtag-labeled antibodies. Then, the cells can be pooled together into a single library and for sequencing at the same time. After sequencing, the cells can be separated by the different antibody hashtags.
+
+- Here, we will use a dataset from Seurat vignette [link](https://satijalab.org/seurat/articles/hashing_vignette.html)
+
+---
+## Load data
+
+```{r sec3_CITE_prep,include=TRUE,eval=T}
+
+rna.mat <- readRDS("data/pbmc_umi_mtx.rds")
+dim(rna.mat)
+
+hto.mat <- readRDS("data/pbmc_hto_mtx.rds")
+dim(hto.mat)
+rownames(hto.mat)
+```
+
+
+---
+## Prepare data
+
+```{r}
+seu_obj <- CreateSeuratObject(counts=rna.mat,project="citeSeq_demo")
+seu_obj[["HTO"]] <- CreateAssayObject(counts=hto.mat)
+seu_obj
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(hto.mat, rna.mat )
+gc()
+```
+
+---
+## Cluster with regular workflow
+```{r sec3_CITE_clust,include=TRUE,eval=T}
+
+DefaultAssay(seu_obj) <- "RNA"
+seu_obj <- data_proc(seu_obj)
+seu_obj <- ScaleData(seu_obj)
+```
+
+---
+## Cluster with regular workflow
+
+```{R}
+seu_obj <- quick_clust(seu_obj)
+DimPlot(seu_obj,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
+```
+
+
+---
+## Centered log-ratio transformation
+
+* Hashtag counts are a kind of [compositional data](https://en.wikipedia.org/wiki/Compositional_data), which define the proportion of hashtags in each cell barcode.
+* CLR is a method to process compositional data. It is a log-ratio transformation that centers the data around the geometric mean of each cell barcode.
+
+```{r sec3_CITE_hto,include=TRUE,eval=T}
+DefaultAssay(seu_obj) <- "HTO"
+seu_obj <- NormalizeData(seu_obj, assay="HTO", normalization.method="CLR")
+
+```
+
+---
+## Differentiate Hashtags
+
+- Demultiplex HTOs with *HTODemux()*
+- Threshold for positive call: *0.99 quantile*
+
+```{r}
+seu_obj <- HTODemux(seu_obj, assay = "HTO", positive.quantile = 0.99)
+
+head(seu_obj,2)
+```
+
+---
+## Decide postive hashtags
+
+* Use the "negative" distribution to calculate cut-off value (99% quantile).
+* Every cell barcode with HTO-A >= cut-off was assigned as HTO-A positive.
+
+```{r CITESeq_posEG,include=TRUE,eval=TRUE,dpi=300}
+# Distribution of HTO-A level
+RidgePlot(seu_obj,features = "HTO-A",group.by = "orig.ident")+NoLegend()
+```
+
+---
+## Demutiplex result
+
+* The demultiplex results are in the column *HTO_classification.global* and *hash.ID*
+* In the HTO_classification.global:
+  + The *Singlet* means the cell barcode with only one particular hashtag. It can be applied to further analysis.
+  + The *Negative* means no hashtags passed cut-off in the cell barcodes.
+  + The *Doublet* means multiple hashtags passed cut-off in the cell bacodes.
+    + The Doublets here didn't mean multiple cells in a single droplet.
+* In the column hash.ID, particular hashtag for each cell barcode assigned in the column *hash.ID*. The *Negative* or *Doublet* were the same as in the column *HTO_classification.global*.
+
+---
+## Demutiplex result
+
+```{r CITESeq_posEG2,include=TRUE,eval=TRUE,dpi=300}
+RidgePlot(seu_obj,
+          features = c("HTO-A","HTO-B"),
+          group.by = "hash.ID")+NoLegend()
+#
+table(seu_obj$HTO_classification.global)
+#
+table(seu_obj$hash.ID)
+#
+table(seu_obj$HTO_classification.global,seu_obj$hash.ID)
+```
+
+---
+## UMAP ~ split by Hashtags
+
+```{r CITESeq_spltUMAP,include=TRUE,eval=TRUE,dpi=300}
+DimPlot(seu_obj,group.by = "seurat_clusters",label = TRUE,pt.size = 0.2,split.by = "hash.ID",ncol = 5)+NoLegend()
+```
+
+---
+## Unassigned cells
+
+* The cell barcodes with *Negative or Doublet* would not be used for further analysis directly.
+  + Generally, the mis-labeled rate in CITE-Seq would be ranged from 10% ~ 80% (avg 30%).
+  + If you use hashtag to label cell types, we could try to rescue the mis-labeled cells by using the clustering in UMAP. [assume a given cell type shall group together]
+  + If you use hashtags to label samples, it would be safer to exclude these cells for following analysis.
+  
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Review
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+  
+  ---
+  "    
+  )
+}else{
+  cat("# Review
+
+---
+  "    
+  )
+  
+}
+
+```
+
+
+![overview](./imgs/scRNA_workflow_ver001_20231017.png)
+
 
 ---
 ## Resources
