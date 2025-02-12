@@ -1124,18 +1124,18 @@ gc()
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Differential Gene Expression
+# Differential expression analysis
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
 
 ---
-  "    
+"    
   )
 }else{
-  cat("# Differential Gene Expression
+  cat("# Differential expression analysis
 
 ---
-  "    
+"    
   )
   
 }
@@ -1144,17 +1144,17 @@ if(params$isSlides == "yes"){
 
 ## Differential expression analysis
 
-We will keep using the rPCA integrated object from earlier lecture, or you can read in the *integrated.rds* object from dropbox
+We will keep using the RPCA integrated object from earlier lecture, or you can read in the *integrated.rds* object from dropbox
 
 
-```{r, echo=T, eval=T}
+```{r, echo=T, eval=F}
 seu_obj <- my_seu_merge_rpca
 seu_obj
 ```
 
 OR...
 
-```{r, echo=T, eval=F}
+```{r, echo=T, eval=T}
 seu_obj <- readRDS("./data/integrated.rds")
 seu_obj
 ```
@@ -1200,11 +1200,11 @@ ggplot(seu_obj@meta.data,aes(x=paper_annot, fill=condition))+geom_bar(position =
 
 ---
 
-## Differentials within Excitatory Neurons
+## Excitatory Neurons
 
 We will use these annotations to compare AD vs control within the cluster of **excitatory neurons**. 
 
-```{r, results='hide',include=T,echo=T, eval=T, fig.width=10}
+```{r, results='hide',include=T,echo=T, eval=T, fig.width=10, fig.height=4}
 library(ggpubr)
 p_condition <- DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"),  reduction = "umap", group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control") + xlim(-10, 13) + ylim(-15, 15)
 ggarrange(p_all + NoLegend() + ggtitle("All cell types"), p_condition)
@@ -1239,7 +1239,7 @@ Expression data at the single cell level adds another layer of complexity and ho
   * How to handle a gene by cell matrix as opposed to gene by replicate?
   * **How to handle the high dropout rate in single cell RNAseq?**
 
-```{r setup3,include=T,echo=T, fig.height=4}
+```{r setup3,include=T,echo=T, fig.height=3}
 counts <- GetAssayData(seu_obj, assay = "RNA", layer = "counts.1")
 counts_mat <- as.matrix(counts)
 actin_counts <- counts_mat[rownames(counts_mat) == "ACTB"]
@@ -1251,7 +1251,7 @@ hist(actin_counts, breaks = 50)
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Prepare object for differential analysis
+# Prepare object
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
 
@@ -1259,7 +1259,7 @@ if(params$isSlides == "yes"){
 "    
   )
 }else{
-  cat("# Prepare object for differential analysis
+  cat("# Prepare object
 
 ---
 "    
@@ -1307,7 +1307,7 @@ Layers(seu_obj)
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Differential expression using the Wilcoxon Rank Sum Test
+# Wilcoxon Rank Sum Test
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
 
@@ -1315,7 +1315,7 @@ if(params$isSlides == "yes"){
 "    
   )
 }else{
-  cat("# Differential expression using the Wilcoxon Rank Sum Test
+  cat("# Wilcoxon Rank Sum Test
 
 ---
 "    
@@ -1360,7 +1360,7 @@ ggplot(de_wilcox, aes(x = avg_log2FC, y = -log10(p_val), color = sig)) +
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Differential expression using parametric methods
+# DE using parametric methods
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
 
@@ -1368,7 +1368,7 @@ if(params$isSlides == "yes"){
 "    
   )
 }else{
-  cat("# Differential expression using parametric methods
+  cat("# DE using parametric methods
 
 ---
 "    
@@ -1562,20 +1562,6 @@ ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
   theme_bw()
 ```
 
-
----
-
-## MAST vs Wilcox
-
-
-```{r}
-mast_wilcox <- merge(de_mast_exn, de_wilcox, by = "geneID", suffixes = c("_mast", "_wilcox"))
-de_compare <- table(mast_wilcox$sig_mast, mast_wilcox$sig_wilcox)
-rownames(de_compare) <- c("mast_false", "mast_true")
-colnames(de_compare) <- c("wilcox_false", "wilcox_true")
-de_compare
-
-```
 ---
 ## Visualize top DE genes
 
@@ -1594,15 +1580,15 @@ top_down_AD <- head(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
 ## Visualize top DE genes
 
 Look at the genes that go down in AD (up in control) with a violin plot
-```{r mast_violin1, echo=T, eval=T, fig.width=10}
+```{r mast_violin1, echo=T, eval=T, fig.width=7}
 
-VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD'))
+VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD')) + NoLegend()
 
 
 ```
 
 ---
-## Visualize top DE genes
+## Visualize (sorta) DE genes
 
 What about genes that barely pass the differential cutoff?
 
@@ -1612,18 +1598,106 @@ sorta_down_AD
 
 ```
 
-
 ---
-## Visualize top DE genes
+## Visualize (sorta) DE genes
 
 What about genes that barely pass the differential cutoff?
 
-```{r mast_violin2, echo=T, eval=T, fig.width=10}
+```{r mast_violin2, echo=T, eval=T, fig.width=7}
 
-VlnPlot(seu_exn, features = sorta_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD'))
+VlnPlot(seu_exn, features = sorta_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD')) + NoLegend()
 
 
 ```
+
+---
+
+## XIST is the top gene!
+
+We notice that the top DE gene from our analysis is XIST, which has much higher expression in females compared to males.
+
+This suggests that sex could be a confounding factor and is potentially a red flag that we should explore. XIST does seem to have localized expression to the group of cells that are only in one of the controls.  
+
+```{r mast_xist_feature, echo=T, eval=T, fig.width=10, fig.height=3}
+FeaturePlot(seu_exn, features = "XIST", split.by = "sample_id")
+```
+
+
+---
+## Sample information
+
+We can see from the sample info taken from the publication that C3 is indeed female. So we appear to have pulled out a *sample dependent* effect, not a *group dependent* effect like we are aiming for.
+
+<img src="./imgs/sample_info_male_female.png"height="125" width="650">
+
+
+---
+## MAST - sex as covariate
+
+We will re-run MAST with sex as a covariate.
+
+Add sex to metadata of SingleCellAssay object
+```{r mast_sex_cov1, eval=T, echo=T}
+
+colData(sca_exn)$sex <- ifelse(colData(sca_exn)$sample_id == "AD2b", "female", 
+                               ifelse(colData(sca_exn)$sample_id == "AD4", "male",
+                                      ifelse(colData(sca_exn)$sample_id == "C1", "male",
+                                             ifelse(colData(sca_exn)$sample_id == "C3", "female", "none!"))))
+
+```
+
+Run MAST with sex as a covariate
+```{r mast_sex_cov2, eval=F, echo=T}
+zlmCond_exn_sex <- zlm(~ngeneson + sex + Group, sca_exn)
+sumZLM_exn_sex <- summary(zlmCond_exn_sex,
+                  doLRT=paste0("Group","AD"))
+sumDT_exn_sex <- sumZLM_exn_sex$datatable
+```
+
+
+```{r mast_noRE_sex_saveDT,include=T,echo=F, eval=F}
+saveRDS(sumDT_exn_sex, "sumDT_exn_sex.rds")
+```
+
+---
+## Load MAST results
+
+To see results, load the following file from dropbox: *sumDT_exn_sex.rds*
+
+```{r mast_noRE_sex_loadDT,include=T,echo=T, eval=T}
+sumDT_exn_sex <- readRDS("./data/sumDT_exn_sex.rds")
+```
+
+---
+## MAST results
+
+A data frame with the fold changes and combined hurdle p-values is constructed from this MAST output.  
+```{r mast_noRE_getRes_sex,include=T,echo=T, eval=T}
+de_mast_exn_sex <- merge(sumDT_exn_sex[sumDT_exn_sex$component=="H"&sumDT_exn_sex$contrast==paste0("Group","AD"),],
+               sumDT_exn_sex[sumDT_exn_sex$component=="logFC"&sumDT_exn_sex$contrast==paste0("Group","AD"),],by='primerid')
+de_mast_exn_sex <- dplyr::select(de_mast_exn_sex,primerid,coef.y,z.y,`Pr(>Chisq).x`)
+names(de_mast_exn_sex) <- c("geneID","log2Fc","z","pvalue")
+de_mast_exn_sex$FDR <- p.adjust(de_mast_exn_sex$pvalue,'fdr')
+de_mast_exn_sex <- de_mast_exn_sex[order(de_mast_exn_sex$FDR),]
+
+head(de_mast_exn_sex, 3)
+```
+
+---
+
+## MAST results for XIST
+
+MAST output with Sex as covarivate: 
+```{r mast_noRE_xist_table,include=T,echo=T, eval=T}
+
+de_mast_exn_sex[de_mast_exn_sex$geneID == "XIST", ]
+```
+
+Previous MAST output:
+```{r mast_noRE_xist_table2,include=T,echo=T, eval=T}
+de_mast_exn[de_mast_exn$geneID == "XIST", ]
+```
+
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1657,7 +1731,7 @@ Treating each cell as an independent replicate is likely an incorrect assumption
 ]
 
 .pull-right[
-<img src="./imgs/pseudoreplication_bis_correlations.png"height="500" width="450">
+<img src="./imgs/pseudoreplication_bis_correlations.png"height="400" width="300">
 ]
 
 [Zimmerman et al 2015, Nat Communications](https://www.nature.com/articles/s41467-021-21038-1)
@@ -1795,7 +1869,7 @@ ggarrange(ma, pca, ncol = 2)
 ## DESeq2 results - Volcano
 
 It's clear that we have many fewer differentially expressed genes using a pseudobulk strategy. This is not surprising with only two replicates per condition, but also highlights the potential for a very high false positive rate when each cell assumed to be independent. 
-```{r pseudo_plot,include=T,echo=T}
+```{r pseudo_plot,include=T,echo=T, fig.height = 3}
 
 de_pseudo_exn$sig = de_pseudo_exn$padj < 0.05
 ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) +
@@ -1807,39 +1881,49 @@ ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), co
 ```
 
 ---
-
-## MAST vs Pseudobulk
-```{r}
-mast_pseudo <- merge(de_mast_exn, de_pseudo_exn, by = "geneID", all = FALSE, suffixes = c("_mast", "_pseudo")) 
-de_compare <- table(mast_pseudo$sig_mast, mast_pseudo$sig_pseudo)
-rownames(de_compare) <- c("mast_false", "mast_true")
-colnames(de_compare) <- c("pseudo_false", "pseudo_true")
-de_compare
-```
-
----
-## Visualize top DE genes
-
-Look at the genes that go down in AD (up in control) in a feature plot
-```{r pseudo_topSig, echo=T, eval=T, fig.width=10}
-de_pseudo_exn_df <- na.omit(de_pseudo_exn)
-
-top_down_AD_ps <- head(de_pseudo_exn_df[de_pseudo_exn_df$log2FoldChange < 0, ], 5)
-```
-
-
----
 ## Visualize top DE genes
 
 Look at the genes that go down in AD (up in control) with a violin plot
-```{r pseudo_violin1, echo=T, eval=T, fig.width=10}
-
+```{r pseudo_violin1, echo=T, eval=T, fig.width=7}
+de_pseudo_exn_df <- na.omit(de_pseudo_exn)
+top_down_AD_ps <- head(de_pseudo_exn_df[de_pseudo_exn_df$log2FoldChange < 0, ], 5)
 VlnPlot(seu_exn, features = top_down_AD_ps$geneID, stack = T, flip = T, pt.size = 1)  + scale_x_discrete(labels=c('CON', 'AD'))
 
 ```
 
 ---
 
+## DESeq2 - sex as covariate
+
+Add sex to metadata of DESeq2 dds object and make PCA plot
+```{r deseq2_sex_cov1, eval=T, echo=T, fig.height = 3}
+
+sample_ids <- rownames(colData(dds_pseudo_exn))
+colData(dds_pseudo_exn)$sex <- ifelse(sample_ids == "AD2b_AD", "female", 
+                                      ifelse(sample_ids == "AD4_AD", "male",
+                                             ifelse(sample_ids == "C1_CON", "male",
+                                                    ifelse(sample_ids == "C3_CON", "female", "none!"))))
+colData(dds_pseudo_exn)$sex <- as.factor(colData(dds_pseudo_exn)$sex)
+plotPCA(rlog(dds_pseudo_exn), intgroup = "sex")  + coord_cartesian() + theme_bw() + ggtitle("PCA")
+```
+
+---
+
+## Re-run DESeq2 with sex as covariate
+
+We notice that we now have no DE genes. This isn't terribly surprising given that we only have two replicates per condition and the sex is driving a lot of our variance.
+
+This doesn't mean the genes that were identified before adding sex as a covariate are invalid, you would just approach them with caution. This likely would be an indication that more replicates were necessary  to more confidently find DE genes. 
+```{r deseq2_sex_cov2, eval=T, echo=T}
+dds_pseudo_exn_sex <- dds_pseudo_exn
+design(dds_pseudo_exn_sex) <- ~sex + condition
+dds_pseudo_exn_sex <- DESeq(dds_pseudo_exn_sex)
+res_pseudo_exn_sex <- results(dds_pseudo_exn_sex, name = "condition_AD_vs_CON")
+
+head(res_pseudo_exn_sex, 3)
+```
+
+---
 
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
@@ -1895,7 +1979,7 @@ colData(sca_exn_filt)$ngeneson <- scale(cdr_filt)
 There is a special notation within the formula to add a random effect. Below we include *sample_id* as a random effect
 
 ```{r mast_re,include=T,echo=T, eval=F}
-zlm_re <- zlm(~ngeneson + Group + (1 | sample_id),
+zlm_re <- zlm(~ngeneson + sex+ Group + (1 | sample_id),
                sca_exn_filt, 
                ebayes = FALSE, 
                method="glmer")
@@ -2039,7 +2123,7 @@ seu_mast <- readRDS("./data/seu_mast_exn.rds")
 ```
 
 ---
-## Compare MAST results to Seurat wrapper 
+## Compare results
 
 ```{r}
 
@@ -2064,7 +2148,7 @@ Also, using the packages directly allow for a higher level of fine tuning for mo
 
 
 ```{r, echo=F, warning=FALSE, message=F}
-rm(seu_obj, counts, counts_mat, sca_exn, seu_exn, seu_exn_data,sumDT_exn,dds_pseudo_exn,res_pseudo_exn, seu_mast,seu_deseq)
+rm(seu_obj, counts, counts_mat, sca_exn, seu_exn, seu_exn_data,sumDT_exn, sumDT_exn_sex, dds_pseudo_exn,res_pseudo_exn, seu_mast,seu_deseq)
 gc()
 ```
 
