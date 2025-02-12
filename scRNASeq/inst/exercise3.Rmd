@@ -1,5 +1,5 @@
 ---
-title: "Exercise 3 - Bioconductor"
+title: "Exercise 2 - Bioconductor"
 author: "Rockefeller University, Bioinformatics Resource Centre"
 date: "https://rockefelleruniversity.github.io/scRNA-seq"
 output: 
@@ -18,169 +18,252 @@ toMessage <- ifelse(!is.null(params$toMessage),params$toMessage,FALSE)
 ```
 
 <p>&nbsp;</p>
-These exercises are about the simple scRNAseq workflow in [session 3](https://rockefelleruniversity.github.io/https://rockefelleruniversity.github.io/SingleCell_Bootcamp/). 
+These exercises are about the simple scRNAseq workflow in [session 2](https://rockefelleruniversity.github.io/https://rockefelleruniversity.github.io/SingleCell_Bootcamp/). 
 
 ## Description
-We will be using the IFNB-Stimulated and Control PBMCs from Seurat Data. The easiest way to get this data is from their custom package *SeuratData* which is hosted on GitHub. This is the same data we used to try out merging our data. 
 
-```{r, eval=F}
-remotes::install_github('satijalab/seurat-data')
+We will use data from this [study](https://www.science.org/doi/10.1126/science.aat1699) on renal cancer from human cancer. 
 
-```
+The full dataset is on [ArrayExpress](https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-7407). We will now use 4 samples for now: FCAImmP7277561, FCAImmP7277560, FCAImmP7277553, FCAImmP7277552. These are CD45 +/- cells from liver. 
 
-## Load data
-- Load the data and plit it into the STIM and CTRL group.
+You can also download them from [DropBox](https://www.dropbox.com/scl/fo/1k4y3fvfbissu1vds5kru/AN-CDAVfqa7H5pJT4wCchj0?rlkey=xi9fvilmqjt5j5er73cbocnui&st=zwlvcf6e&dl=0). 
 
-```{r load_data,include=TRUE, eval=FALSE,echo=toMessage}
+**Exercise 0** - **Preprocess data** [You can skip this and go straight to integration if you want]
+
+- Read in each dataset. Quickly run through creating a seurat object, log normalize, scale, assessing MT, check cell cycle integration. Creating a loop or function will help do this. Check some QC attributes. 
+
+```{r, eval=FALSE,echo=toMessage}
+
+files <- c("~/Downloads/FCAImmP7277552/GRCh38",
+  "~/Downloads/FCAImmP7277553/GRCh38",
+  "~/Downloads/FCAImmP7277560/GRCh38",
+  "~/Downloads/FCAImmP7277561/GRCh38")
+
+labels <- c("liver_CD45pos_552",
+            "liver_CD45neg_553",
+            "liver_CD45pos_560",
+            "liver_CD45neg_561")
+
 library(Seurat)
 
-library(Seurat)
-library(SeuratData)
-InstallData("ifnb")
-ifnb <- LoadData("ifnb")
-ifnb_list <- Seurat::SplitObject(ifnb, split.by="stim")
+seu_list <- lapply(1:4, function(x){
+
+mtx <- Read10X(files[x])
+seu <- CreateSeuratObject(mtx, min.features =200, min.cells=10 )
+seu[["dset"]] <- labels[x]# Create a category for sample
+seu <- Seurat::RenameCells(seu, add.cell.id=labels[x]) # add sample name in front of cell 
+seu <- NormalizeData(seu, normalization.method="LogNormalize")
+seu <- FindVariableFeatures(seu, select.method="vst", nfeatures=3000)
+seu <- ScaleData(seu)
+seu[["percent.mt"]] <- PercentageFeatureSet(seu, pattern = "^MT-")
+feat_s <- cc.genes$s.genes
+feat_g2m <- cc.genes$g2m.genes
+seu <- CellCycleScoring(seu, s.features = feat_s, g2m.features = feat_g2m)
+seu_filt <- subset(seu, percent.mt < 10)
+seu_filt <- ScaleData(seu, vars.to.regress = c("percent.mt","Phase"))
+DefaultAssay(seu_filt) <- "RNA"
+seu_filt <- RunPCA(seu_filt, assay = "RNA", npcs = 50)
+seu_filt <- FindNeighbors(seu_filt, reduction = "pca")
+seu_filt <- RunUMAP(seu_filt, dims=1:30, reduction = "pca")
+
+return(seu_filt)
+})
+
+
+my_plots <- lapply(seu_list, function(x){
+  vln <- VlnPlot(x,"percent.mt", group.by ="dset")
+  feat <- FeaturePlot(x, "percent.mt")
+  umap <- DimPlot(x,group.by = "Phase")
+  out <- list(vln, feat, umap)
+  return(out)
+})
+
+a <- my_plots[[1]][[1]]
+b <- my_plots[[1]][[2]]
+c <- my_plots[[1]][[3]]
+
+a
+b
+c
 ```
 
-**Exercise 1**
-
-## Data Processing
-
-- We want to run QC for our dataset. The MT genes have been filtered out in this example dataset. So lets skip that step. 
-
-- Make log normalization and identify variable features with the following settings
-  + log normalization: *normalization.method="logNormalize"*.
-  + find variable features: *select.method="vst"* and *nfeatures=3000*.
-  
-```{r prac1_dataProc_logNorm,echo=toMessage, eval=F}
-
-ifnb_list[[1]] <- NormalizeData(ifnb_list[[1]],normalization.method =  "LogNormalize")
-ifnb_list[[1]] <- FindVariableFeatures(ifnb_list[[1]],selection.method = "vst",nfeatures = 3000)
-ifnb_list[[1]]
-
-
-ifnb_list[[2]] <- NormalizeData(ifnb_list[[2]],normalization.method =  "LogNormalize")
-ifnb_list[[2]] <- FindVariableFeatures(ifnb_list[[2]],selection.method = "vst",nfeatures = 3000)
-ifnb_list[[2]]
+```{r, eval=F, echo=F}
+load("data/myplots2.RData")
+a
+b
+c
 ```
 
-## Estimate doublets
-Please estimate doublets with scrublet
+**Exercise 1** - **Integration**
 
-```{r prac1_doubletEst, eval=FALSE,echo=toMessage}
-# Prepare environment
-library(reticulate)
-py_path <- "/Users/JDLuo/opt/anaconda3/envs/reticulate/bin/python"
-Sys.setenv('RETICULATE_PYTHON'=py_path)
-scr <- import("scrublet")
-#
-# Extract counting matrix
-mat <- GetAssayData(ifnb_list[[1]],assay = "RNA",slot = "counts")
-mat <- as.matrix(mat)
-#
-# calculate doubelt scores
-scrub <- scr$Scrublet(t(mat))
-doublet <- scrub$scrub_doublets()
-names(doublet) <- c("doublet_score","doublet")
-#
-# import results into seurat object
-ifnb_list[[1]][["doublet_score"]] <- doublet$doublet_score
-ifnb_list[[1]][["doublet"]] <- doublet$doublet
+- Merge the datasets. How does it look? You can download a list of the 4 datasets after preprocessing from DropBox, or do exercise 0 yourself. 
 
+```{r, eval=FALSE,echo=toMessage}
+seu_list <- readRDS(file="~/Desktop/to_integrate_ex3.rds")
 
+seu_merge <- merge(seu_list[[1]], seu_list[2:4],
+                            add.cell.ids = labels, project = "Merge")
+seu_merge <- NormalizeData(seu_merge, normalization.method="LogNormalize", scale.factor=10000)
+seu_merge <- FindVariableFeatures(seu_merge, select.method="vst", nfeatures=2000)
+seu_merge <- ScaleData(seu_merge, verbose=FALSE)
+seu_merge <- RunPCA(seu_merge, npcs=30, verbose=FALSE)
+seu_merge <- RunUMAP(seu_merge, reduction = "pca", dims = 1:10, verbose=FALSE)
+seu_merge <- FindNeighbors(seu_merge, reduction = "pca", dims = 1:10, verbose=FALSE)
+seu_merge <- FindClusters(seu_merge, resolution = 0.5, verbose=FALSE)
 
-mat <- GetAssayData(ifnb_list[[2]],assay = "RNA",slot = "counts")
-mat <- as.matrix(mat)
-#
-# calculate doubelt scores
-scrub <- scr$Scrublet(t(mat))
-doublet <- scrub$scrub_doublets()
-names(doublet) <- c("doublet_score","doublet")
-#
-# import results into seurat object
-ifnb_list[[2]][["doublet_score"]] <- doublet$doublet_score
-ifnb_list[[2]][["doublet"]] <- doublet$doublet
+dim_1 <- DimPlot(seu_merge, group.by = "dset")
+dim_1
 
+dim_2 <- DimPlot(seu_merge, split.by = "dset", ncol = 2)
+dim_2
 
-#
-summary(ifnb_list[[1]]$doublet_score)
-table(ifnb_list[[1]]$doublet)
-summary(ifnb_list[[2]]$doublet_score)
-table(ifnb_list[[2]]$doublet)
-
+seu_merge_basic <- seu_merge
 ```
 
-## Run SoupX
-- Run SoupX on the automatic mode to determine the number of ambient RNA molecules in each cell.
-- Correct ambient RNA molecules from each cell and reload in corrected matrix.
-- Read in corrected matrix into seurat. Add scrublet doublet scores to the corrected matrix.
-
-```{r prac1_dataProc_soupx, eval=FALSE,echo=toMessage}
+```{r, eval=F, echo=F}
+dim_1
+dim_2
 ```
 
-## Cell cycle phase estimation
-- Please estimate cell cycle Phases with *Seurat::CellCycleScoring()*.
-- Check how many are assigned to each phase.
+- Integrate the 4 datasets using rPCA
 
-```{r prac1_dataProc_mito, eval=FALSE,echo=toMessage}
+```{r, eval=FALSE,echo=toMessage}
 
-ifnb_list[[1]] <- CellCycleScoring(ifnb_list[[1]], s.features = cc.genes$s.genes,g2m.features = cc.genes$g2m.genes)
+feats <- SelectIntegrationFeatures(seu_list)
 
-ifnb_list[[2]] <- CellCycleScoring(ifnb_list[[2]], s.features = cc.genes$s.genes,g2m.features = cc.genes$g2m.genes)
+my_seu_list_rpca <- lapply(seu_list, function(seu, feats){
+  seu <- ScaleData(seu, features=feats, verbose=FALSE)
+  seu <- RunPCA(seu, features=feats, verbose=FALSE)
+  return(seu)}, feats)
 
-table(ifnb_list[[1]]$Phase)
-table(ifnb_list[[2]]$Phase)
-```
+anchors <- FindIntegrationAnchors(my_seu_list_rpca, anchor.features = feats, reduction = "rpca")
 
+my_seu_merge_rpca <- IntegrateData(anchorset = anchors)
+my_seu_merge_rpca <- ScaleData(my_seu_merge_rpca)
+my_seu_merge_rpca <- RunPCA(my_seu_merge_rpca, npcs=30, verbose=FALSE)
+my_seu_merge_rpca <- RunUMAP(my_seu_merge_rpca, reduction = "pca", dims = 1:10, verbose=FALSE)
+my_seu_merge_rpca <- FindNeighbors(my_seu_merge_rpca, reduction = "pca", dims = 1:10, verbose=FALSE)
+my_seu_merge_rpca <- FindClusters(my_seu_merge_rpca, resolution = 0.5, verbose=FALSE)
 
-## Check QCs and filtering cells
-- Please make a violin plot including the following variables: UMI counts, genes detected, and doublet score per cell
-- Compare pre-post correction of ambient RNA molecules
+dim_3 <- DimPlot(my_seu_merge_rpca, group.by = "dset")
+dim_3
 
-```{r prac1_qcPlot_vlnPlot, eval=FALSE,echo=toMessage}
-VlnPlot(ifnb_list[[1]],features = c("nCount_RNA","nFeature_RNA","doublet_score"),ncol = 4)
-VlnPlot(ifnb_list[[2]],features = c("nCount_RNA","nFeature_RNA","doublet_score"),ncol = 4)
-```
+dim_4 <- DimPlot(my_seu_merge_rpca, split.by = "dset", ncol = 2)
+dim_4
 
-- Please use scatter plot to identify potential doublets and coloured by doublets detected with scrublet
-
-```{r prac1_qcPlot_scatter1, eval=FALSE,echo=toMessage}
-FeatureScatter(ifnb_list[[1]],feature1 = "nCount_RNA","nFeature_RNA",group.by = "doublet")
-
-FeatureScatter(ifnb_list[[2]],feature1 = "nCount_RNA","nFeature_RNA",group.by = "doublet")
-```
-
-## Filter out the doublets
-
-* Please filtering cells with
-  + doublets
-  
-```{r prac1_qcPlot_filt, eval=FALSE,echo=toMessage}
-ifnb_list[[1]][["filtOUT"]] <- ifnb_list[[1]]$doublet == "TRUE"
-table(ifnb_list[[1]]$filtOUT)
-
-ifnb_list[[2]][["filtOUT"]] <- ifnb_list[[2]]$doublet == "TRUE"
-table(ifnb_list[[2]]$filtOUT)
-```
-
-* Subset cells and re-scale to *percent.mt* and *CellCycleScoring Phase*
-```{r prac1_qcPlot_reScale, eval=FALSE,echo=toMessage}
-ifnb_list[[1]] <- subset(ifnb_list[[1]],subset=filtOUT == "FALSE")
-ifnb_list[[1]] <- ScaleData(ifnb_list[[1]],vars.to.regress = c("Phase"))
-
-ifnb_list[[2]] <- subset(ifnb_list[[2]],subset=filtOUT == "FALSE")
-ifnb_list[[2]] <- ScaleData(ifnb_list[[2]],vars.to.regress = c("Phase"))
-```
-
-## Dimensional reduction
-- Please make dimensional reduction with principle component analysis, UMAP and then cluster.
-```{r prac1_dimRed_PCA, eval=FALSE,echo=toMessage}
 
 ```
 
+```{r, eval=F, echo=F}
+dim_3
+dim_4
+```
 
-## Merge with rPCA
-- Integrate the two datasets together. 
+- Integrate the 4 datasets using Harmony
+
+```{r, eval=FALSE,echo=toMessage}
+
+seu_merge <- merge(seu_list[[1]], seu_list[2:4],
+                            add.cell.ids = labels, project = "Merge")
+seu_merge <- NormalizeData(seu_merge, normalization.method="LogNormalize", scale.factor=10000)
+seu_merge <- FindVariableFeatures(seu_merge, select.method="vst", nfeatures=2000)
+seu_merge <- ScaleData(seu_merge, verbose=FALSE)
+seu_merge <- RunPCA(seu_merge, npcs=30, verbose=FALSE)
+seu_merge <- RunUMAP(seu_merge, reduction = "pca", dims = 1:10, verbose=FALSE)
+library(harmony)
+seu_merge_harmony <- RunHarmony(seu_merge, group.by.vars= "dset", assay.use= "RNA")
+seu_merge_harmony <- RunUMAP(seu_merge_harmony, reduction = "harmony", dims = 1:10, reduction.name = "umap_harmony")
+seu_merge_harmony <- FindNeighbors(seu_merge_harmony, reduction = "harmony")
+seu_merge_harmony <- FindClusters(seu_merge_harmony) 
+
+dim_5 <- DimPlot(seu_merge_harmony, group.by = "dset", reduction = "umap_harmony")
+dim_5
+
+dim_6 <- DimPlot(seu_merge_harmony, split.by = "dset", ncol = 2, reduction = "umap_harmony")
+dim_6
 
 
-## Rescale the data and visualize with UMAP
-- Rescale and then run dimension reduction and clustering. We can visualize the results with UMAP.
+```
+
+```{r, eval=F, echo=F}
+dim_5
+dim_6
+```
+
+- Assess the integration performance. Here are some marker genes: A1BG and SERPINC1
+
+```{r, eval=FALSE,echo=toMessage}
+
+d <- FeaturePlot(seu_merge, "A1BG")
+e <- FeaturePlot(my_seu_merge_rpca, "A1BG")
+f <- FeaturePlot(seu_merge_harmony, "A1BG", reduction = "umap_harmony")
+
+
+g <- FeaturePlot(seu_merge, "SERPINC1")
+h <- FeaturePlot(my_seu_merge_rpca, "SERPINC1")
+i <- FeaturePlot(seu_merge_harmony, "SERPINC1", reduction = "umap_harmony")
+
+d
+e
+f
+g
+h
+i
+
+```
+
+```{r, eval=F, echo=F}
+d
+e
+f
+g
+h
+i
+
+```
+
+
+
+**Exercise 2** - **Annotation**
+
+- Use the harmony results. Lets annotate using the HumanPrimaryCellAtlasData and ImmGen from celldex. Use singleR.
+
+[Hint: The layers of a Harmony integrated object are kept seperate in the Seurat Object. You made need to run JoinLayers() before exporting the count matrix]
+
+```{r, eval=FALSE,echo=toMessage}
+
+library(celldex)
+library(SingleR)
+hpcad <- HumanPrimaryCellAtlasData()
+imm <- ImmGenData()
+
+seu_merge_harmony <- JoinLayers(seu_merge_harmony)
+seu_merge_harmony_mat <- GetAssayData(seu_merge_harmony)
+
+pred_res <- SingleR(ref = hpcad, test = seu_merge_harmony_mat, labels = hpcad$label.main)
+seu_merge_harmony$hpcad_singleR_labels <- pred_res$labels
+
+pred_res <- SingleR(ref = imm, test = seu_merge_harmony_mat, labels = imm$label.main)
+seu_merge_harmony$imm_singleR_labels <- pred_res$labels
+
+dim_7 <- DimPlot(seu_merge_harmony, group.by = "hpcad_singleR_labels", reduction = "umap_harmony", label=T)
+
+dim_8 <- DimPlot(seu_merge_harmony, group.by = "imm_singleR_labels", reduction = "umap_harmony", label=T)
+
+dim_7
+dim_8
+```
+
+```{r, eval=F, echo=F}
+dim_7
+dim_8
+```
+
+- Lets try annotation using the Allen Brain Map. Use singleR and transfer anchors.
+
+```{r, eval=F, echo=F}
+save(a,b,c,dim_1,dim_2,dim_3,dim_4,dim_5, dim_6,dim_7,dim_8,d,e,f,g,h,i, file = "data/myplots2.RData")
+
+```
+
+
