@@ -22,6 +22,12 @@ knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning 
 # library(SoupX)
 # library(DropletUtils)
 # library(scuttle)
+# 
+# library(ggpubr)
+# library(DESeq2)
+# library(tibble)
+# library(dplyr)
+# library(MAST)
 
 
 ## ----sec_mergeData_funcUsed_dataProc,include=TRUE-----------------------------
@@ -295,7 +301,7 @@ pheatmap(tbl, scale = "row", main="rPCA", treeheight_row = 0, , treeheight_col =
 
 ## ----echo=F-------------------------------------------------------------------
 tbl <- table(seu_merge_harmony$seurat_clusters, seu_merge_harmony$paper_annot)
-pheatmap(tbl, main="Harmony", treeheight_row = 0, , treeheight_col = 0)
+pheatmap(tbl, scale = "row", main="Harmony", treeheight_row = 0, , treeheight_col = 0)
 
 
 ## ----echo=F-------------------------------------------------------------------
@@ -309,9 +315,15 @@ tbl <- table(seu_merge_harmony$sample_id, seu_merge_harmony$seurat_clusters)
 pheatmap(tbl, scale = "row", main="Harmony", treeheight_row = 0, , treeheight_col = 0)
 
 
-## ----echo=F, warning=FALSE, message=F-----------------------------------------
+## ----eval=T, echo=F-----------------------------------------------------------
+rm(seu_merge )
+rm(seu_merge_harmony)
 
+
+
+## ----echo=F, warning=FALSE, message=F-----------------------------------------
 rm(seu_merge_harmony, my_seu_list_rpca,my_seu_list,seu_merge)
+gc()
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
@@ -565,26 +577,650 @@ tbl <- table(my_seu_merge_rpca$abm_seurat_labels,my_seu_merge_rpca$abm_singleR_l
 pheatmap::pheatmap(tbl,scale = "row")
 
 
+## ----echo=F, warning=FALSE, message=F-----------------------------------------
+rm(hpcad)
+gc()
+
+
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Differential Gene Expression
+# Differential expression analysis
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
 
 ---
-  "    
+"    
   )
 }else{
-  cat("# Differential Gene Expression
+  cat("# Differential expression analysis
 
 ---
-  "    
+"    
   )
   
 }
 
+
+
+## ----echo=T, eval=F-----------------------------------------------------------
+# seu_obj <- my_seu_merge_rpca
+# seu_obj
+
+
+## ----echo=T, eval=T-----------------------------------------------------------
+seu_obj <- readRDS("./data/integrated.rds")
+seu_obj
+
+
+## ----results='hide',include=T,echo=T, eval=T, fig.height=4--------------------
+
+p_all <- DimPlot(seu_obj,  reduction = "umap", group.by = "paper_annot", label = T) 
+p_all
+
+
+## ----seu_setup,include=T,echo=T, fig.height=3, fig.width=6--------------------
+# metadata column for condition
+seu_obj$condition <- ifelse(grepl("AD", seu_obj$sample_id), "AD", "CON")
+
+# metadata column for condition + cell type
+seu_obj$celltype_condition <- paste(seu_obj$paper_annot, seu_obj$condition, sep = "_")
+
+table(seu_obj$celltype_condition)
+
+
+## -----------------------------------------------------------------------------
+ggplot(seu_obj@meta.data,aes(x=paper_annot, fill=condition))+geom_bar(position = "fill")+
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+
+## ----results='hide',include=T,echo=T, eval=T, fig.width=10, fig.height=4------
+library(ggpubr)
+p_condition <- DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"),  reduction = "umap", group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control") + xlim(-10, 13) + ylim(-15, 15)
+ggarrange(p_all + NoLegend() + ggtitle("All cell types"), p_condition)
+
+
+## ----setup3,include=T,echo=T, fig.height=3------------------------------------
+counts <- GetAssayData(seu_obj, assay = "RNA", layer = "counts.1")
+counts_mat <- as.matrix(counts)
+actin_counts <- counts_mat[rownames(counts_mat) == "ACTB"]
+hist(actin_counts, breaks = 50)
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Prepare object
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Prepare object
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----results='asis',include=T,echo=T, eval=T----------------------------------
+DefaultAssay(seu_obj)
+DefaultAssay(seu_obj) <- "RNA"
+DefaultAssay(seu_obj)
+
+
+## ----results='asis',include=T,echo=T, eval=T----------------------------------
+Layers(seu_obj)
+
+
+## ----results='asis',include=T,echo=T, eval=T----------------------------------
+seu_obj <- JoinLayers(seu_obj)
+Layers(seu_obj)
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Wilcoxon Rank Sum Test
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Wilcoxon Rank Sum Test
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----wilcox,include=T,echo=T--------------------------------------------------
+library(tibble)
+library(dplyr)
+Idents(seu_obj) <- "celltype_condition"
+de_wilcox <- FindMarkers(seu_obj, ident.1 = "Excitatory Neurons_AD", ident.2 = "Excitatory Neurons_CON", logfc.threshold = 0)  %>% 
+  tibble::rownames_to_column("geneID")
+
+head(de_wilcox, 3)
+
+
+## ----wilcox_volcano,include=T,echo=T------------------------------------------
+de_wilcox$sig <- de_wilcox$p_val_adj < 0.05
+
+ggplot(de_wilcox, aes(x = avg_log2FC, y = -log10(p_val), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw()
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# DE using parametric methods
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# DE using parametric methods
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----include=T,echo=T, fig.height=3-------------------------------------------
+
+counts_seu <- GetAssayData(seu_obj, assay = "RNA", layer = "data")
+# SNX31 was identified as differentially expressed in excitatory neurons
+seu_obj$SNX31 <- counts_seu[rownames(counts_seu) == "SNX31", ]
+exn_toPlot <- seu_obj@meta.data[seu_obj@meta.data$paper_annot == "Excitatory Neurons", ]
+ggplot(exn_toPlot, aes(x = SNX31, fill = condition)) + geom_density() + ggtitle("SNX31 expression in AD vs CON in Excitatory Neruons") + theme_classic() + xlim(0,2)
+
+
+## ----mast_prep, include=T,echo=T, eval=T--------------------------------------
+library(MAST)
+seu_exn <- subset(seu_obj, paper_annot == "Excitatory Neurons")
+seu_exn_data <- GetAssayData(seu_exn, assay = "RNA", layer = "data")
+# create SingleCellAssay for MAST
+sca_exn <- MAST::FromMatrix(exprsArray = as.matrix(seu_exn_data),
+                           cData = seu_exn@meta.data,
+                           fData = data.frame(gene_id = rownames(seu_exn))
+)
+sca_exn
+
+
+## ----mast_prep2, include=T,echo=T, eval=T-------------------------------------
+cdr <- colSums(assay(sca_exn)>0)
+cdr_scale <- scale(cdr)
+head(cdr_scale)
+
+
+## ----mast_prep3, include=T,echo=T, eval=T-------------------------------------
+
+colData(sca_exn)$ngeneson <- cdr_scale
+cond <- factor(colData(sca_exn)$condition,
+               levels = c("AD","CON"))
+cond <- relevel(cond,"CON")
+colData(sca_exn)$Group <- cond
+
+colData(sca_exn)[1:3, c("paper_annot", "ngeneson", "Group")]
+
+
+
+## ----mast_cdr_pca-------------------------------------------------------------
+pca_embed <- data.frame(seu_exn[["pca"]]@cell.embeddings)
+
+pca_vars <-  seu_exn[["pca"]]@stdev^2 # variance for each pc
+total_var <- sum(pca_vars) # total variance
+pct_var_explained <- pca_vars/total_var * 100 
+pct_var_explained <- round(pct_var_explained, 1)
+
+for_plot <- data.frame(colData(sca_exn))
+for_plot <- merge(for_plot, pca_embed, by = 0)
+
+
+## ----mast_cdr_pca_plot,fig.width=7--------------------------------------------
+
+p1 <- ggplot(for_plot, aes(x = ngeneson, y = PC_1, color = condition)) + geom_point() + ylab(paste0("PC_1 (", pct_var_explained[1],"%)")) 
+p2 <- ggplot(for_plot, aes(x = ngeneson, y = PC_2, color = condition)) + geom_point() + ylab(paste0("PC_2 (", pct_var_explained[2],"%)")) 
+ggarrange(p1, p2, nrow = 1, common.legend = TRUE, legend="bottom")
+
+
+## ----mast_noRE,include=T,echo=T, eval=F---------------------------------------
+# 
+# zlmCond_exn <- zlm(~ngeneson + Group, sca_exn)
+# sumZLM_exn <- summary(zlmCond_exn,
+#                   doLRT=paste0("Group","AD"))
+# sumDT_exn <- sumZLM_exn$datatable
+
+
+## ----mast_noRE_saveDT,include=T,echo=F, eval=F--------------------------------
+# saveRDS(sumDT_exn, "sumDT_exn.rds")
+
+
+## ----mast_noRE_loadDT,include=T,echo=T, eval=T--------------------------------
+sumDT_exn <- readRDS("./data/sumDT_exn.rds")
+
+
+## -----------------------------------------------------------------------------
+sumDT_exn[1:12, c("primerid", "component", "contrast", "Pr(>Chisq)", "coef")]
+
+
+## ----mast_noRE_getRes,include=T,echo=T, eval=T--------------------------------
+de_mast_exn <- merge(sumDT_exn[sumDT_exn$component=="H"&sumDT_exn$contrast==paste0("Group","AD"),],
+               sumDT_exn[sumDT_exn$component=="logFC"&sumDT_exn$contrast==paste0("Group","AD"),],by='primerid')
+de_mast_exn <- dplyr::select(de_mast_exn,primerid,coef.y,z.y,`Pr(>Chisq).x`)
+names(de_mast_exn) <- c("geneID","log2Fc","z","pvalue")
+de_mast_exn$FDR <- p.adjust(de_mast_exn$pvalue,'fdr')
+de_mast_exn <- de_mast_exn[order(de_mast_exn$FDR),]
+
+head(de_mast_exn, 3)
+
+
+## ----mast_noRE_plot,include=T,echo=T, eval=T----------------------------------
+
+de_mast_exn$sig <- de_mast_exn$FDR < 0.05
+
+ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw()
+
+
+## ----mast_topSig, echo=T, eval=T, fig.width=10--------------------------------
+de_mast_exn_df <- data.frame(de_mast_exn)
+de_mast_exn_df <- na.omit(de_mast_exn_df)
+de_mast_exn_sig <- de_mast_exn_df[de_mast_exn_df$FDR < 0.05, ]
+
+top_down_AD <- head(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
+
+
+
+## ----mast_violin1, echo=T, eval=T, fig.width=7--------------------------------
+
+VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD')) + NoLegend()
+
+
+
+
+## ----mast_sorta_down, echo=T, eval=T, fig.width=10----------------------------
+sorta_down_AD <- tail(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
+sorta_down_AD
+
+
+
+## ----mast_violin2, echo=T, eval=T, fig.width=7--------------------------------
+
+VlnPlot(seu_exn, features = sorta_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD')) + NoLegend()
+
+
+
+
+## ----mast_xist_feature, echo=T, eval=T, fig.width=10, fig.height=3------------
+FeaturePlot(seu_exn, features = "XIST", split.by = "sample_id")
+
+
+## ----mast_sex_cov1, eval=T, echo=T--------------------------------------------
+
+colData(sca_exn)$sex <- ifelse(colData(sca_exn)$sample_id == "AD2b", "female", 
+                               ifelse(colData(sca_exn)$sample_id == "AD4", "male",
+                                      ifelse(colData(sca_exn)$sample_id == "C1", "male",
+                                             ifelse(colData(sca_exn)$sample_id == "C3", "female", "none!"))))
+
+
+
+## ----mast_sex_cov2, eval=F, echo=T--------------------------------------------
+# zlmCond_exn_sex <- zlm(~ngeneson + sex + Group, sca_exn)
+# sumZLM_exn_sex <- summary(zlmCond_exn_sex,
+#                   doLRT=paste0("Group","AD"))
+# sumDT_exn_sex <- sumZLM_exn_sex$datatable
+
+
+## ----mast_noRE_sex_saveDT,include=T,echo=F, eval=F----------------------------
+# saveRDS(sumDT_exn_sex, "sumDT_exn_sex.rds")
+
+
+## ----mast_noRE_sex_loadDT,include=T,echo=T, eval=T----------------------------
+sumDT_exn_sex <- readRDS("./data/sumDT_exn_sex.rds")
+
+
+## ----mast_noRE_getRes_sex,include=T,echo=T, eval=T----------------------------
+de_mast_exn_sex <- merge(sumDT_exn_sex[sumDT_exn_sex$component=="H"&sumDT_exn_sex$contrast==paste0("Group","AD"),],
+               sumDT_exn_sex[sumDT_exn_sex$component=="logFC"&sumDT_exn_sex$contrast==paste0("Group","AD"),],by='primerid')
+de_mast_exn_sex <- dplyr::select(de_mast_exn_sex,primerid,coef.y,z.y,`Pr(>Chisq).x`)
+names(de_mast_exn_sex) <- c("geneID","log2Fc","z","pvalue")
+de_mast_exn_sex$FDR <- p.adjust(de_mast_exn_sex$pvalue,'fdr')
+de_mast_exn_sex <- de_mast_exn_sex[order(de_mast_exn_sex$FDR),]
+
+head(de_mast_exn_sex, 3)
+
+
+## ----mast_noRE_xist_table,include=T,echo=T, eval=T----------------------------
+
+de_mast_exn_sex[de_mast_exn_sex$geneID == "XIST", ]
+
+
+## ----mast_noRE_xist_table2,include=T,echo=T, eval=T---------------------------
+de_mast_exn[de_mast_exn$geneID == "XIST", ]
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Pseudoreplication bias
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Pseudoreplication bias
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Pseudobulk
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Pseudobulk
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----pseudo_agg,include=T,echo=T----------------------------------------------
+seu_exn_aggr <- Seurat::AggregateExpression(seu_exn, return.seurat = T, group.by = c("sample_id", "condition"))
+# get the raw un-normalized counts
+counts_aggr <- as.matrix(seu_exn_aggr[["RNA"]]$counts)
+head(counts_aggr, 3)
+
+
+## ----pseudo_prep,include=T,echo=T---------------------------------------------
+library(DESeq2)
+column_meta <- data.frame(
+  row.names = colnames(counts_aggr),
+  condition = ifelse(grepl("AD", colnames(counts_aggr)), "AD", "CON")
+)
+column_meta$condition <- factor(column_meta$condition, levels = c("CON", "AD"))
+
+
+dds_pseudo_exn <- DESeqDataSetFromMatrix(countData = counts_aggr, colData = column_meta, design = ~condition)
+colData(dds_pseudo_exn)
+
+
+## ----pseudo_filter,include=T,echo=T-------------------------------------------
+smallestGroupSize <- 2
+keep <- rowSums(counts(dds_pseudo_exn) >= 10) >= smallestGroupSize
+table(keep)
+dds_pseudo_exn <- dds_pseudo_exn[keep,]
+
+
+## ----pseudo_results,include=T,echo=T------------------------------------------
+
+dds_pseudo_exn <- DESeq(dds_pseudo_exn)
+resultsNames(dds_pseudo_exn)
+res_pseudo_exn <- results(dds_pseudo_exn, name = "condition_AD_vs_CON")
+
+
+
+## ----pseudo_results2,include=T,echo=T-----------------------------------------
+de_pseudo_exn <- res_pseudo_exn %>%
+  data.frame %>%
+  arrange(pvalue) %>%
+  rownames_to_column(var = "geneID") 
+
+head(de_pseudo_exn, 3)
+
+
+## ----pseudo_MA_PCA, fig.width = 10--------------------------------------------
+ma <- ggplot(de_pseudo_exn, aes(x = baseMean, y = log2FoldChange)) + geom_point() + theme_bw() +scale_x_log10() + ggtitle("MA plot") 
+pca <- plotPCA(rlog(dds_pseudo_exn))  + coord_cartesian() + theme_bw() + ggtitle("PCA")
+
+ggarrange(ma, pca, ncol = 2)
+
+
+## ----pseudo_plot,include=T,echo=T, fig.height = 3-----------------------------
+
+de_pseudo_exn$sig = de_pseudo_exn$padj < 0.05
+ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw()
+
+
+
+
+## ----pseudo_violin1, echo=T, eval=T, fig.width=7------------------------------
+de_pseudo_exn_df <- na.omit(de_pseudo_exn)
+top_down_AD_ps <- head(de_pseudo_exn_df[de_pseudo_exn_df$log2FoldChange < 0, ], 5)
+VlnPlot(seu_exn, features = top_down_AD_ps$geneID, stack = T, flip = T, pt.size = 1)  + scale_x_discrete(labels=c('CON', 'AD'))
+
+
+
+## ----deseq2_sex_cov1, eval=T, echo=T, fig.height = 3--------------------------
+
+sample_ids <- rownames(colData(dds_pseudo_exn))
+colData(dds_pseudo_exn)$sex <- ifelse(sample_ids == "AD2b_AD", "female", 
+                                      ifelse(sample_ids == "AD4_AD", "male",
+                                             ifelse(sample_ids == "C1_CON", "male",
+                                                    ifelse(sample_ids == "C3_CON", "female", "none!"))))
+colData(dds_pseudo_exn)$sex <- as.factor(colData(dds_pseudo_exn)$sex)
+plotPCA(rlog(dds_pseudo_exn), intgroup = "sex")  + coord_cartesian() + theme_bw() + ggtitle("PCA")
+
+
+## ----deseq2_sex_cov2, eval=T, echo=T------------------------------------------
+dds_pseudo_exn_sex <- dds_pseudo_exn
+design(dds_pseudo_exn_sex) <- ~sex + condition
+dds_pseudo_exn_sex <- DESeq(dds_pseudo_exn_sex)
+res_pseudo_exn_sex <- results(dds_pseudo_exn_sex, name = "condition_AD_vs_CON")
+
+head(res_pseudo_exn_sex, 3)
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Mixed model with random effect
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Mixed model with random effect
+
+---
+"    
+  )
+  
+}
+
+
+
+## ----mast_re_prep,include=T,echo=T, eval=F------------------------------------
+# # recommended here for RE: https://github.com/RGLab/MAST/issues/133
+# sca_exn_filt<-filterLowExpressedGenes(sca_exn,threshold=0.1)
+# 
+# cdr_filt <- colSums(assay(sca_exn_filt)>0)
+# colData(sca_exn_filt)$ngeneson <- scale(cdr_filt)
+# 
+
+
+## ----mast_re,include=T,echo=T, eval=F-----------------------------------------
+# zlm_re <- zlm(~ngeneson + sex+ Group + (1 | sample_id),
+#                sca_exn_filt,
+#                ebayes = FALSE,
+#                method="glmer")
+# 
+# sumZLM_re <- summary(zlm_re,
+#                   doLRT=paste0("Group","AD"))
+# sumDT_re <- sumZLM_re$datatable
+# 
+
+
+## ----mast_re_saveDT,include=T,echo=F, eval=F----------------------------------
+# saveRDS(sumDT_re, "sumDT_exn_re.rds")
+
+
+## ----mast_re_loadDT,include=T,echo=T, eval=T----------------------------------
+sumDT_re <- readRDS("./data/sumDT_exn_re.rds")
+
+
+## ----mast_re2,include=T,echo=T, eval=T----------------------------------------
+de_mast_re <- merge(sumDT_re[sumDT_re$component=="H"&sumDT_re$contrast==paste0("Group","AD"),],
+               sumDT_re[sumDT_re$component=="logFC"&sumDT_re$contrast==paste0("Group","AD"),],by='primerid')
+de_mast_re <- dplyr::select(de_mast_re,primerid,coef.y,z.y,`Pr(>Chisq).x`)
+names(de_mast_re) <- c("geneID","log2Fc","z","pvalue")
+de_mast_re$FDR <- p.adjust(de_mast_re$pvalue,'fdr')
+de_mast_re <- de_mast_re[order(de_mast_re$FDR),]
+
+head(de_mast_re, 3)
+
+
+## ----mast_re_plot,include=T,echo=T, eval=T------------------------------------
+
+de_mast_re$sig <- de_mast_re$FDR < 0.05
+
+ggplot(de_mast_re, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw()
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# DESeq2 and MAST using Seurat FindMarkers?
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# DESeq2 and MAST using Seurat FindMarkers?
+
+---
+"    
+  )
+  
+}
+
+
+
+## -----------------------------------------------------------------------------
+# test deseq output to deseq using findmarkers
+Idents(seu_exn_aggr) <- "condition"
+seu_deseq <- FindMarkers(object = seu_exn_aggr,
+                         ident.1 = "AD",
+                         ident.2 = "CON",
+                         test.use = "DESeq2", 
+                         slot = "counts",
+                         min.cells.group = 2)
+
+seu_deseq$sig = seu_deseq$p_val_adj < 0.05
+
+
+## -----------------------------------------------------------------------------
+p_seuD <- ggplot(seu_deseq, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw() + ggtitle("FindMarkers")
+p_pseudo <- ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw() + ggtitle("Using DESeq2 directly")
+
+ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend="bottom")
+
+
+## ----eval=F-------------------------------------------------------------------
+# cdr_exn <- colSums(seu_exn[["RNA"]]$data>0)
+# seu_exn$ngeneson <- scale(cdr_exn)
+# 
+# Idents(seu_exn_aggr) <- "condition"
+# seu_mast <- FindMarkers(object = seu_exn,
+#                         group.by = "condition",
+#                         ident.1 = "AD",
+#                         ident.2 = "CON",
+#                         test.use = "MAST",
+#                         slot = "data",
+#                         latent.vars = "ngeneson"
+# )
+# 
+# seu_mast$sig = seu_mast$p_val_adj < 0.05
+# 
+
+
+## ----saveSeuMast,include=T,echo=F, eval=F-------------------------------------
+# saveRDS(seu_mast, "seu_mast_exn.rds")
+
+
+## ----loadSeuMast,include=T,echo=T, eval=T-------------------------------------
+seu_mast <- readRDS("./data/seu_mast_exn.rds")
+
+
+## -----------------------------------------------------------------------------
+
+p_seuM <- ggplot(seu_mast, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw() + ggtitle("FindMarkers")
+p_mast <- ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw() + ggtitle("Using MAST directly")
+
+ggarrange(p_seuM, p_mast, common.legend = TRUE, legend="bottom")
+
+
+## ----echo=F, warning=FALSE, message=F-----------------------------------------
+rm(seu_obj, counts, counts_mat, sca_exn, seu_exn, seu_exn_data,sumDT_exn, sumDT_exn_sex, dds_pseudo_exn,res_pseudo_exn, seu_mast,seu_deseq)
+gc()
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
