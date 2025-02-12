@@ -54,6 +54,7 @@ library(MAST)
 
 - Merge multiple data sets
 - Cell Type Annotation 
+- Differential Analysis
 - CITE-seq data processing
 
 
@@ -161,12 +162,19 @@ my_seu_list <- readRDS("data/to_integrate.rds")
 Each dataset has been individually processed, QC'd and reviewed prior to combining into a list. Sotring everything in a list will make our life easier later. 
 
 1) Load into Seurat object. 
+
 2) Log Normalized and scaled. 
+
 3) Filtered based on MT levels (2.5%).
-4) Filtered based on doublets (Scrublet).  
+
+4) Filtered based on doublets (Scrublet). 
+
 5) Regressed to MT. 
+
 6) PCA. 
+
 7) Clusters. 
+
 8) UMAP. 
 
 ---
@@ -195,7 +203,6 @@ if(params$isSlides == "yes"){
 ## Concatenate the datasets
 
 We can use *merge()* function to integrate multiple data sets, as they are. We need to provide a single seurat object as our first argument, and a list containing the rest of our Seurat objects as the second. We also need to provide *Group* information and a *name* for the project as arguments. 
-
 
 ```{r mergeData_woCor_merged,include=TRUE,eval=T}
 
@@ -280,14 +287,14 @@ The steps involved in rPCA:
 
 ![](./imgs/rpca_1.png)
 
-[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
+[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674\(19\)30559-8)
 
 ---
 ## Merge with reciprocal PCA
 
 ![](./imgs/rpca_2.png)
 
-[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
+[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674\(19\)30559-8)
 
 ---
 ## RPCA workflow
@@ -507,9 +514,9 @@ seu_merge_harmony <- FindClusters(seu_merge_harmony)
 ```
 
 ---
-## Evaluating Harmony using clusters
+## Evaluating Harmony
 
-We can see that our data sets overlay with each other. Again, it looks slightly better than before. The dataset looked pretty good before, but now the overlap is tighter.
+We can see that our data sets overlay with each other. Again, it looks slightly better than before.
 
 ```{R}
 DimPlot(seu_merge_harmony, group.by = "sample_id", reduction = "umap_harmony", pt.size = 0.2)
@@ -582,9 +589,12 @@ saveRDS(my_seu_merge_rpca, "scRNASeq/inst/extdata/data/integrated.rds")
 
 Broadly it seems like rPCA may be the best option in this case. Why?:
 
-1) The integration in general is subtle and rPCA is more conservative
+1) The integration in general is subtle and rPCA is considered more conservative
+
 2) Sample UMAP looks cleanest
+
 3) The number of cells per cluster seems more equal
+
 4) The annotation seems cleaner
 
 ---
@@ -616,7 +626,7 @@ pheatmap(tbl, scale = "row", main="rPCA", treeheight_row = 0, , treeheight_col =
 .pull-right[
 ```{R, echo=F}
 tbl <- table(seu_merge_harmony$seurat_clusters, seu_merge_harmony$paper_annot)
-pheatmap(tbl, main="Harmony", treeheight_row = 0, , treeheight_col = 0)
+pheatmap(tbl, scale = "row", main="Harmony", treeheight_row = 0, , treeheight_col = 0)
 ```
   ]
   
@@ -725,7 +735,7 @@ This was done by careful assessment of the marker genes. Here we are look at Oli
 FeaturePlot(my_seu_merge_rpca, c("MOBP","MAG"))
 ```
 
-
+---
 ## Automated annotation
 
 To annotate the Single-cell data sets, we can evaluate the gene expression pattern of well known cell-type specific marker genes and make a manual annotation. This is time consuming and not systematic.
@@ -778,7 +788,7 @@ if(params$isSlides == "yes"){
 [SingleR](https://bioconductor.org/packages/release/bioc/vignettes/SingleR/inst/doc/SingleR.html) is Bioconductor package which can be used to predict annotations of a single-cell dataset. It is maybe the most flexible way of annotating your data, as it will accept a variety of kinds of reference data including bulk and scRNAseq experiments. 
 SingleR works with a very simple method: calculate a spearman rank correlation between reference and test dataset for each label.
 
-Despite this simplicity, there is also scope to do more complex annotation with some advacned features i.e. to improve resolution of related labels or using multiple references. You can dig into this further in the [singleR book](https://bioconductor.org/books/release/SingleRBook/).
+Despite this simplicity, there is also scope to do more complex annotation with some advanced features i.e. to improve resolution of related labels or using multiple references. You can dig into this further in the [singleR book](https://bioconductor.org/books/release/SingleRBook/).
 
 ---
 ## Annotation with SingleR
