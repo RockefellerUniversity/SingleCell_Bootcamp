@@ -564,3 +564,158 @@ table(my_seu_merge_rpca$abm_seurat_labels == my_seu_merge_rpca$abm_singleR_label
 tbl <- table(my_seu_merge_rpca$abm_seurat_labels,my_seu_merge_rpca$abm_singleR_labels)
 pheatmap::pheatmap(tbl,scale = "row")
 
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Differential Gene Expression
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+  "    
+  )
+}else{
+  cat("# Differential Gene Expression
+
+---
+  "    
+  )
+  
+}
+
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Differential Cell Counts
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+  
+  ---
+  "    
+  )
+}else{
+  cat("# Differential Cell Counts
+
+---
+  "    
+  )
+  
+}
+
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# CITE-Seq 
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+  
+  ---
+  "    
+  )
+}else{
+  cat("# CITE-Seq 
+
+---
+  "    
+  )
+  
+}
+
+
+
+## ----sec3_CITE_prep,include=TRUE,eval=T---------------------------------------
+
+rna.mat <- readRDS("data/pbmc_umi_mtx.rds")
+dim(rna.mat)
+
+hto.mat <- readRDS("data/pbmc_hto_mtx.rds")
+dim(hto.mat)
+rownames(hto.mat)
+
+
+## -----------------------------------------------------------------------------
+seu_obj <- CreateSeuratObject(counts=rna.mat,project="citeSeq_demo")
+seu_obj[["HTO"]] <- CreateAssayObject(counts=hto.mat)
+seu_obj
+
+
+## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
+
+rm(hto.mat, rna.mat )
+gc()
+
+
+## ----sec3_CITE_clust,include=TRUE,eval=T--------------------------------------
+
+DefaultAssay(seu_obj) <- "RNA"
+seu_obj <- data_proc(seu_obj)
+seu_obj <- ScaleData(seu_obj)
+
+
+## -----------------------------------------------------------------------------
+seu_obj <- quick_clust(seu_obj)
+DimPlot(seu_obj,group.by = "seurat_clusters",pt.size = 0.2,label = TRUE)+NoLegend()
+
+
+## ----sec3_CITE_hto,include=TRUE,eval=T----------------------------------------
+DefaultAssay(seu_obj) <- "HTO"
+seu_obj <- NormalizeData(seu_obj, assay="HTO", normalization.method="CLR")
+
+
+
+## -----------------------------------------------------------------------------
+seu_obj <- HTODemux(seu_obj, assay = "HTO", positive.quantile = 0.99)
+
+head(seu_obj,2)
+
+
+## ----CITESeq_posEG,include=TRUE,eval=TRUE,dpi=300-----------------------------
+# Distribution of HTO-A level
+RidgePlot(seu_obj,features = "HTO-A",group.by = "orig.ident")+NoLegend()
+
+
+## ----CITESeq_posEG2,include=TRUE,eval=TRUE,dpi=300----------------------------
+RidgePlot(seu_obj,
+          features = c("HTO-A","HTO-B"),
+          group.by = "hash.ID")+NoLegend()
+#
+table(seu_obj$HTO_classification.global)
+#
+table(seu_obj$hash.ID)
+#
+table(seu_obj$HTO_classification.global,seu_obj$hash.ID)
+
+
+## ----CITESeq_spltUMAP,include=TRUE,eval=TRUE,dpi=300--------------------------
+DimPlot(seu_obj,group.by = "seurat_clusters",label = TRUE,pt.size = 0.2,split.by = "hash.ID",ncol = 5)+NoLegend()
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Review
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+  
+  ---
+  "    
+  )
+}else{
+  cat("# Review
+
+---
+  "    
+  )
+  
+}
+
+
