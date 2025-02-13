@@ -2245,11 +2245,7 @@ seu_obj[["HTO"]] <- CreateAssayObject(counts=hto.mat)
 seu_obj
 ```
 
-```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
-rm(hto.mat, rna.mat )
-gc()
-```
 
 ---
 ## Cluster with regular workflow
@@ -2292,6 +2288,12 @@ This will assign each cell to a specific hash, which will correspond to a specif
 
 hto.mat[,1]
 
+```
+
+```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
+
+rm(hto.mat, rna.mat )
+gc()
 ```
 
 ---
