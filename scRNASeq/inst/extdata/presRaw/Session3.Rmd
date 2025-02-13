@@ -1631,9 +1631,12 @@ colData(sca_exn)$sex <- ifelse(colData(sca_exn)$sample_id == "AD2b", "female",
 
 ```
 
+---
+## MAST - sex as covariate
+
 Run MAST with sex as a covariate
 
-Note: This can tke a long time to run, the result can be loaded on next slide
+Note: This can take a long time to run, the result can be loaded on next slide
 ```{r mast_sex_cov2, eval=F, echo=T}
 zlmCond_exn_sex <- zlm(~ngeneson + sex + Group, sca_exn)
 sumZLM_exn_sex <- summary(zlmCond_exn_sex,
@@ -1688,6 +1691,8 @@ Previous MAST output:
 ```{r mast_noRE_xist_table2,include=T,echo=T, eval=T}
 de_mast_exn[de_mast_exn$geneID == "XIST", ]
 ```
+
+---
 
 ## MAST vs Wilcoxon
 
