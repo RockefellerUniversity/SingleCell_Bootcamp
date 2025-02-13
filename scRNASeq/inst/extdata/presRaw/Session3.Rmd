@@ -1141,17 +1141,16 @@ if(params$isSlides == "yes"){
 
 ## Differential expression analysis
 
-We will keep using the RPCA integrated object from earlier lecture, or you can read in the *integrated.rds* object from dropbox
+We will use the rPCA integrated object from earlier lecture, and you can read it in from dropbox. It is the object called *integrated.rds*.
 
 
 ```{r, echo=T, eval=F}
-seu_obj <- my_seu_merge_rpca
+# downloaded from dropbox
+seu_obj <- readRDS("~/Downloads/integrated.rds")
 seu_obj
 ```
 
-OR...
-
-```{r, echo=T, eval=T}
+```{r, echo=F, eval=T}
 seu_obj <- readRDS("./data/integrated.rds")
 seu_obj
 ```
@@ -1162,7 +1161,7 @@ seu_obj
 
 Compared to bulk analysis, single cell RNAseq data presents several opportunities and challenges when doing differential gene expression.
 
-As we've explored so far, we can understand differences between cell types and find markers for cell types within a population of cells.
+As we've explored so far, we can identify different cell types and then find markers for these cell types within a population of cells. We did this with the Seurat *FindAllMarkers* function. 
 
 
 ```{r, results='hide',include=T,echo=T, eval=T, fig.height=4}
@@ -1174,9 +1173,9 @@ p_all
 ---
 ## Differentials within cell types
 
-Contrary to bulk RNAseq, expression data from individual cells allows us to compare conditions *within* important subsets of cells, such as interesting cell types. 
+In this section we will compare conditions *within* important subsets of cells, such as interesting cell types. We will look at gene expression differences between AD and control cells. 
 
-We will look at gene expression differences between AD and control cells. First, we add metadata columns that will eventually allow us to set up these comparisons.
+First, we add metadata columns that will eventually allow us to set up these comparisons.
 
 ```{r seu_setup,include=T,echo=T, fig.height=3, fig.width=6}
 # metadata column for condition
@@ -1327,7 +1326,7 @@ if(params$isSlides == "yes"){
 
 This is a non-parametric test that is used by default in the Seurat *FindMarkers* function. It is very fast and generally works well when finding markers of different and distinct cell types that have been identified through clustering. 
 
-It can also be used to find differences between conditions, **though this is likely not the best choice for this comparison**.
+It can also be used to find differences between conditions, though this is likely not the best choice for this comparison.
 
 ```{r wilcox,include=T,echo=T}
 library(tibble)
@@ -1562,25 +1561,14 @@ ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
 ---
 ## Visualize top DE genes
 
-Look at the genes that go down in AD (up in control) in a feature plot
+Look at the genes that go down in AD (up in control) in a violin plot
 ```{r mast_topSig, echo=T, eval=T, fig.width=10}
 de_mast_exn_df <- data.frame(de_mast_exn)
 de_mast_exn_df <- na.omit(de_mast_exn_df)
 de_mast_exn_sig <- de_mast_exn_df[de_mast_exn_df$FDR < 0.05, ]
-
 top_down_AD <- head(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
 
-```
-
-
----
-## Visualize top DE genes
-
-Look at the genes that go down in AD (up in control) with a violin plot
-```{r mast_violin1, echo=T, eval=T, fig.width=7}
-
 VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD')) + NoLegend()
-
 
 ```
 
@@ -2143,7 +2131,7 @@ Currently (Seurat v5.0) the fold change information from DESeq2 or MAST is not o
 
 Also, using the packages directly allow for a higher level of fine tuning for more complex parameters (e.g random effect in MAST). 
 
-
+---
 ```{r, echo=F, warning=FALSE, message=F}
 rm(seu_obj, counts, counts_mat, sca_exn, seu_exn, seu_exn_data,sumDT_exn, sumDT_exn_sex, dds_pseudo_exn,res_pseudo_exn, seu_mast,seu_deseq)
 gc()

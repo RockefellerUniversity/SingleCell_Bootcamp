@@ -38,6 +38,7 @@ class: center, middle, inverse, title-slide
 
 - Merge multiple data sets
 - Cell Type Annotation 
+- Differential Analysis
 - CITE-seq data processing
 
 
@@ -135,12 +136,19 @@ my_seu_list &lt;- readRDS("data/to_integrate.rds")
 Each dataset has been individually processed, QC'd and reviewed prior to combining into a list. Sotring everything in a list will make our life easier later. 
 
 1) Load into Seurat object. 
+
 2) Log Normalized and scaled. 
+
 3) Filtered based on MT levels (2.5%).
-4) Filtered based on doublets (Scrublet).  
+
+4) Filtered based on doublets (Scrublet). 
+
 5) Regressed to MT. 
+
 6) PCA. 
+
 7) Clusters. 
+
 8) UMAP. 
 
 ---
@@ -155,7 +163,6 @@ class: inverse, center, middle
 ## Concatenate the datasets
 
 We can use *merge()* function to integrate multiple data sets, as they are. We need to provide a single seurat object as our first argument, and a list containing the rest of our Seurat objects as the second. We also need to provide *Group* information and a *name* for the project as arguments. 
-
 
 
 ``` r
@@ -244,14 +251,14 @@ The steps involved in rPCA:
 
 ![](./imgs/rpca_1.png)
 
-[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
+[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674\(19\)30559-8)
 
 ---
 ## Merge with reciprocal PCA
 
 ![](./imgs/rpca_2.png)
 
-[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8)
+[(Stuart et al, 2019)](https://www.cell.com/cell/fulltext/S0092-8674\(19\)30559-8)
 
 ---
 ## RPCA workflow
@@ -493,9 +500,9 @@ seu_merge_harmony &lt;- FindClusters(seu_merge_harmony)
 ```
 
 ---
-## Evaluating Harmony using clusters
+## Evaluating Harmony
 
-We can see that our data sets overlay with each other. Again, it looks slightly better than before. The dataset looked pretty good before, but now the overlap is tighter.
+We can see that our data sets overlay with each other. Again, it looks slightly better than before.
 
 
 ``` r
@@ -576,9 +583,12 @@ pheatmap(tbl, scale = "row")
 
 Broadly it seems like rPCA may be the best option in this case. Why?:
 
-1) The integration in general is subtle and rPCA is more conservative
+1) The integration in general is subtle and rPCA is considered more conservative
+
 2) Sample UMAP looks cleanest
+
 3) The number of cells per cluster seems more equal
+
 4) The annotation seems cleaner
 
 ---
@@ -641,6 +651,8 @@ Though Harmony and rPCA are our main workhorses for integration. There are many 
 
 For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.gov/articles/PMC9982060/).
 
+
+
 ---
 ## An advanced scRNAseq workflow
 
@@ -649,6 +661,11 @@ For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.g
 
 
 
+```
+##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
+## Ncells  12402320  662.4   24672781 1317.7   24672781 1317.7
+## Vcells 443274493 3382.0 1029257452 7852.7 1029257384 7852.7
+```
 
 ---
 class: inverse, center, middle
@@ -668,7 +685,7 @@ As mentioned before this dataset has been manually annotated.
 DimPlot(my_seu_merge_rpca, group.by = "paper_annot")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-29-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
 
 ---
 ## Manual Annotation
@@ -680,9 +697,9 @@ This was done by careful assessment of the marker genes. Here we are look at Oli
 FeaturePlot(my_seu_merge_rpca, c("MOBP", "MAG"))
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-31-1.png)&lt;!-- --&gt;
 
-
+---
 ## Automated annotation
 
 To annotate the Single-cell data sets, we can evaluate the gene expression pattern of well known cell-type specific marker genes and make a manual annotation. This is time consuming and not systematic.
@@ -721,7 +738,7 @@ class: inverse, center, middle
 [SingleR](https://bioconductor.org/packages/release/bioc/vignettes/SingleR/inst/doc/SingleR.html) is Bioconductor package which can be used to predict annotations of a single-cell dataset. It is maybe the most flexible way of annotating your data, as it will accept a variety of kinds of reference data including bulk and scRNAseq experiments. 
 SingleR works with a very simple method: calculate a spearman rank correlation between reference and test dataset for each label.
 
-Despite this simplicity, there is also scope to do more complex annotation with some advacned features i.e. to improve resolution of related labels or using multiple references. You can dig into this further in the [singleR book](https://bioconductor.org/books/release/SingleRBook/).
+Despite this simplicity, there is also scope to do more complex annotation with some advanced features i.e. to improve resolution of related labels or using multiple references. You can dig into this further in the [singleR book](https://bioconductor.org/books/release/SingleRBook/).
 
 ---
 ## Annotation with SingleR
@@ -865,7 +882,7 @@ rownames(mat) &lt;- rownames(pred_res)
 pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE, fontsize_col = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-39-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-40-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -881,7 +898,7 @@ summ_table &lt;- table(my_seu_merge_rpca$hpcad_singleR_labels, my_seu_merge_rpca
 pheatmap(summ_table, scale = "column", fontsize_row = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-40-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-41-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -891,7 +908,7 @@ pheatmap(summ_table, scale = "column", fontsize_row = 5)
 DimPlot(my_seu_merge_rpca, group.by = "hpcad_singleR_labels")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-41-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-42-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -1004,7 +1021,7 @@ rownames(mat) &lt;- rownames(pred_res2)
 pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE, fontsize_col = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-49-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-50-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -1023,7 +1040,7 @@ summ_table &lt;- table(my_seu_merge_rpca$abm_singleR_labels, my_seu_merge_rpca$p
 pheatmap(summ_table, scale = "column", fontsize_row = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -1033,7 +1050,7 @@ pheatmap(summ_table, scale = "column", fontsize_row = 5)
 DimPlot(my_seu_merge_rpca, group.by = "abm_singleR_labels")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-53-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -1047,7 +1064,7 @@ class: inverse, center, middle
 ---
 ## Anotation with Seurat
   
-Seurat uses a similar appraoch to integration to be able to fnid anchors between datasets. It can then use this to transfer label information from a reference to a test dataset.
+Seurat uses a similar approach to integration to be able to find anchors between datasets. It can then use this to transfer label information from a reference to a test dataset.
 
 A restriction of this approach is both datasets have to be Seurat objects and therefore single cell datasets. We will use the Allen Brain Map again for this analysis. 
 
@@ -1112,7 +1129,7 @@ colnames(mat) &lt;- gsub("prediction.score.", "", colnames(mat))
 pheatmap(mat, scale = "row", show_rownames = FALSE)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-57-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-58-1.png)&lt;!-- --&gt;
 
 
 --
@@ -1132,7 +1149,7 @@ summ_table &lt;- table(my_seu_merge_rpca$abm_seurat_labels, my_seu_merge_rpca$pa
 pheatmap(summ_table, scale = "column", fontsize_row = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-59-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-60-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -1142,7 +1159,7 @@ pheatmap(summ_table, scale = "column", fontsize_row = 5)
 DimPlot(my_seu_merge_rpca, group.by = "abm_seurat_labels")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-60-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-61-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -1166,7 +1183,7 @@ tbl &lt;- table(my_seu_merge_rpca$abm_seurat_labels, my_seu_merge_rpca$abm_singl
 pheatmap::pheatmap(tbl, scale = "row")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-61-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-62-1.png)&lt;!-- --&gt;
 
 ---
 ## Seurat vs SingleR annotation
@@ -1193,20 +1210,1147 @@ We have not exhaustively tested these, but the consensus is that they provide a 
 Often domain specific knowledge and good reference datasets will outperform the more general LLM approaches. 
 
 
+```
+##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
+## Ncells  13478259  719.9   24672781 1317.7   24672781 1317.7
+## Vcells 311949573 2380.0 1029257452 7852.7 1029257384 7852.7
+```
 
 ---
 class: inverse, center, middle
 
-# Differential Gene Expression
+# Differential expression analysis
 
 &lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
 
 ---
-  
 
-# Differential Gene Expression
+## Differential expression analysis
+
+We will use the rPCA integrated object from earlier lecture, and you can read it in from dropbox. It is the object called *integrated.rds*.
 
 
+
+``` r
+# downloaded from dropbox
+seu_obj &lt;- readRDS("~/Downloads/integrated.rds")
+seu_obj
+```
+
+
+```
+## An object of class Seurat 
+## 28110 features across 10018 samples within 2 assays 
+## Active assay: integrated (2000 features, 2000 variable features)
+##  2 layers present: data, scale.data
+##  1 other assay present: RNA
+##  2 dimensional reductions calculated: pca, umap
+```
+
+---
+
+## Differential expression analysis
+
+Compared to bulk analysis, single cell RNAseq data presents several opportunities and challenges when doing differential gene expression.
+
+As we've explored so far, we can identify different cell types and then find markers for these cell types within a population of cells. We did this with the Seurat *FindAllMarkers* function. 
+
+
+
+``` r
+p_all &lt;- DimPlot(seu_obj, reduction = "umap", group.by = "paper_annot", label = T)
+p_all
+```
+
+![](Session3_files/figure-html/unnamed-chunk-67-1.png)&lt;!-- --&gt;
+
+---
+## Differentials within cell types
+
+In this section we will compare conditions *within* important subsets of cells, such as interesting cell types. We will look at gene expression differences between AD and control cells. 
+
+First, we add metadata columns that will eventually allow us to set up these comparisons.
+
+
+``` r
+# metadata column for condition
+seu_obj$condition &lt;- ifelse(grepl("AD", seu_obj$sample_id), "AD", "CON")
+
+# metadata column for condition + cell type
+seu_obj$celltype_condition &lt;- paste(seu_obj$paper_annot, seu_obj$condition, sep = "_")
+
+table(seu_obj$celltype_condition)
+```
+
+```
+## 
+##          Astrocytes_AD         Astrocytes_CON         Endothelial_AD 
+##                    674                    353                     70 
+##        Endothelial_CON  Excitatory Neurons_AD Excitatory Neurons_CON 
+##                     51                   2338                   1295 
+##  Inhibitory Neurons_AD Inhibitory Neurons_CON           Microglia_AD 
+##                    423                    461                    391 
+##          Microglia_CON                OPCs_AD               OPCs_CON 
+##                    180                    257                    206 
+##    Oligodendrocytes_AD   Oligodendrocytes_CON           Pericytes_AD 
+##                   1974                   1107                    137 
+##          Pericytes_CON 
+##                    101
+```
+
+
+``` r
+ggplot(seu_obj@meta.data, aes(x = paper_annot, fill = condition)) + geom_bar(position = "fill") +
+    theme_classic() + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+```
+
+![](Session3_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
+
+
+---
+
+## Excitatory Neurons
+
+We will use these annotations to compare AD vs control within the cluster of **excitatory neurons**. 
+
+
+``` r
+library(ggpubr)
+p_condition &lt;- DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"), reduction = "umap",
+    group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control") +
+    xlim(-10, 13) + ylim(-15, 15)
+ggarrange(p_all + NoLegend() + ggtitle("All cell types"), p_condition)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-69-1.png)&lt;!-- --&gt;
+
+---
+
+## Single cell DE considerations
+
+
+Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
+
+
+---
+
+## Single cell DE considerations
+
+
+Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
+  * **How to handle a gene by cell matrix as opposed to gene by replicate?**
+
+
+&lt;img src="./imgs/single_vs_bulk_intro.png"height="350" width="650"&gt;
+
+
+---
+
+## Single cell DE considerations
+
+
+Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
+  * How to handle a gene by cell matrix as opposed to gene by replicate?
+  * **How to handle the high dropout rate in single cell RNAseq?**
+
+
+``` r
+counts &lt;- GetAssayData(seu_obj, assay = "RNA", layer = "counts.1")
+counts_mat &lt;- as.matrix(counts)
+actin_counts &lt;- counts_mat[rownames(counts_mat) == "ACTB"]
+hist(actin_counts, breaks = 50)
+```
+
+![](Session3_files/figure-html/setup3-1.png)&lt;!-- --&gt;
+
+---
+class: inverse, center, middle
+
+# Prepare object
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Prep object - set assay to RNA 
+
+While the integrated data is critical for visualization and clustering samples together, for differential analyses we will use the counts from each individual object. 
+
+Before we start our analysis, we then need to change the active assay to 'RNA' (instead of 'integrated')
+
+
+``` r
+DefaultAssay(seu_obj)
+```
+
+[1] "integrated"
+
+``` r
+DefaultAssay(seu_obj) &lt;- "RNA"
+DefaultAssay(seu_obj)
+```
+
+[1] "RNA"
+
+
+---
+## Prep object - join layers 
+
+As we learned, a Seurat object (version 5 or later) contains separate layers for each sample within an integrated object.
+
+
+``` r
+Layers(seu_obj)
+```
+
+ [1] "counts.1"     "counts.2"     "counts.3"     "counts.4"     "data.1"      
+ [6] "scale.data.1" "data.2"       "scale.data.2" "data.3"       "scale.data.3"
+[11] "data.4"       "scale.data.4"
+
+---
+## Prep object - join layers 
+
+Before doing differential gene expression, we first must join the layers of the Seurat object for get one counts matrix for all samples. 
+
+
+``` r
+seu_obj &lt;- JoinLayers(seu_obj)
+Layers(seu_obj)
+```
+
+[1] "scale.data" "data"       "counts"    
+
+
+---
+class: inverse, center, middle
+
+# Wilcoxon Rank Sum Test
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+
+## Wilcoxon Rank Sum Test
+
+This is a non-parametric test that is used by default in the Seurat *FindMarkers* function. It is very fast and generally works well when finding markers of different and distinct cell types that have been identified through clustering. 
+
+It can also be used to find differences between conditions, though this is likely not the best choice for this comparison.
+
+
+``` r
+library(tibble)
+library(dplyr)
+Idents(seu_obj) &lt;- "celltype_condition"
+de_wilcox &lt;- FindMarkers(seu_obj, ident.1 = "Excitatory Neurons_AD", ident.2 = "Excitatory Neurons_CON",
+    logfc.threshold = 0) %&gt;%
+    tibble::rownames_to_column("geneID")
+
+head(de_wilcox, 3)
+```
+
+```
+##   geneID         p_val avg_log2FC pct.1 pct.2     p_val_adj
+## 1   XIST 2.951723e-276  -3.027978 0.132 0.676 7.706949e-272
+## 2 ADARB2 1.653428e-202  -1.727079 0.239 0.720 4.317100e-198
+## 3  CDH13 6.851910e-138  -1.357173 0.201 0.605 1.789034e-133
+```
+
+
+---
+## Wilcoxon Rank Sum Test
+
+
+``` r
+de_wilcox$sig &lt;- de_wilcox$p_val_adj &lt; 0.05
+
+ggplot(de_wilcox, aes(x = avg_log2FC, y = -log10(p_val), color = sig)) + geom_point() +
+    scale_color_manual(values = c("grey", "red")) + theme_bw()
+```
+
+![](Session3_files/figure-html/wilcox_volcano-1.png)&lt;!-- --&gt;
+
+---
+class: inverse, center, middle
+
+# DE using parametric methods
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## MAST
+
+Parametric methods have been developed that attempt to address the added complexities of single cell RNAseq data. 
+
+For more subtle changes within your data, such as comparing conditions within a cluster or cell type, these more advanced methods often work better.
+
+One commonly used example is [MAST](https://www.bioconductor.org/packages/release/bioc/html/MAST.html) (Model-based Analysis of Single-cell Transcriptomics), which uses a two part generalized linear model to account for the zero-inflated, bi-modal nature of single cell RNA seq.
+
+
+---
+## MAST - hurdle model
+ 
+MAST models both the rate of a gene being detected (i.e. expression not zero) and the continuous level of expression (conditional on expression &gt; 0)
+
+
+``` r
+counts_seu &lt;- GetAssayData(seu_obj, assay = "RNA", layer = "data")
+# SNX31 was identified as differentially expressed in excitatory neurons
+seu_obj$SNX31 &lt;- counts_seu[rownames(counts_seu) == "SNX31", ]
+exn_toPlot &lt;- seu_obj@meta.data[seu_obj@meta.data$paper_annot == "Excitatory Neurons",
+    ]
+ggplot(exn_toPlot, aes(x = SNX31, fill = condition)) + geom_density() + ggtitle("SNX31 expression in AD vs CON in Excitatory Neruons") +
+    theme_classic() + xlim(0, 2)
+```
+
+![](Session3_files/figure-html/unnamed-chunk-76-1.png)&lt;!-- --&gt;
+
+---
+## MAST - including covariates
+
+Covariate or batch terms can be accounted for in the model formula
+  * For example, the fraction of genes expressed in a cell, or the cellular detection rate (CDR), is a suggested covariate
+    + CDR is thought to measure unwanted technical and biological factors (e.g. batch, cell size)
+
+
+&lt;img src="./imgs/cdr_from_paper.png"height="250" width="500"&gt;
+
+[Finak et. al. Genome Biology, 2015](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0844-5)
+
+---
+## Using MAST
+
+MAST requires a *SingleCellAssay* object with counts on a log scale. Importantly, zero counts should remain zero in any normalized data. 
+
+Here we are going to compare AD to control in excitatory neurons. These neurons are extracted from the Seurat object, and then we build the SingleCellAssay object. 
+
+
+``` r
+library(MAST)
+seu_exn &lt;- subset(seu_obj, paper_annot == "Excitatory Neurons")
+seu_exn_data &lt;- GetAssayData(seu_exn, assay = "RNA", layer = "data")
+# create SingleCellAssay for MAST
+sca_exn &lt;- MAST::FromMatrix(exprsArray = as.matrix(seu_exn_data), cData = seu_exn@meta.data,
+    fData = data.frame(gene_id = rownames(seu_exn)))
+sca_exn
+```
+
+```
+## class: SingleCellAssay 
+## dim: 26110 3633 
+## metadata(0):
+## assays(1): et
+## rownames(26110): AL627309.1 AL627309.5 ... AC022486.1 AC004556.3
+## rowData names(2): gene_id primerid
+## colnames(3633): AAACCCACAGCTGAAG-1_C1 AAACGAAAGGTCGTAG-1_C1 ...
+##   TTTGTTGGTGCGGATA-1_AD4 TTTGTTGGTTCGGCGT-1_AD4
+## colData names(15): orig.ident nCount_RNA ... SNX31 wellKey
+## reducedDimNames(0):
+## mainExpName: NULL
+## altExpNames(0):
+```
+
+
+---
+## Using MAST - calculate CDR
+
+The CDR (the fraction of genes that are detected in each cell) is calculated for each cell, then scaled (z-score).
+
+
+``` r
+cdr &lt;- colSums(assay(sca_exn) &gt; 0)
+cdr_scale &lt;- scale(cdr)
+head(cdr_scale)
+```
+
+```
+##                             [,1]
+## AAACCCACAGCTGAAG-1_C1 -0.9377860
+## AAACGAAAGGTCGTAG-1_C1 -0.9048629
+## AAACGCTGTGTCCACG-1_C1 -0.8526606
+## AAAGAACAGGTCACCC-1_C1 -0.7360953
+## AAAGAACCAGAAGTTA-1_C1 -0.9271082
+## AAAGGATGTATTGGCT-1_C1  2.0736346
+```
+
+---
+## Using MAST - calculate CDR
+
+Add the CDR to the metadata and set up the grouping factor we will use for the differential analysis.
+
+
+``` r
+colData(sca_exn)$ngeneson &lt;- cdr_scale
+cond &lt;- factor(colData(sca_exn)$condition, levels = c("AD", "CON"))
+cond &lt;- relevel(cond, "CON")
+colData(sca_exn)$Group &lt;- cond
+
+colData(sca_exn)[1:3, c("paper_annot", "ngeneson", "Group")]
+```
+
+```
+## DataFrame with 3 rows and 3 columns
+##                              paper_annot  ngeneson    Group
+##                              &lt;character&gt;  &lt;matrix&gt; &lt;factor&gt;
+## AAACCCACAGCTGAAG-1_C1 Excitatory Neurons -0.937786      CON
+## AAACGAAAGGTCGTAG-1_C1 Excitatory Neurons -0.904863      CON
+## AAACGCTGTGTCCACG-1_C1 Excitatory Neurons -0.852661      CON
+```
+
+
+---
+
+## Using  MAST - plot CDR vs PCA
+
+To understand how CDR is contributing to the variance of our data, we can look at correlations between CDR and principal components.
+
+We obtain the embeddings from the PCA calculation previously done on the Seurat object.
+
+
+``` r
+pca_embed &lt;- data.frame(seu_exn[["pca"]]@cell.embeddings)
+
+pca_vars &lt;- seu_exn[["pca"]]@stdev^2  # variance for each pc
+total_var &lt;- sum(pca_vars)  # total variance
+pct_var_explained &lt;- pca_vars/total_var * 100
+pct_var_explained &lt;- round(pct_var_explained, 1)
+
+for_plot &lt;- data.frame(colData(sca_exn))
+for_plot &lt;- merge(for_plot, pca_embed, by = 0)
+```
+
+---
+
+## Using  MAST - plot CDR vs PCA
+
+
+CDR seems to correlate with PC1 from the data.
+
+
+``` r
+p1 &lt;- ggplot(for_plot, aes(x = ngeneson, y = PC_1, color = condition)) + geom_point() +
+    ylab(paste0("PC_1 (", pct_var_explained[1], "%)"))
+p2 &lt;- ggplot(for_plot, aes(x = ngeneson, y = PC_2, color = condition)) + geom_point() +
+    ylab(paste0("PC_2 (", pct_var_explained[2], "%)"))
+ggarrange(p1, p2, nrow = 1, common.legend = TRUE, legend = "bottom")
+```
+
+![](Session3_files/figure-html/mast_cdr_pca_plot-1.png)&lt;!-- --&gt;
+
+---
+## Using MAST - fit hurdle model
+The CDR is included in the model and will be accounted for in determining differentially expressed genes. 
+
+The *zlm* function can take a long time when you have a high number of cells. It returns a data table with information about the test.
+
+``` r
+zlmCond_exn &lt;- zlm(~ngeneson + Group, sca_exn)
+sumZLM_exn &lt;- summary(zlmCond_exn, doLRT = paste0("Group", "AD"))
+sumDT_exn &lt;- sumZLM_exn$datatable
+```
+
+
+
+---
+## MAST results
+
+MAST can take some time to run, so to move forward download the following file from dropbox: *sumDT_exn.rds*
+
+
+``` r
+sumDT_exn &lt;- readRDS("./data/sumDT_exn.rds")
+```
+
+---
+## MAST results
+
+The table from the *zlm* function contains p-values for both the continuous gene expression (component = 'C'), gene detection rate (component = 'D'), and the combined p-value for the hurdle method (component = 'H'). 
+
+The log2FC is also in this table in the 'coef' column.
+
+
+``` r
+sumDT_exn[1:12, c("primerid", "component", "contrast", "Pr(&gt;Chisq)", "coef")]
+```
+
+```
+##     primerid component    contrast Pr(&gt;Chisq)         coef
+##       &lt;char&gt;    &lt;char&gt;      &lt;fctr&gt;      &lt;num&gt;        &lt;num&gt;
+##  1:     A1BG         C     GroupAD  0.1082826 -0.063046860
+##  2:     A1BG         C (Intercept)         NA  1.124246862
+##  3:     A1BG         C    ngeneson         NA -0.572281229
+##  4:     A1BG         D     GroupAD  0.5100539  0.100513994
+##  5:     A1BG         D (Intercept)         NA -3.662571467
+##  6:     A1BG         D    ngeneson         NA  1.342774638
+##  7:     A1BG         H     GroupAD  0.2216773           NA
+##  8:     A1BG         S     GroupAD         NA           NA
+##  9:     A1BG         S (Intercept)         NA           NA
+## 10:     A1BG         S    ngeneson         NA           NA
+## 11:     A1BG     logFC     GroupAD         NA  0.001152782
+## 12:     A1BG     logFC    ngeneson         NA  0.021265736
+```
+
+---
+## MAST results
+
+A data frame with the fold changes and combined hurdle p-values is constructed from this MAST output.  
+
+``` r
+de_mast_exn &lt;- merge(sumDT_exn[sumDT_exn$component == "H" &amp; sumDT_exn$contrast ==
+    paste0("Group", "AD"), ], sumDT_exn[sumDT_exn$component == "logFC" &amp; sumDT_exn$contrast ==
+    paste0("Group", "AD"), ], by = "primerid")
+de_mast_exn &lt;- dplyr::select(de_mast_exn, primerid, coef.y, z.y, `Pr(&gt;Chisq).x`)
+names(de_mast_exn) &lt;- c("geneID", "log2Fc", "z", "pvalue")
+de_mast_exn$FDR &lt;- p.adjust(de_mast_exn$pvalue, "fdr")
+de_mast_exn &lt;- de_mast_exn[order(de_mast_exn$FDR), ]
+
+head(de_mast_exn, 3)
+```
+
+```
+##    geneID    log2Fc         z        pvalue           FDR
+##    &lt;char&gt;     &lt;num&gt;     &lt;num&gt;         &lt;num&gt;         &lt;num&gt;
+## 1:   XIST -1.415323 -35.84507 4.653001e-254 1.214899e-249
+## 2:  PLCG2  1.114275  33.01194 4.636187e-233 6.052542e-229
+## 3: ADARB2 -1.142667 -30.08747 6.272292e-183 5.458985e-179
+```
+
+
+---
+## MAST results
+
+
+``` r
+de_mast_exn$sig &lt;- de_mast_exn$FDR &lt; 0.05
+
+ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) + geom_point() +
+    scale_color_manual(values = c("grey", "red")) + theme_bw()
+```
+
+![](Session3_files/figure-html/mast_noRE_plot-1.png)&lt;!-- --&gt;
+
+---
+## Visualize top DE genes
+
+Look at the genes that go down in AD (up in control) in a violin plot
+
+``` r
+de_mast_exn_df &lt;- data.frame(de_mast_exn)
+de_mast_exn_df &lt;- na.omit(de_mast_exn_df)
+de_mast_exn_sig &lt;- de_mast_exn_df[de_mast_exn_df$FDR &lt; 0.05, ]
+top_down_AD &lt;- head(de_mast_exn_sig[de_mast_exn_sig$log2Fc &lt; 0, ], 5)
+
+VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) +
+    scale_x_discrete(labels = c("CON", "AD")) + NoLegend()
+```
+
+![](Session3_files/figure-html/mast_topSig-1.png)&lt;!-- --&gt;
+
+---
+## Visualize (sorta) DE genes
+
+What about genes that barely pass the differential cutoff?
+
+
+``` r
+sorta_down_AD &lt;- tail(de_mast_exn_sig[de_mast_exn_sig$log2Fc &lt; 0, ], 5)
+sorta_down_AD
+```
+
+```
+##           geneID       log2Fc         z     pvalue        FDR  sig
+## 15212 AC105230.1 -0.012419823 -2.377461 0.02896481 0.04971543 TRUE
+## 15213      NRIP3 -0.012876226 -1.394409 0.02898560 0.04974785 TRUE
+## 15214      CALCR -0.001228994 -1.138183 0.02899530 0.04976123 TRUE
+## 15217  LINC00629 -0.003408750 -1.572098 0.02905931 0.04986125 TRUE
+## 15223 AL096803.4 -0.007086156 -1.987236 0.02913228 0.04996675 TRUE
+```
+
+---
+## Visualize (sorta) DE genes
+
+What about genes that barely pass the differential cutoff?
+
+
+``` r
+VlnPlot(seu_exn, features = sorta_down_AD$geneID, stack = T, flip = T, pt.size = 1) +
+    scale_x_discrete(labels = c("CON", "AD")) + NoLegend()
+```
+
+![](Session3_files/figure-html/mast_violin2-1.png)&lt;!-- --&gt;
+
+---
+
+## XIST is the top gene!
+
+We notice that the top DE gene from our analysis is XIST, which has much higher expression in females compared to males.
+
+This suggests that sex could be a confounding factor and is potentially a red flag that we should explore. XIST does seem to have localized expression to the group of cells that are only in one of the controls.  
+
+
+``` r
+FeaturePlot(seu_exn, features = "XIST", split.by = "sample_id")
+```
+
+![](Session3_files/figure-html/mast_xist_feature-1.png)&lt;!-- --&gt;
+
+
+---
+## Sample information
+
+We can see from the sample info taken from the publication that C3 is indeed female. So we appear to have pulled out a *sample dependent* effect, not a *group dependent* effect like we are aiming for.
+
+&lt;img src="./imgs/sample_info_male_female.png"height="125" width="650"&gt;
+
+
+---
+## MAST - sex as covariate
+
+We will re-run MAST with sex as a covariate.
+
+Add sex to metadata of SingleCellAssay object
+
+``` r
+colData(sca_exn)$sex &lt;- ifelse(colData(sca_exn)$sample_id == "AD2b", "female", ifelse(colData(sca_exn)$sample_id ==
+    "AD4", "male", ifelse(colData(sca_exn)$sample_id == "C1", "male", ifelse(colData(sca_exn)$sample_id ==
+    "C3", "female", "none!"))))
+```
+
+Run MAST with sex as a covariate
+
+``` r
+zlmCond_exn_sex &lt;- zlm(~ngeneson + sex + Group, sca_exn)
+sumZLM_exn_sex &lt;- summary(zlmCond_exn_sex, doLRT = paste0("Group", "AD"))
+sumDT_exn_sex &lt;- sumZLM_exn_sex$datatable
+```
+
+
+
+
+---
+## Load MAST results
+
+To see results, load the following file from dropbox: *sumDT_exn_sex.rds*
+
+
+``` r
+sumDT_exn_sex &lt;- readRDS("./data/sumDT_exn_sex.rds")
+```
+
+---
+## MAST results
+
+A data frame with the fold changes and combined hurdle p-values is constructed from this MAST output.  
+
+``` r
+de_mast_exn_sex &lt;- merge(sumDT_exn_sex[sumDT_exn_sex$component == "H" &amp; sumDT_exn_sex$contrast ==
+    paste0("Group", "AD"), ], sumDT_exn_sex[sumDT_exn_sex$component == "logFC" &amp;
+    sumDT_exn_sex$contrast == paste0("Group", "AD"), ], by = "primerid")
+de_mast_exn_sex &lt;- dplyr::select(de_mast_exn_sex, primerid, coef.y, z.y, `Pr(&gt;Chisq).x`)
+names(de_mast_exn_sex) &lt;- c("geneID", "log2Fc", "z", "pvalue")
+de_mast_exn_sex$FDR &lt;- p.adjust(de_mast_exn_sex$pvalue, "fdr")
+de_mast_exn_sex &lt;- de_mast_exn_sex[order(de_mast_exn_sex$FDR), ]
+
+head(de_mast_exn_sex, 3)
+```
+
+```
+##        geneID      log2Fc         z        pvalue           FDR
+##        &lt;char&gt;       &lt;num&gt;     &lt;num&gt;         &lt;num&gt;         &lt;num&gt;
+## 1:      PLCG2  1.17957273 22.907530 9.150363e-191 2.389160e-186
+## 2: FP236383.3 -0.01912773 -4.251368 3.264977e-177 4.262428e-173
+## 3:       PEG3  1.00613240 24.410163 8.852879e-168 7.704956e-164
+```
+
+---
+
+## MAST results for XIST
+
+MAST output with Sex as covarivate: 
+
+``` r
+de_mast_exn_sex[de_mast_exn_sex$geneID == "XIST", ]
+```
+
+```
+##    geneID     log2Fc         z       pvalue          FDR
+##    &lt;char&gt;      &lt;num&gt;     &lt;num&gt;        &lt;num&gt;        &lt;num&gt;
+## 1:   XIST -0.3376534 -4.619174 3.986526e-12 5.897348e-11
+```
+
+Previous MAST output:
+
+``` r
+de_mast_exn[de_mast_exn$geneID == "XIST", ]
+```
+
+```
+##    geneID    log2Fc         z        pvalue           FDR    sig
+##    &lt;char&gt;     &lt;num&gt;     &lt;num&gt;         &lt;num&gt;         &lt;num&gt; &lt;lgcl&gt;
+## 1:   XIST -1.415323 -35.84507 4.653001e-254 1.214899e-249   TRUE
+```
+
+
+---
+class: inverse, center, middle
+
+# Pseudoreplication bias
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Intra-sample correlation
+
+.pull-left[
+Methods that don't account for variation that exists between biological replicates can lead to inflated p-values and many false positives, known as the pseudoreplication bias (see [here](https://www.nature.com/articles/s41467-021-25960-2) and [here](https://www.nature.com/articles/s41467-021-21038-1)). 
+
+Treating each cell as an independent replicate is likely an incorrect assumption as cells from the same sample often correlate better than cells from different samples. 
+]
+
+.pull-right[
+&lt;img src="./imgs/pseudoreplication_bis_correlations.png"height="400" width="300"&gt;
+]
+
+[Zimmerman et al 2015, Nat Communications](https://www.nature.com/articles/s41467-021-21038-1)
+
+---
+## Accounting for pseudoreplication bias
+
+To help with pseudoreplication bias we can employ either a pseudobulk strategy or a mixed model with a random effect for each individual/sample 
+
+Various papers (for example, [here](https://www.nature.com/articles/s41467-022-35519-4) and [here](https://pmc.ncbi.nlm.nih.gov/articles/PMC9487674/)) have compared these methods and it's debatable which performs better and likely depends on the context. 
+
+Currently, the much lighter weight pseudobulk method is more commonly used and we will focus on this method.
+
+---
+class: inverse, center, middle
+
+# Pseudobulk
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Pseudobulk analysis
+
+  - counts within a data set or subset of cells (e.g. cluster) are aggregated to get a gene by *replicate* table (like bulk RNAseq)
+  - requires replicates
+  - quick and lightweight
+
+&lt;img src="./imgs/pseudobulk_diagram.png"height="350" width="700"&gt;
+ 
+
+---
+
+## Pseudobulk using DESeq2
+
+Pseudobulk analysis can leverage the well-established tools for bulk RNAseq, such as DESeq2 and edgeR. We will show you how to use DESeq2 here.
+
+First, the *AggregateExpression* function from Seurat is used to get the sum of counts for each gene across all cells grouped by metadata columns. 
+
+**Importantly, DESeq2 expects raw counts that have not been normalized in anyway.**
+
+
+``` r
+seu_exn_aggr &lt;- Seurat::AggregateExpression(seu_exn, return.seurat = T, group.by = c("sample_id",
+    "condition"))
+# get the raw un-normalized counts
+counts_aggr &lt;- as.matrix(seu_exn_aggr[["RNA"]]$counts)
+head(counts_aggr, 3)
+```
+
+```
+##            AD2b_AD AD4_AD C1_CON C3_CON
+## AL627309.1      25     10     77     23
+## AL627309.5      55     89     48     59
+## AP006222.2       0      0      7      0
+```
+
+---
+
+## Pseudobulk - make DESeq2 object
+
+Set up DESeq2 object with the aggregated counts and a data frame with column metadata. We now have reduced the analysis to two groups with only two samples each.
+
+
+``` r
+library(DESeq2)
+column_meta &lt;- data.frame(row.names = colnames(counts_aggr), condition = ifelse(grepl("AD",
+    colnames(counts_aggr)), "AD", "CON"))
+column_meta$condition &lt;- factor(column_meta$condition, levels = c("CON", "AD"))
+
+
+dds_pseudo_exn &lt;- DESeqDataSetFromMatrix(countData = counts_aggr, colData = column_meta,
+    design = ~condition)
+colData(dds_pseudo_exn)
+```
+
+```
+## DataFrame with 4 rows and 1 column
+##         condition
+##          &lt;factor&gt;
+## AD2b_AD       AD 
+## AD4_AD        AD 
+## C1_CON        CON
+## C3_CON        CON
+```
+
+---
+
+## Filter lowly expressed genes
+
+While its not completely necessary, it is common to remove genes that are lowly expressed or are not expressed in enough samples.
+
+Here, we keep those genes that 10 reads in at least two samples (the size of the smallest group)
+
+
+``` r
+smallestGroupSize &lt;- 2
+keep &lt;- rowSums(counts(dds_pseudo_exn) &gt;= 10) &gt;= smallestGroupSize
+table(keep)
+```
+
+```
+## keep
+## FALSE  TRUE 
+##  5477 20633
+```
+
+``` r
+dds_pseudo_exn &lt;- dds_pseudo_exn[keep, ]
+```
+
+
+---
+## Run DESeq2
+
+The *DESeq* function estimates size factors and dispersions before fitting the data to a negative binomial generalized liner model to get differential statistics. 
+
+Look at the [DESeq2 manual](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html) and our course on [bulk RNAseq](https://rockefelleruniversity.github.io/RU_RNAseq/) to get more information about how DESeq2 normalizes and determines differentially expressed genes. 
+
+
+``` r
+dds_pseudo_exn &lt;- DESeq(dds_pseudo_exn)
+resultsNames(dds_pseudo_exn)
+```
+
+```
+## [1] "Intercept"           "condition_AD_vs_CON"
+```
+
+``` r
+res_pseudo_exn &lt;- results(dds_pseudo_exn, name = "condition_AD_vs_CON")
+```
+
+---
+## Run DESeq2
+
+``` r
+de_pseudo_exn &lt;- res_pseudo_exn %&gt;%
+    data.frame %&gt;%
+    arrange(pvalue) %&gt;%
+    rownames_to_column(var = "geneID")
+
+head(de_pseudo_exn, 3)
+```
+
+```
+##      geneID baseMean log2FoldChange     lfcSE      stat       pvalue
+## 1 SPRY4-AS1 803.0868      -1.959599 0.2493818 -7.857826 3.908571e-15
+## 2     SNX31 459.1236       3.251960 0.4357934  7.462160 8.511567e-14
+## 3     MOXD1 417.5197      -2.581761 0.3714799 -6.949936 3.654531e-12
+##           padj
+## 1 5.875363e-11
+## 2 6.397294e-10
+## 3 1.460451e-08
+```
+
+---
+## DESeq2 results - MA and PCA
+
+
+``` r
+ma &lt;- ggplot(de_pseudo_exn, aes(x = baseMean, y = log2FoldChange)) + geom_point() +
+    theme_bw() + scale_x_log10() + ggtitle("MA plot")
+pca &lt;- plotPCA(rlog(dds_pseudo_exn)) + coord_cartesian() + theme_bw() + ggtitle("PCA")
+
+ggarrange(ma, pca, ncol = 2)
+```
+
+![](Session3_files/figure-html/pseudo_MA_PCA-1.png)&lt;!-- --&gt;
+
+---
+## DESeq2 results - Volcano
+
+It's clear that we have many fewer differentially expressed genes using a pseudobulk strategy. This is not surprising with only two replicates per condition, but also highlights the potential for a very high false positive rate when each cell assumed to be independent. 
+
+``` r
+de_pseudo_exn$sig = de_pseudo_exn$padj &lt; 0.05
+ggplot(de_pseudo_exn %&gt;%
+    na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) + geom_point() +
+    scale_color_manual(values = c("grey", "red")) + theme_bw()
+```
+
+![](Session3_files/figure-html/pseudo_plot-1.png)&lt;!-- --&gt;
+
+---
+## Visualize top DE genes
+
+Look at the genes that go down in AD (up in control) with a violin plot
+
+``` r
+de_pseudo_exn_df &lt;- na.omit(de_pseudo_exn)
+top_down_AD_ps &lt;- head(de_pseudo_exn_df[de_pseudo_exn_df$log2FoldChange &lt; 0, ], 5)
+VlnPlot(seu_exn, features = top_down_AD_ps$geneID, stack = T, flip = T, pt.size = 1) +
+    scale_x_discrete(labels = c("CON", "AD"))
+```
+
+![](Session3_files/figure-html/pseudo_violin1-1.png)&lt;!-- --&gt;
+
+---
+
+## DESeq2 - sex as covariate
+
+Add sex to metadata of DESeq2 dds object and make PCA plot
+
+``` r
+sample_ids &lt;- rownames(colData(dds_pseudo_exn))
+colData(dds_pseudo_exn)$sex &lt;- ifelse(sample_ids == "AD2b_AD", "female", ifelse(sample_ids ==
+    "AD4_AD", "male", ifelse(sample_ids == "C1_CON", "male", ifelse(sample_ids ==
+    "C3_CON", "female", "none!"))))
+colData(dds_pseudo_exn)$sex &lt;- as.factor(colData(dds_pseudo_exn)$sex)
+plotPCA(rlog(dds_pseudo_exn), intgroup = "sex") + coord_cartesian() + theme_bw() +
+    ggtitle("PCA")
+```
+
+![](Session3_files/figure-html/deseq2_sex_cov1-1.png)&lt;!-- --&gt;
+
+---
+
+## Re-run DESeq2 with sex as covariate
+
+We notice that we now have no DE genes. This isn't terribly surprising given that we only have two replicates per condition and the sex is driving a lot of our variance.
+
+This doesn't mean the genes that were identified before adding sex as a covariate are invalid, you would just approach them with caution. This likely would be an indication that more replicates were necessary  to more confidently find DE genes. 
+
+``` r
+dds_pseudo_exn_sex &lt;- dds_pseudo_exn
+design(dds_pseudo_exn_sex) &lt;- ~sex + condition
+dds_pseudo_exn_sex &lt;- DESeq(dds_pseudo_exn_sex)
+res_pseudo_exn_sex &lt;- results(dds_pseudo_exn_sex, name = "condition_AD_vs_CON")
+
+head(res_pseudo_exn_sex, 3)
+```
+
+```
+## log2 fold change (MLE): condition AD vs CON 
+## Wald test p-value: condition AD vs CON 
+## DataFrame with 3 rows and 6 columns
+##             baseMean log2FoldChange     lfcSE      stat    pvalue      padj
+##            &lt;numeric&gt;      &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+## AL627309.1   44.3124      -1.913196  1.333886 -1.434303  0.151486  0.692659
+## AL627309.5   61.6567      -0.121863  0.849788 -0.143404  0.885971  0.992942
+## LINC01409   589.3636      -0.408151  0.513194 -0.795315  0.426430  0.909770
+```
+
+---
+
+class: inverse, center, middle
+
+# Mixed model with random effect
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Mixed model with random effect
+
+A less commonly used approach for dealing with the pseudoreplication bias is the use of a mixed model with random effect for each sample. 
+
+  - random effects are used to measure and account for the variability from a population
+    + different from treating as a fixed effect where the effect of that variable is removed 
+    + [this benchmarking study](https://pmc.ncbi.nlm.nih.gov/articles/PMC9487674) suggests that this leads to higher precision than simply including subject as a fixed effect
+  - computationally expensive compared to pseudobulk
+
+In our case, including the sample as the random effect will model the variance that would exist in an entire population of samples (or patients) and then we include this in the model to understand if our fixed effect (AD vs control) changes while accounting for this expected population variance. 
+
+---
+
+## Filter genes and compute CDR for MAST
+
+In fitting a mixed model with a random effect, MAST will often error when there are genes that have many zeroes. MAST includes the *filterLowExpressedGenes* function which will filter out genes that are expressed below a threshold percentage of cells. 
+
+``` r
+# recommended here for RE: https://github.com/RGLab/MAST/issues/133
+sca_exn_filt &lt;- filterLowExpressedGenes(sca_exn, threshold = 0.1)
+
+cdr_filt &lt;- colSums(assay(sca_exn_filt) &gt; 0)
+colData(sca_exn_filt)$ngeneson &lt;- scale(cdr_filt)
+```
+
+---
+
+## Run MAST with random effect
+
+There is a special notation within the formula to add a random effect. Below we include *sample_id* as a random effect
+
+
+``` r
+zlm_re &lt;- zlm(~ngeneson + sex + Group + (1 | sample_id), sca_exn_filt, ebayes = FALSE,
+    method = "glmer")
+
+sumZLM_re &lt;- summary(zlm_re, doLRT = paste0("Group", "AD"))
+sumDT_re &lt;- sumZLM_re$datatable
+```
+
+
+
+---
+## MAST results
+
+MAST can take some time to run, especially with random effects, so to move forward download the following file from dropbox: *sumDT_exn_re.rds*
+
+
+``` r
+sumDT_re &lt;- readRDS("./data/sumDT_exn_re.rds")
+```
+
+
+---
+
+## Run MAST with random effect
+
+``` r
+de_mast_re &lt;- merge(sumDT_re[sumDT_re$component == "H" &amp; sumDT_re$contrast == paste0("Group",
+    "AD"), ], sumDT_re[sumDT_re$component == "logFC" &amp; sumDT_re$contrast == paste0("Group",
+    "AD"), ], by = "primerid")
+de_mast_re &lt;- dplyr::select(de_mast_re, primerid, coef.y, z.y, `Pr(&gt;Chisq).x`)
+names(de_mast_re) &lt;- c("geneID", "log2Fc", "z", "pvalue")
+de_mast_re$FDR &lt;- p.adjust(de_mast_re$pvalue, "fdr")
+de_mast_re &lt;- de_mast_re[order(de_mast_re$FDR), ]
+
+head(de_mast_re, 3)
+```
+
+```
+##        geneID    log2Fc        z       pvalue          FDR
+##        &lt;char&gt;     &lt;num&gt;    &lt;num&gt;        &lt;num&gt;        &lt;num&gt;
+## 1:   HSP90AB1 0.7011930 14.65392 5.486664e-09 6.003508e-05
+## 2: AL133166.1 0.6755124 10.12379 1.346825e-08 7.368480e-05
+## 3: AC120193.1 0.6986804 10.06780 2.992759e-08 1.091559e-04
+```
+
+---
+
+## Run MAST with random effect
+
+``` r
+de_mast_re$sig &lt;- de_mast_re$FDR &lt; 0.05
+
+ggplot(de_mast_re, aes(x = log2Fc, y = -log10(pvalue), color = sig)) + geom_point() +
+    scale_color_manual(values = c("grey", "red")) + theme_bw()
+```
+
+![](Session3_files/figure-html/mast_re_plot-1.png)&lt;!-- --&gt;
+
+---
+
+class: inverse, center, middle
+
+# DESeq2 and MAST using Seurat FindMarkers?
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
+
+---
+
+## Seurat FindMarkers for DESeq2
+
+The Seurat *FindMarkers* function has an option to use MAST or DESeq2 with the 'test.use' argument, and the Seurat differential expression [vignette](https://satijalab.org/seurat/articles/de_vignette.html) describes this in their workflows. Shouldn't we just use this?
+
+
+
+``` r
+# test deseq output to deseq using findmarkers
+Idents(seu_exn_aggr) &lt;- "condition"
+seu_deseq &lt;- FindMarkers(object = seu_exn_aggr, ident.1 = "AD", ident.2 = "CON",
+    test.use = "DESeq2", slot = "counts", min.cells.group = 2)
+
+seu_deseq$sig = seu_deseq$p_val_adj &lt; 0.05
+```
+
+---
+## Compare DESeq2 results to Seurat
+
+
+``` r
+p_seuD &lt;- ggplot(seu_deseq, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
+    geom_point() + scale_color_manual(values = c("grey", "red")) + theme_bw() + ggtitle("FindMarkers")
+p_pseudo &lt;- ggplot(de_pseudo_exn %&gt;%
+    na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) + geom_point() +
+    scale_color_manual(values = c("grey", "red")) + theme_bw() + ggtitle("Using DESeq2 directly")
+
+ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend = "bottom")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-83-1.png)&lt;!-- --&gt;
+
+---
+## Seurat FindMarkers for MAST
+
+
+``` r
+cdr_exn &lt;- colSums(seu_exn[["RNA"]]$data &gt; 0)
+seu_exn$ngeneson &lt;- scale(cdr_exn)
+
+Idents(seu_exn_aggr) &lt;- "condition"
+seu_mast &lt;- FindMarkers(object = seu_exn, group.by = "condition", ident.1 = "AD",
+    ident.2 = "CON", test.use = "MAST", slot = "data", latent.vars = "ngeneson")
+
+seu_mast$sig = seu_mast$p_val_adj &lt; 0.05
+```
+
+
+
+---
+## Seurat FindMarkers for MAST
+
+To make the following plot, read in the the MAST output from Seurat on dropbox: *seu_mast_exn.rds*
+
+``` r
+seu_mast &lt;- readRDS("./data/seu_mast_exn.rds")
+```
+
+---
+## Compare results
+
+
+``` r
+p_seuM &lt;- ggplot(seu_mast, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
+    geom_point() + scale_color_manual(values = c("grey", "red")) + theme_bw() + ggtitle("FindMarkers")
+p_mast &lt;- ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
+    geom_point() + scale_color_manual(values = c("grey", "red")) + theme_bw() + ggtitle("Using MAST directly")
+
+ggarrange(p_seuM, p_mast, common.legend = TRUE, legend = "bottom")
+```
+
+![](Session3_files/figure-html/unnamed-chunk-85-1.png)&lt;!-- --&gt;
+
+---
+## Seurat FindMarkers take home
+
+Currently (Seurat v5.0) the fold change information from DESeq2 or MAST is not obtained by *FindMarkers*. When defining gene sets with fold change cutoffs or visualizing gene expression changes, by not using the fold changes that account for normalization done by that algorithm, you can get funky results.
+
+Also, using the packages directly allow for a higher level of fine tuning for more complex parameters (e.g random effect in MAST). 
+
+---
+
+```
+##             used   (Mb) gc trigger    (Mb)   max used   (Mb)
+## Ncells  14091642  752.6   24672781  1317.7   24672781 1317.7
+## Vcells 579981351 4425.0 1501330457 11454.3 1279414623 9761.2
+```
 
 ---
 class: inverse, center, middle
@@ -1308,7 +2452,7 @@ seu_obj &lt;- quick_clust(seu_obj)
 DimPlot(seu_obj, group.by = "seurat_clusters", pt.size = 0.2, label = TRUE) + NoLegend()
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-67-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-91-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -1455,6 +2599,7 @@ class: inverse, center, middle
 
 
 ![overview](./imgs/scRNA_workflow_ver001_20231017.png)
+
 
 ---
 ## Resources
