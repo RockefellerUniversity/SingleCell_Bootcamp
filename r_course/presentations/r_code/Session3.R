@@ -629,23 +629,10 @@ seu_obj$celltype_condition <- paste(seu_obj$paper_annot, seu_obj$condition, sep 
 table(seu_obj$celltype_condition)
 
 
-## -----------------------------------------------------------------------------
-ggplot(seu_obj@meta.data,aes(x=paper_annot, fill=condition))+geom_bar(position = "fill")+
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+## ----results='hide',include=T,echo=T, eval=T, fig.width=10, fig.height=5------
 
+DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"),  reduction = "umap", group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control")
 
-## ----results='hide',include=T,echo=T, eval=T, fig.width=10, fig.height=4------
-library(ggpubr)
-p_condition <- DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"),  reduction = "umap", group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control") + xlim(-10, 13) + ylim(-15, 15)
-ggarrange(p_all + NoLegend() + ggtitle("All cell types"), p_condition)
-
-
-## ----setup3,include=T,echo=T, fig.height=3------------------------------------
-counts <- GetAssayData(seu_obj, assay = "RNA", layer = "counts.1")
-counts_mat <- as.matrix(counts)
-actin_counts <- counts_mat[rownames(counts_mat) == "ACTB"]
-hist(actin_counts, breaks = 50)
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
@@ -683,6 +670,13 @@ Layers(seu_obj)
 ## ----results='asis',include=T,echo=T, eval=T----------------------------------
 seu_obj <- JoinLayers(seu_obj)
 Layers(seu_obj)
+
+
+## ----setup3,include=T,echo=T, fig.height=3------------------------------------
+counts <- GetAssayData(seu_obj, assay = "RNA", layer = "counts")
+counts_mat <- as.matrix(counts)
+actin_counts <- counts_mat[rownames(counts_mat) == "ACTB"]
+hist(actin_counts, breaks = 50)
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
@@ -788,9 +782,8 @@ colData(sca_exn)[1:3, c("paper_annot", "ngeneson", "Group")]
 
 
 ## ----mast_cdr_pca-------------------------------------------------------------
-pca_embed <- data.frame(seu_exn[["pca"]]@cell.embeddings)
-
-pca_vars <-  seu_exn[["pca"]]@stdev^2 # variance for each pc
+pca_embed <- data.frame(Embeddings(seu_exn, reduction = "pca"))
+pca_vars <-  Stdev(seu_exn, reduction = "pca")^2
 total_var <- sum(pca_vars) # total variance
 pct_var_explained <- pca_vars/total_var * 100 
 pct_var_explained <- round(pct_var_explained, 1)
@@ -800,7 +793,7 @@ for_plot <- merge(for_plot, pca_embed, by = 0)
 
 
 ## ----mast_cdr_pca_plot,fig.width=7--------------------------------------------
-
+library(ggpubr)
 p1 <- ggplot(for_plot, aes(x = ngeneson, y = PC_1, color = condition)) + geom_point() + ylab(paste0("PC_1 (", pct_var_explained[1],"%)")) 
 p2 <- ggplot(for_plot, aes(x = ngeneson, y = PC_2, color = condition)) + geom_point() + ylab(paste0("PC_2 (", pct_var_explained[2],"%)")) 
 ggarrange(p1, p2, nrow = 1, common.legend = TRUE, legend="bottom")
@@ -818,7 +811,11 @@ ggarrange(p1, p2, nrow = 1, common.legend = TRUE, legend="bottom")
 # saveRDS(sumDT_exn, "sumDT_exn.rds")
 
 
-## ----mast_noRE_loadDT,include=T,echo=T, eval=T--------------------------------
+## ----include=T,echo=T, eval=F-------------------------------------------------
+# sumDT_exn <- readRDS("~/Downloads/sumDT_exn.rds")
+
+
+## ----mast_noRE_loadDT,include=T,echo=F, eval=T--------------------------------
 sumDT_exn <- readRDS("./data/sumDT_exn.rds")
 
 
@@ -850,14 +847,14 @@ ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
 ## ----mast_topSig, echo=T, eval=T, fig.width=10--------------------------------
 de_mast_exn_df <- data.frame(de_mast_exn)
 de_mast_exn_df <- na.omit(de_mast_exn_df)
-de_mast_exn_sig <- de_mast_exn_df[de_mast_exn_df$FDR < 0.05, ]
-top_down_AD <- head(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
+top_down_AD <- head(de_mast_exn_df[de_mast_exn_df$log2Fc < 0, ], 5)
 
 VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD')) + NoLegend()
 
 
 
 ## ----mast_sorta_down, echo=T, eval=T, fig.width=10----------------------------
+de_mast_exn_sig <- de_mast_exn_df[de_mast_exn_df$FDR < 0.05, ]
 sorta_down_AD <- tail(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
 sorta_down_AD
 
@@ -894,7 +891,11 @@ colData(sca_exn)$sex <- ifelse(colData(sca_exn)$sample_id == "AD2b", "female",
 # saveRDS(sumDT_exn_sex, "sumDT_exn_sex.rds")
 
 
-## ----mast_noRE_sex_loadDT,include=T,echo=T, eval=T----------------------------
+## ----include=T,echo=T, eval=F-------------------------------------------------
+# sumDT_exn_sex <- readRDS("~/Downloads/sumDT_exn_sex.rds")
+
+
+## ----mast_noRE_sex_loadDT,include=T,echo=F, eval=T----------------------------
 sumDT_exn_sex <- readRDS("./data/sumDT_exn_sex.rds")
 
 
@@ -965,7 +966,7 @@ if(params$isSlides == "yes"){
 ## ----pseudo_agg,include=T,echo=T----------------------------------------------
 seu_exn_aggr <- Seurat::AggregateExpression(seu_exn, return.seurat = T, group.by = c("sample_id", "condition"))
 # get the raw un-normalized counts
-counts_aggr <- as.matrix(seu_exn_aggr[["RNA"]]$counts)
+counts_aggr <- as.matrix(GetAssayData(seu_exn_aggr, assay = "RNA", layer = "counts"))
 head(counts_aggr, 3)
 
 
@@ -1098,7 +1099,11 @@ if(params$isSlides == "yes"){
 # saveRDS(sumDT_re, "sumDT_exn_re.rds")
 
 
-## ----mast_re_loadDT,include=T,echo=T, eval=T----------------------------------
+## ----include=T,echo=T, eval=F-------------------------------------------------
+# sumDT_re <- readRDS("~/Downloads/sumDT_exn_re.rds")
+
+
+## ----mast_re_loadDT,include=T,echo=F, eval=T----------------------------------
 sumDT_re <- readRDS("./data/sumDT_exn_re.rds")
 
 
@@ -1193,7 +1198,11 @@ ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend="bottom")
 # saveRDS(seu_mast, "seu_mast_exn.rds")
 
 
-## ----loadSeuMast,include=T,echo=T, eval=T-------------------------------------
+## ----include=T,echo=T, eval=F-------------------------------------------------
+# seu_mast <- readRDS("~/Downloads/seu_mast_exn.rds")
+
+
+## ----loadSeuMast,include=T,echo=F, eval=T-------------------------------------
 seu_mast <- readRDS("./data/seu_mast_exn.rds")
 
 
