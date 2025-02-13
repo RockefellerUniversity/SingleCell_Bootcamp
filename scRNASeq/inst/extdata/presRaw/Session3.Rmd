@@ -1161,7 +1161,7 @@ seu_obj
 
 Compared to bulk analysis, single cell RNAseq data presents several opportunities and challenges when doing differential gene expression.
 
-As we've explored so far, we can identify different cell types and then find markers for these cell types within a population of cells. We did this with the Seurat *FindAllMarkers* function. 
+As we've explored so far, we can identify different cell types and then find markers for these cell types within a population of cells. We did this with the Seurat [FindAllMarkers](https://rockefelleruniversity.github.io/SingleCell_Bootcamp/presentations/slides/Session2.html#123) function. 
 
 
 ```{r, results='hide',include=T,echo=T, eval=T, fig.height=4}
@@ -1187,12 +1187,6 @@ seu_obj$celltype_condition <- paste(seu_obj$paper_annot, seu_obj$condition, sep 
 table(seu_obj$celltype_condition)
 ```
 
-```{r}
-ggplot(seu_obj@meta.data,aes(x=paper_annot, fill=condition))+geom_bar(position = "fill")+
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
-```
-
 
 ---
 
@@ -1200,47 +1194,12 @@ ggplot(seu_obj@meta.data,aes(x=paper_annot, fill=condition))+geom_bar(position =
 
 We will use these annotations to compare AD vs control within the cluster of **excitatory neurons**. 
 
-```{r, results='hide',include=T,echo=T, eval=T, fig.width=10, fig.height=4}
-library(ggpubr)
-p_condition <- DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"),  reduction = "umap", group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control") + xlim(-10, 13) + ylim(-15, 15)
-ggarrange(p_all + NoLegend() + ggtitle("All cell types"), p_condition)
+```{r, results='hide',include=T,echo=T, eval=T, fig.width=10, fig.height=5}
+
+DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"),  reduction = "umap", group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control")
+
 ```
 
----
-
-## Single cell DE considerations
-
-
-Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
-
-
----
-
-## Single cell DE considerations
-
-
-Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
-  * **How to handle a gene by cell matrix as opposed to gene by replicate?**
-
-
-<img src="./imgs/single_vs_bulk_intro.png"height="350" width="650">
-
-
----
-
-## Single cell DE considerations
-
-
-Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
-  * How to handle a gene by cell matrix as opposed to gene by replicate?
-  * **How to handle the high dropout rate in single cell RNAseq?**
-
-```{r setup3,include=T,echo=T, fig.height=3}
-counts <- GetAssayData(seu_obj, assay = "RNA", layer = "counts.1")
-counts_mat <- as.matrix(counts)
-actin_counts <- counts_mat[rownames(counts_mat) == "ACTB"]
-hist(actin_counts, breaks = 50)
-```
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1297,6 +1256,41 @@ seu_obj <- JoinLayers(seu_obj)
 Layers(seu_obj)
 ```
 
+---
+
+## Single cell DE considerations
+
+
+Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
+
+
+---
+
+## Single cell DE considerations
+
+
+Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
+  * **How to handle a gene by cell matrix as opposed to gene by replicate?**
+
+
+<img src="./imgs/single_vs_bulk_intro.png"height="350" width="650">
+
+
+---
+
+## Single cell DE considerations
+
+
+Expression data at the single cell level adds another layer of complexity and how we handle this can have huge impacts on identifying differentially expressed genes.
+  * How to handle a gene by cell matrix as opposed to gene by replicate?
+  * **How to handle the high dropout rate in single cell RNAseq?**
+
+```{r setup3,include=T,echo=T, fig.height=3}
+counts <- GetAssayData(seu_obj, assay = "RNA", layer = "counts")
+counts_mat <- as.matrix(counts)
+actin_counts <- counts_mat[rownames(counts_mat) == "ACTB"]
+hist(actin_counts, breaks = 50)
+```
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1467,9 +1461,8 @@ To understand how CDR is contributing to the variance of our data, we can look a
 We obtain the embeddings from the PCA calculation previously done on the Seurat object.
 
 ```{r mast_cdr_pca}
-pca_embed <- data.frame(seu_exn[["pca"]]@cell.embeddings)
-
-pca_vars <-  seu_exn[["pca"]]@stdev^2 # variance for each pc
+pca_embed <- data.frame(Embeddings(seu_exn, reduction = "pca"))
+pca_vars <-  Stdev(seu_exn, reduction = "pca")^2
 total_var <- sum(pca_vars) # total variance
 pct_var_explained <- pca_vars/total_var * 100 
 pct_var_explained <- round(pct_var_explained, 1)
@@ -1486,7 +1479,7 @@ for_plot <- merge(for_plot, pca_embed, by = 0)
 CDR seems to correlate with PC1 from the data.
 
 ```{r mast_cdr_pca_plot,fig.width=7}
-
+library(ggpubr)
 p1 <- ggplot(for_plot, aes(x = ngeneson, y = PC_1, color = condition)) + geom_point() + ylab(paste0("PC_1 (", pct_var_explained[1],"%)")) 
 p2 <- ggplot(for_plot, aes(x = ngeneson, y = PC_2, color = condition)) + geom_point() + ylab(paste0("PC_2 (", pct_var_explained[2],"%)")) 
 ggarrange(p1, p2, nrow = 1, common.legend = TRUE, legend="bottom")
@@ -1497,6 +1490,8 @@ ggarrange(p1, p2, nrow = 1, common.legend = TRUE, legend="bottom")
 The CDR is included in the model and will be accounted for in determining differentially expressed genes. 
 
 The *zlm* function can take a long time when you have a high number of cells. It returns a data table with information about the test.
+
+Note: This can tke a long time to run, the result can be loaded on next slide
 ```{r mast_noRE,include=T,echo=T, eval=F}
 
 zlmCond_exn <- zlm(~ngeneson + Group, sca_exn)
@@ -1514,7 +1509,12 @@ saveRDS(sumDT_exn, "sumDT_exn.rds")
 
 MAST can take some time to run, so to move forward download the following file from dropbox: *sumDT_exn.rds*
 
-```{r mast_noRE_loadDT,include=T,echo=T, eval=T}
+
+```{r mast_noRE_loadDT,include=T,echo=T, eval=F}
+sumDT_exn <- readRDS("~/Downloads/sumDT_exn.rds")
+```
+
+```{r mast_noRE_loadDT,include=T,echo=F, eval=T}
 sumDT_exn <- readRDS("./data/sumDT_exn.rds")
 ```
 
@@ -1565,8 +1565,7 @@ Look at the genes that go down in AD (up in control) in a violin plot
 ```{r mast_topSig, echo=T, eval=T, fig.width=10}
 de_mast_exn_df <- data.frame(de_mast_exn)
 de_mast_exn_df <- na.omit(de_mast_exn_df)
-de_mast_exn_sig <- de_mast_exn_df[de_mast_exn_df$FDR < 0.05, ]
-top_down_AD <- head(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
+top_down_AD <- head(de_mast_exn_df[de_mast_exn_df$log2Fc < 0, ], 5)
 
 VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1) + scale_x_discrete(labels=c('CON', 'AD')) + NoLegend()
 
@@ -1578,6 +1577,7 @@ VlnPlot(seu_exn, features = top_down_AD$geneID, stack = T, flip = T, pt.size = 1
 What about genes that barely pass the differential cutoff?
 
 ```{r mast_sorta_down, echo=T, eval=T, fig.width=10}
+de_mast_exn_sig <- de_mast_exn_df[de_mast_exn_df$FDR < 0.05, ]
 sorta_down_AD <- tail(de_mast_exn_sig[de_mast_exn_sig$log2Fc < 0, ], 5)
 sorta_down_AD
 
@@ -1632,6 +1632,8 @@ colData(sca_exn)$sex <- ifelse(colData(sca_exn)$sample_id == "AD2b", "female",
 ```
 
 Run MAST with sex as a covariate
+
+Note: This can tke a long time to run, the result can be loaded on next slide
 ```{r mast_sex_cov2, eval=F, echo=T}
 zlmCond_exn_sex <- zlm(~ngeneson + sex + Group, sca_exn)
 sumZLM_exn_sex <- summary(zlmCond_exn_sex,
@@ -1649,7 +1651,11 @@ saveRDS(sumDT_exn_sex, "sumDT_exn_sex.rds")
 
 To see results, load the following file from dropbox: *sumDT_exn_sex.rds*
 
-```{r mast_noRE_sex_loadDT,include=T,echo=T, eval=T}
+```{r mast_noRE_sex_loadDT,include=T,echo=T, eval=F}
+sumDT_exn_sex <- readRDS("~/Downloads/sumDT_exn_sex.rds")
+```
+
+```{r mast_noRE_sex_loadDT,include=T,echo=F, eval=T}
 sumDT_exn_sex <- readRDS("./data/sumDT_exn_sex.rds")
 ```
 
@@ -1682,6 +1688,16 @@ Previous MAST output:
 ```{r mast_noRE_xist_table2,include=T,echo=T, eval=T}
 de_mast_exn[de_mast_exn$geneID == "XIST", ]
 ```
+
+## MAST vs Wilcoxon
+
+ * MAST models zeroes within the data, Wilcoxon does not
+  + This can lead to biases where the differences in number of zero values can heavily influence DE calculation for Wilcoxon.
+ * MAST will give more reliable log fold change values as its based on the continuous data
+  + Wilcoxon doesn't use fold change in it's calculation, so often mean expression values are used and dropouts can skew these values
+ * MAST can account for covariates 
+ * Wilcoxon results can be biased towards samples that have more cells  
+ * However, Wilcoxon is fast and generally pretty robust, especially for differences between cell types where large differences are expected, and you are only taking the top markers.
 
 
 ---
@@ -1771,11 +1787,11 @@ Pseudobulk analysis can leverage the well-established tools for bulk RNAseq, suc
 First, the *AggregateExpression* function from Seurat is used to get the sum of counts for each gene across all cells grouped by metadata columns. 
 
 **Importantly, DESeq2 expects raw counts that have not been normalized in anyway.**
-
+ 
 ```{r pseudo_agg,include=T,echo=T}
 seu_exn_aggr <- Seurat::AggregateExpression(seu_exn, return.seurat = T, group.by = c("sample_id", "condition"))
 # get the raw un-normalized counts
-counts_aggr <- as.matrix(seu_exn_aggr[["RNA"]]$counts)
+counts_aggr <- as.matrix(GetAssayData(seu_exn_aggr, assay = "RNA", layer = "counts"))
 head(counts_aggr, 3)
 ```
 
@@ -1817,7 +1833,7 @@ dds_pseudo_exn <- dds_pseudo_exn[keep,]
 ---
 ## Run DESeq2
 
-The *DESeq* function estimates size factors and dispersions before fitting the data to a negative binomial generalized liner model to get differential statistics. 
+The *DESeq* function estimates size factors and dispersions before fitting the data to a negative binomial generalized linear model to get differential statistics. 
 
 Look at the [DESeq2 manual](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html) and our course on [bulk RNAseq](https://rockefelleruniversity.github.io/RU_RNAseq/) to get more information about how DESeq2 normalizes and determines differentially expressed genes. 
 
@@ -1984,7 +2000,11 @@ saveRDS(sumDT_re, "sumDT_exn_re.rds")
 
 MAST can take some time to run, especially with random effects, so to move forward download the following file from dropbox: *sumDT_exn_re.rds*
 
-```{r mast_re_loadDT,include=T,echo=T, eval=T}
+```{r mast_re_loadDT,include=T,echo=T, eval=F}
+sumDT_re <- readRDS("~/Downloads/sumDT_exn_re.rds")
+```
+
+```{r mast_re_loadDT,include=T,echo=F, eval=T}
 sumDT_re <- readRDS("./data/sumDT_exn_re.rds")
 ```
 
@@ -2077,6 +2097,7 @@ ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend="bottom")
 ---
 ## Seurat FindMarkers for MAST
 
+Note: Running this will take a while, so load the object on the next slide to see the plot
 ```{r, eval=F}
 cdr_exn <- colSums(seu_exn[["RNA"]]$data>0)
 seu_exn$ngeneson <- scale(cdr_exn)
@@ -2103,7 +2124,13 @@ saveRDS(seu_mast, "seu_mast_exn.rds")
 ## Seurat FindMarkers for MAST
 
 To make the following plot, read in the the MAST output from Seurat on dropbox: *seu_mast_exn.rds*
-```{r loadSeuMast,include=T,echo=T, eval=T}
+
+```{r loadSeuMast,include=T,echo=T, eval=F}
+seu_mast <- readRDS("~/Downloads/seu_mast_exn.rds")
+```
+
+
+```{r loadSeuMast,include=T,echo=F, eval=T}
 seu_mast <- readRDS("./data/seu_mast_exn.rds")
 ```
 
@@ -2127,7 +2154,7 @@ ggarrange(p_seuM, p_mast, common.legend = TRUE, legend="bottom")
 ---
 ## Seurat FindMarkers take home
 
-Currently (Seurat v5.0) the fold change information from DESeq2 or MAST is not obtained by *FindMarkers*. When defining gene sets with fold change cutoffs or visualizing gene expression changes, by not using the fold changes that account for normalization done by that algorithm, you can get funky results.
+Currently (Seurat v5.0) the fold change information from DESeq2 or MAST is not carried over by *FindMarkers*. When defining gene sets with fold change cutoffs or visualizing gene expression changes, by not using the fold changes that account for normalization done by that algorithm, you can get funky results.
 
 Also, using the packages directly allow for a higher level of fine tuning for more complex parameters (e.g random effect in MAST). 
 
