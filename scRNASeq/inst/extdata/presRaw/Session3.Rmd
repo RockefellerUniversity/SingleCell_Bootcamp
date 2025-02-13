@@ -230,8 +230,6 @@ Our UMAP shows our cells are quite similar. Bu there are a few regions that are 
 ```{r}
 DimPlot(seu_merge, group.by = "sample_id", pt.size = 0.2)
 
-
-
 ```
 
 
@@ -991,7 +989,6 @@ if(params$isSlides == "yes"){
 
 ```
 
----
 ## Anotation with Seurat
   
 Seurat uses a similar approach to integration to be able to find anchors between datasets. It can then use this to transfer label information from a reference to a test dataset.
@@ -1051,7 +1048,7 @@ pheatmap(mat,scale = "row",show_rownames = FALSE)
 ```
 
 
---
+---
 ## Annotation with SingleR
   
 We can now add our labels back to our original Seurat object by a quick assignment. This then allows us to start reviewing the annotation in the context of UMAPs and also versus our other annotation. 
@@ -2152,51 +2149,25 @@ rm(seu_obj, counts, counts_mat, sca_exn, seu_exn, seu_exn_data,sumDT_exn, sumDT_
 gc()
 ```
 
+
 ---
+
 ```{r, results='asis',include=TRUE,echo=FALSE}
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Differential Cell Counts
+# CITE-seq
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-  
-  ---
-  "    
+
+---
+"    
   )
 }else{
-  cat("# Differential Cell Counts
+  cat("# CITE-seq
 
 ---
-  "    
-  )
-  
-}
-
-```  
-
-
-# Differential Cell Counts
-
-
-
----
-```{r, results='asis',include=TRUE,echo=FALSE}
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
-# CITE-Seq 
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-  
-  ---
-  "    
-  )
-}else{
-  cat("# CITE-Seq 
-
----
-  "    
+"    
   )
   
 }
