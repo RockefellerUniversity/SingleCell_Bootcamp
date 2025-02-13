@@ -115,8 +115,6 @@ DimPlot(seu_merge, group.by = "sample_id", pt.size = 0.2)
 
 
 
-
-
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
@@ -1222,40 +1220,18 @@ gc()
 if(params$isSlides == "yes"){
   cat("class: inverse, center, middle
 
-# Differential Cell Counts
+# CITE-seq
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-  
-  ---
-  "    
-  )
-}else{
-  cat("# Differential Cell Counts
 
 ---
-  "    
-  )
-  
-}
-
-
-
-## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
-# CITE-Seq 
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-  
-  ---
-  "    
+"    
   )
 }else{
-  cat("# CITE-Seq 
+  cat("# CITE-seq
 
 ---
-  "    
+"    
   )
   
 }
@@ -1336,15 +1312,15 @@ if(params$isSlides == "yes"){
 # Review
 
 <html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
-  
-  ---
-  "    
+
+---
+"    
   )
 }else{
   cat("# Review
 
 ---
-  "    
+"    
   )
   
 }
