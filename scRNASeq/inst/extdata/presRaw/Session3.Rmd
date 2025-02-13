@@ -1510,7 +1510,7 @@ saveRDS(sumDT_exn, "sumDT_exn.rds")
 MAST can take some time to run, so to move forward download the following file from dropbox: *sumDT_exn.rds*
 
 
-```{r mast_noRE_loadDT,include=T,echo=T, eval=F}
+```{r,include=T,echo=T, eval=F}
 sumDT_exn <- readRDS("~/Downloads/sumDT_exn.rds")
 ```
 
@@ -1651,7 +1651,7 @@ saveRDS(sumDT_exn_sex, "sumDT_exn_sex.rds")
 
 To see results, load the following file from dropbox: *sumDT_exn_sex.rds*
 
-```{r mast_noRE_sex_loadDT,include=T,echo=T, eval=F}
+```{r,include=T,echo=T, eval=F}
 sumDT_exn_sex <- readRDS("~/Downloads/sumDT_exn_sex.rds")
 ```
 
@@ -2000,7 +2000,7 @@ saveRDS(sumDT_re, "sumDT_exn_re.rds")
 
 MAST can take some time to run, especially with random effects, so to move forward download the following file from dropbox: *sumDT_exn_re.rds*
 
-```{r mast_re_loadDT,include=T,echo=T, eval=F}
+```{r,include=T,echo=T, eval=F}
 sumDT_re <- readRDS("~/Downloads/sumDT_exn_re.rds")
 ```
 
@@ -2125,7 +2125,7 @@ saveRDS(seu_mast, "seu_mast_exn.rds")
 
 To make the following plot, read in the the MAST output from Seurat on dropbox: *seu_mast_exn.rds*
 
-```{r loadSeuMast,include=T,echo=T, eval=F}
+```{r,include=T,echo=T, eval=F}
 seu_mast <- readRDS("~/Downloads/seu_mast_exn.rds")
 ```
 
