@@ -605,11 +605,12 @@ if(params$isSlides == "yes"){
 
 
 ## ----echo=T, eval=F-----------------------------------------------------------
-# seu_obj <- my_seu_merge_rpca
+# # downloaded from dropbox
+# seu_obj <- readRDS("~/Downloads/integrated.rds")
 # seu_obj
 
 
-## ----echo=T, eval=T-----------------------------------------------------------
+## ----echo=F, eval=T-----------------------------------------------------------
 seu_obj <- readRDS("./data/integrated.rds")
 seu_obj
 

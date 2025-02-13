@@ -663,8 +663,8 @@ For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.g
 
 ```
 ##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  12402338  662.4   24672834 1317.7   24672834 1317.7
-## Vcells 443274480 3382.0 1235188934 9423.8 1227265619 9363.3
+## Ncells  12402320  662.4   24672781 1317.7   24672781 1317.7
+## Vcells 443274493 3382.0 1029257452 7852.7 1029257384 7852.7
 ```
 
 ---
@@ -1212,8 +1212,8 @@ Often domain specific knowledge and good reference datasets will outperform the 
 
 ```
 ##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  13478277  719.9   24672834 1317.7   24672834 1317.7
-## Vcells 311949560 2380.0  988151148 7539.0 1227265619 9363.3
+## Ncells  13478259  719.9   24672781 1317.7   24672781 1317.7
+## Vcells 311949573 2380.0 1029257452 7852.7 1029257384 7852.7
 ```
 
 ---
@@ -1227,22 +1227,16 @@ class: inverse, center, middle
 
 ## Differential expression analysis
 
-We will keep using the RPCA integrated object from earlier lecture, or you can read in the *integrated.rds* object from dropbox
+We will use the rPCA integrated object from earlier lecture, and you can read it in from dropbox. It is the object called *integrated.rds*.
 
 
 
 ``` r
-seu_obj &lt;- my_seu_merge_rpca
+# downloaded from dropbox
+seu_obj &lt;- readRDS("~/Downloads/integrated.rds")
 seu_obj
 ```
 
-OR...
-
-
-``` r
-seu_obj &lt;- readRDS("./data/integrated.rds")
-seu_obj
-```
 
 ```
 ## An object of class Seurat 
@@ -1259,7 +1253,7 @@ seu_obj
 
 Compared to bulk analysis, single cell RNAseq data presents several opportunities and challenges when doing differential gene expression.
 
-As we've explored so far, we can understand differences between cell types and find markers for cell types within a population of cells.
+As we've explored so far, we can identify different cell types and then find markers for these cell types within a population of cells. We did this with the Seurat *FindAllMarkers* function. 
 
 
 
@@ -1273,9 +1267,9 @@ p_all
 ---
 ## Differentials within cell types
 
-Contrary to bulk RNAseq, expression data from individual cells allows us to compare conditions *within* important subsets of cells, such as interesting cell types. 
+In this section we will compare conditions *within* important subsets of cells, such as interesting cell types. We will look at gene expression differences between AD and control cells. 
 
-We will look at gene expression differences between AD and control cells. First, we add metadata columns that will eventually allow us to set up these comparisons.
+First, we add metadata columns that will eventually allow us to set up these comparisons.
 
 
 ``` r
@@ -2354,8 +2348,8 @@ Also, using the packages directly allow for a higher level of fine tuning for mo
 
 ```
 ##             used   (Mb) gc trigger    (Mb)   max used   (Mb)
-## Ncells  14091653  752.6   24690953  1318.7   24690953 1318.7
-## Vcells 579981338 4425.0 1423128460 10857.7 1227265619 9363.3
+## Ncells  14091642  752.6   24672781  1317.7   24672781 1317.7
+## Vcells 579981351 4425.0 1501330457 11454.3 1279414623 9761.2
 ```
 
 ---
