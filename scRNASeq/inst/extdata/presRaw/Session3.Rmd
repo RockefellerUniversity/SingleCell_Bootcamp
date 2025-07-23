@@ -714,6 +714,16 @@ if(params$isSlides == "yes"){
 
 ```
 
+# Cell type annotation
+
+Annotation is a often seen as a key step in generating your final analysis. That said it also still important for QC. If you have mixed identities or surprising cell types this could be grounds to do further filtering. So even after all this work on our dataset we may circle back and reprocess our data. 
+
+```{r, echo=F}
+
+DimPlot(my_seu_merge_rpca, group.by = "paper_annot")
+```
+
+---
 ## Manual Annotation
 
 As mentioned before this dataset has been manually annotated. 
@@ -738,7 +748,7 @@ FeaturePlot(my_seu_merge_rpca, c("MOBP","MAG"))
 
 To annotate the Single-cell data sets, we can evaluate the gene expression pattern of well known cell-type specific marker genes and make a manual annotation. This is time consuming and not systematic.
 
-Here, we will introduce two more strategies to make cell type annotations automatically:
+Here, we will introduce two more strategies to make cell type annotations computationally:
   1. Mapping and annotating query datasets with Seurat using a reference data set.  [link](https://satijalab.org/seurat/articles/integration_mapping.html)
   2. Make annotation with SingleR [link](https://bioconductor.org/packages/release/bioc/html/SingleR.html)
 
@@ -755,7 +765,6 @@ For this we need a reference dataset and a query dataset. Our annotation ends up
 * Papers (though this can be variable) - [Adipose](https://gitlab.com/rosen-lab/white-adipose-atlas) or [Neuronal](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE287652)
 
 Depending on the format of the data, you may be set to go straightaway, need to do some light processing, or reanalyze the whole thing. 
-
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -779,7 +788,6 @@ if(params$isSlides == "yes"){
 }
 
 ```
-
 
 ## Annotation with SingleR
 
@@ -2312,7 +2320,7 @@ seu_obj <- NormalizeData(seu_obj, assay="HTO", normalization.method="CLR")
 ---
 ## Differentiate Hashtags
 
-We can use HTODemux() to classify our cells into groups. This uses clustering of the cells to help determine which sample each celll is from:
+We can use HTODemux() to classify our cells into groups. This uses clustering of the cells to help determine which sample each cell is from:
 
 1) Cluster cells based on HTO signal into K+1 groups.   
 
