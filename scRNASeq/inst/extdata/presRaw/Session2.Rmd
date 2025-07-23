@@ -653,156 +653,43 @@ For a detailed explanation and discussion of dimension reduction approaches here
 
 [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
 
----
-
-```{r, results='asis',include=TRUE,echo=FALSE}
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
-# Clustering
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html>
 
 ---
-"
-  )
-}else{
-  cat("# Clustering
 
+## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
 
 ---
-"
-  )
-
-}
-
-```
 
 ## Clustering
-- The cells are clustered using *FindClusters()* function in Seurat.
+- The cells are then clustered using *FindClusters()* function in Seurat.
+
 - The clustering is differentiated by **original Louvain algorithm**.
-- To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
 
----
+- To see different options for clustering with Seurat, you can alter the parameter: algorithm. If you want to learn about which algorithms are available, you can quickly read the Seurat manual by typing ?Seurat in R
+
+
 ## Identify clusters
-
+  
 We will have a quick look first at how to run the clustering, using the *FindClusters()* function. We just need to provide our Seurat object and a resolution.
 
 ```{r clust_default,include=TRUE,eval=T}
 seu_obj <- FindClusters(seu_obj, resolution = 0.5)
 seu_obj[["cluster_byDefault"]] <- seu_obj$seurat_clusters
 ```
-
----
 ## Identify clusters
 
-Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
+- Now you can view your default clusters with the DimPlot() function.
 
-```{r, fig.height=4,fig.width=7}
-DimPlot(seu_obj, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend()
-
+```{r clust_default,include=TRUE,eval=T}
+DimPlot(seu_obj, group.by = "cluster_byDefault")
 
 ```
+
+
 
 ---
-## Testing resolutions
-
-To identify the best resolution for each dataset we iteratively test potential resolutions using clustree.
-
-```{r clust_resoEval,include=TRUE,eval=T, warning=FALSE, message=FALSE}
-library(clustree)
-
-reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
-reso_res <- lapply(1:length(reso), function(x,seu_obj,reso){
-  seu_obj <- FindClusters(seu_obj,resolution = reso[x])
-  clust <- setNames(seu_obj$seurat_clusters,Cells(seu_obj))
-  return(clust)}, seu_obj, reso)
-names(reso_res) <- paste0("k",1:length(reso))
-```
-
-Some newer Macs have issues with *clustree*. Installing *tweenr* directly should help. 
-
-```{r, eval=F}
-remotes::install_github("thomasp85/tweenr")
-```
-
----
-## Testing resolutions
-
-To identify the best resolution for each dataset we iteratively test potential resolutions.
-
-```{r,include=TRUE,eval=T}
-k_tab <- do.call(cbind,reso_res)
-k_dat <- as.data.frame(k_tab)
-
-head(k_dat,2)
-```
-
----
-## Evaluate resolutions with clustree
-- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
-- To identify the better resolution
-  + less cross talks between lineages
-  + more clusters identified
-  
-```{r clust_resoEval2,include=TRUE,eval=F}
-clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
-```
-
----
-## Evaluate resolutions with clustree
-- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
-* In this case, we use *resolution=0.4*
-
-```{r include=TRUE,eval=T, echo=F, warning=FALSE, fig.height=4,fig.width=7}
-clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
-```
-
----
-## Clustering - optimized
-
-Lets retry clustering with our improved resolution. 
-
-```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
-seu_obj <- FindClusters(seu_obj, resolution = 0.6)
-```
-
----
-## Clustering - optimized
-
-We can see that we have slightly more clusters. We can now compare back to the original clustering, and there are some clearly defined clusters, which weren't there before.
-
-
-```{r, fig.height=4,fig.width=7}
-DimPlot(seu_obj, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
-```
-
----
-## Clustering - default
-
-We can see that we have slightly more clusters. We can now compare back to the original clustering, and see that cluster 12 is clearly defined now, where it wasn't before.
-
-```{r ,include=TRUE,eval=T, fig.height=4,fig.width=7}
-DimPlot(seu_obj, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
-```
-
----
-
-## Gene marker expression
-
-- LYZ is a monocyte marker 
-- We can plot the expression of LYZ onto our clusters using FeaturePlot()
-- Although the expression of LYZ is specific, there seems to be some background expression 
-
-
-```{r, fig.height=4,fig.width=6}
-
-FeaturePlot(seu_obj,features = "LYZ",pt.size = 0)
-
-```
-
----
-
 
 ## A basic scRNAseq workflow
 
@@ -916,7 +803,7 @@ cbFilt_mtx <- Read10X_h5("~/Downloads/cbFilt_PBMC8K_20250131_filtered_forseurat.
 We are going to try out a few tools and approaches. We want to wrap some of our analysis steps into a function to simplify rerunning things.
 
 Normalization: 
-  * Log normalization with scale factor = 10,000
+  * Log normalization with scale factor = 10,000 (this is approx. the avg # of counts in a cell for 10X scRNA-seq data)
   * Find Variable features with vst, select top 2000 variable features
   
 ```{r sec_mergeData_funcUsed_dataProc,include=TRUE}
@@ -987,9 +874,10 @@ DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLe
 ---
 ## Evaluate with marker gene expression
 
+- We will check the expression of some monocyte markers: LYZ and HLA-DRA (present in B-cells also)
 - Without CellBender
 
-```{r, fig.height=4,fig.width=7}
+```{r, fig.height=4,fig.width=7, warning=F}
 
 mark_gene <- c("LYZ","HLA-DRA")
 
@@ -1002,7 +890,7 @@ FeaturePlot(seu_obj,features = mark_gene,pt.size = 0)
 
 - Without CellBender
 
-```{r, fig.height=3,fig.width=7}
+```{r, fig.height=3,fig.width=7, warning=F}
 
 
 VlnPlot(seu_obj,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
@@ -1014,7 +902,7 @@ VlnPlot(seu_obj,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 - With CellBender
 
-```{r, fig.height=4,fig.width=7}
+```{r, fig.height=4,fig.width=7, warning=F}
 
 FeaturePlot(seu_cbFilt,features = mark_gene,pt.size = 0)
 
@@ -1025,7 +913,7 @@ FeaturePlot(seu_cbFilt,features = mark_gene,pt.size = 0)
 
 - With CellBender
 
-```{r, fig.height=3,fig.width=7}
+```{r, fig.height=3,fig.width=7, warning = F}
 
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 ```
@@ -1342,7 +1230,7 @@ dat$cat <- factor(dat$cat,levels = c("cyclon_G1Score","cyclon_SScore","cyclon_G2
 
 We can see in both S and G2/M scores are highest in cells with the corresponding assignment. 
 
-```{r,fig.height=4,fig.width=7}
+```{r,fig.height=4,fig.width=7, warning=F}
 ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_violin()+
   labs(x="",y="Score",fill="Phase")+
   facet_wrap(~cat)+theme_classic()
@@ -1524,6 +1412,29 @@ An alternative visualization of this is an X-Y plot comparing UMIs (nCount) and 
 ```{r, fig.height=4,fig.width=7}
 FeatureScatter(seu_cbFilt,feature1 = "nCount_RNA",feature2 = "nFeature_RNA",pt.size = 0.1,group.by = "doublet")
 ```
+
+
+
+---
+
+## Other doublet removal methods
+
+- There are different software used for doublet removal in both R and Python (which you can use with reticulate). Follow this [link](https://www.sciencedirect.com/science/article/pii/S2405471220304592) for a good review about them.  
+
+- DoubletFinder is a popular software in R. It all depends on your assumptions about your data.
+
+
+
+
+---
+
+## Other doublet removal methods
+  
+- Scrublet: creates an artificial doublet from your data to compare with cells by summing the expression of 2 random cells. Uses raw data and can mistakenly identify cells with high depth as doublets.
+
+- DoubletFinder: creates an artificial doublet from your data by averaging the expression of 2 random cells. Uses normalized data and can reliably identify doublets regardless of RNA content. It can miss doublets with high RNA content.
+
+
 
 ---
 ```{r, results='asis',include=TRUE,echo=FALSE}
@@ -1784,36 +1695,294 @@ seu_filt <- ScaleData(seu_filt, vars.to.regress = pot_conf)
 ```
 
 ---
-## Quick re-processing of data
+## Re-processing of data
 
-  - It's important to re-run dimensionality reduction and re-cluster your cells once you've done filtering
-  - Let's use the function quick_clust() we created earlier
+- It's important to re-run dimensionality reduction and re-cluster your cells once you've done filtering
+- Let's start by using data_proc() to quickly normalize and find variables in our data
 
-```{r, fig.height=3,fig.width=7}
-seu_filt <- quick_clust(seu_filt)
 
-DimPlot(seu_filt)
+```{r, eval = T, warning=F, message=F}
+
+seu_filt <- data_proc(seu_filt)
+
 ```
+
+
+---
+
+## Re-processing of data
+
+- Next, we will quickly re-run PCA and derive the elbow, saving the number of principal components to use in "pc"
+
+```{r, eval = T, warning=F, message=F}
+
+seu_filt <- RunPCA(seu_filt, assay = "RNA", npcs = 50)
+# Determine percent of variation associated with each PC
+pct <- seu_filt[["pca"]]@stdev / sum(seu_filt[["pca"]]@stdev) * 100
+# Calculate cumulative percents for each PC
+cumu <- cumsum(pct)
+# Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
+co1 <- which(cumu > 90 & pct < 5)[1]
+# Determine the difference between variation of PC and subsequent PC, last point where change of % of variation is more than 0.1%.
+co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1), decreasing = T)[1] + 1
+pc <- min(co1, co2)
+
+```
+
+---
+
+## Re-processing of data
+
+- Now, we will perform non-linear dimensionality reduction with our previously calculated optimal pcs
+
+- After this we are ready to re-cluster
+
+```{r, eval = T, warning=F, message=F}
+
+seu_filt <- FindNeighbors(seu_filt,dims = 1:pc, reduction = "pca")
+seu_filt <- RunUMAP(seu_filt,dims = 1:pc, reduction = "pca")
+
+```
+
 
 
 ```{R, eval=F, echo=F}
 
-save(seu_filt, file="data/pbmc8k_SCT2.RData")
-saveRDS(seu_filt, file="data/pbmc8k_SCT2.rds")
-save(sce, file="data/pbmc8k_sce.RData")
+save(seu_filt, file="data/pbmc8k_SCT3.RData")
+saveRDS(seu_filt, file="data/pbmc8k_SCT3.rds")
+save(sce, file="data/pbmc8k_sce_updated.RData")
 
 ```
 
 ```{R,sceload, eval=T, echo=F}
-load("data/pbmc8k_sce.RData")
+load("data/pbmc8k_sce_updated.RData")
 ```
 
 ```{R,sctload, eval=T, echo=F}
-load("data/pbmc8k_SCT2.RData")
-#seu_filt <- readRDS("data/pbmc8k_SCT2.rds")
+load("data/pbmc8k_SCT3.RData")
+#seu_filt <- readRDS("data/pbmc8k_SCT3.rds")
 ```
 
 ---
+## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
+
+---
+
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Clustering
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html>
+
+---
+"
+  )
+}else{
+  cat("# Clustering
+
+
+---
+"
+  )
+  
+}
+
+```
+
+## Clustering
+
+- We will once more use the *FindClusters()* function in Seurat, but we will refine the resolution
+- This will give us an optimal number of clusters
+- To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
+
+---
+## Identify clusters
+  
+For comparison, we will generate clusters first with the default resolution of 0.5
+
+```{r clust_default,include=TRUE,eval=T}
+seu_filt <- FindClusters(seu_filt, resolution = 0.5)
+seu_filt[["cluster_byDefault"]] <- seu_filt$seurat_clusters
+```
+
+---
+## Identify clusters
+  
+Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
+
+```{r, fig.height=4,fig.width=7}
+
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend()
+
+
+```
+
+---
+## Testing resolutions
+  
+To identify the best resolution for each dataset we iteratively test potential resolutions using clustree.
+
+```{r clust_resoEval,include=TRUE,eval=T, warning=FALSE, message=FALSE}
+library(clustree)
+
+reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+reso_res <- lapply(1:length(reso), function(x,seu_filt,reso){
+  seu_filt <- FindClusters(seu_filt,resolution = reso[x])
+  clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
+  return(clust)}, seu_filt, reso)
+names(reso_res) <- paste0("k",1:length(reso))
+```
+
+Some newer Macs have issues with *clustree*. Installing *tweenr* directly should help. 
+
+```{r, eval=F}
+remotes::install_github("thomasp85/tweenr")
+```
+
+---
+## Testing resolutions
+  
+To identify the best resolution for each dataset we iteratively test potential resolutions
+
+```{r,include=TRUE,eval=T}
+k_tab <- do.call(cbind,reso_res)
+k_dat <- as.data.frame(k_tab)
+
+head(k_dat,2)
+```
+
+---
+  ## Evaluate resolutions with clustree
+- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
+- To identify the better resolution
+  + less cross talks between lineages
+  + more clusters identified
+
+```{r clust_resoEval2,include=TRUE,eval=F}
+clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+```
+
+---
+## Evaluate resolutions with clustree
+
+- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
+  * Let's try *resolution=0.3* first, which has the least cross-talk
+  
+```{r include=TRUE,eval=T, echo=F, warning=FALSE, fig.height=4,fig.width=7}
+clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+```
+
+---
+## Clustering - optimized
+  
+Lets retry clustering with our improved resolution. 
+
+```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
+seu_filt <- FindClusters(seu_filt, resolution = 0.3)
+```
+
+---
+## Clustering - optimized
+  
+- We can see that we have slightly less clusters. We can now compare back to the original clustering, and there are some clusters that previously overlapped and are now classified as one. 
+
+
+```{r, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+```
+
+---
+## Clustering - default
+
+- We can see that we have slightly less clusters. We can now compare back to the original clustering, and there are some clusters that previously overlapped and are now classified as one. 
+
+- Specifically cluster 2 and 6 are now cluster 1
+
+```{r ,include=TRUE,eval=T, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
+```
+
+---
+  
+## Gene marker expression
+  
+- We can plot the expression of LYZ onto our clusters using FeaturePlot()
+- We see that it is clearly present in cluster 1,6,7,9 
+- However, the expression of LYZ on new cluster 4 indicates that maybe cluster 4 is composed of 2 cell types
+
+```{r, fig.height=4,fig.width=6}
+
+FeaturePlot(seu_filt,features = "LYZ",pt.size = 0)
+
+```
+
+## Clustering - optimized
+  
+Lets retry clustering with 0.6 - which should yield more clusters than 0.5
+
+```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
+
+seu_filt <- FindClusters(seu_filt, resolution = 0.6)
+```
+
+---
+## Clustering - optimized
+  
+- We can see that we have slightly more clusters than 0.3 and 0.5. We can now compare back to the original clustering, and we see cluster 10 is back, but now there's some extra clusters that don't visually make sense
+
+
+```{r, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+```
+
+---
+## Clustering - default
+
+- We can see that we have slightly more clusters than 0.3 and 0.5. We can now compare back to the original clustering, and we see cluster 10 is back, but now there's some extra clusters that don't visually make sense
+
+```{r ,include=TRUE,eval=T, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
+```
+
+
+---
+## Clustering - optimized
+
+- Let's try 0.4 to see if it rescues cluster 10 but unites original clusters 2 and 6
+
+- In any case, if you suspect a cluster is made of different subtypes and can't obtain clear separation without forcing additional clusters, you can isolate (subset) the cluster later and re-cluster
+
+```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
+seu_filt <- FindClusters(seu_filt, resolution = 0.4)
+```
+---
+## Clustering - optimized
+  
+- We now see that original clusters 2 and 6 are united in cluster 1, and original clusters 4 and 10 remain separated as clusters 4 and 9. 
+
+
+```{r, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+```
+
+---
+## Clustering - default
+
+- We now see that original clusters 2 and 6 are united in cluster 1, and original clusters 4 and 10 remain separated as clusters 4 and 9. 
+
+
+```{r ,include=TRUE,eval=T, fig.height=4,fig.width=7}
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
+```
+
+
+
+---
+
 ## A basic scRNAseq workflow
 
 ![overview](./imgs/basicworkflow.png)
@@ -1833,11 +2002,11 @@ markers <- FindAllMarkers(seu_filt, only.pos = TRUE,
 ```
 
 ```{r, eval=F, echo=F}
-save(markers, file="data/pbmc8k_markers.RData")
+save(markers, file="data/pbmc8k_markers_updated.RData")
 ```
 
 ```{R, echo=F, eval=T}
-load("data/pbmc8k_markers.RData")
+load("data/pbmc8k_markers_updated.RData")
 ```
 
 ```{r}
@@ -1860,7 +2029,9 @@ head(top_genes)
 
 ## Identify cluster-specific marker genes
 
-We can then use the *DoHeatmap()* from Seurat to plot just these genes.
+- We can then use the *DoHeatmap()* from Seurat to plot just these genes
+
+- You can see here whether clusters have unique markers or if they overlap with other clusters
 
 ```{r, fig.height=4,fig.width=7}
 
@@ -1989,15 +2160,15 @@ We can then manually annotate the clusters based on these markers. We do this ma
 ```{r sec2_resEval_cellTypeAsign,include=TRUE,eval=T}
 
 seu_filt[["cellType_byClust"]] <- NA
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0)] <- "Naive CD4+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] <- "Memory CD4+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] <- "CD8+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] <- "NK cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9,11)] <- "DC"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0,5)] <- "Naive CD4+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] <- "Memory CD4+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] <- "CD8+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(6)] <- "NK cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7,10)] <- "DC"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(8)] <- "FCGR3A+ Monocytes"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2)] <- "B cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1,6)] <- "CD14+ Monocytes"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(12)] <- "Platelets"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1)] <- "CD14+ Monocytes"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(11)] <- "Platelets"
 seu_filt$cellType_byClust[is.na(seu_filt$cellType_byClust)] <- "Unspecified"
 ```
 
@@ -2016,7 +2187,7 @@ table(seu_filt$cellType_byClust)
 We can also display seurat clusters and cell types in UMAP.
 ```{r,fig.height=4,fig.width=7}
 
-DimPlot(seu_filt, group.by = c("seurat_clusters","cellType_byClust"),label = TRUE,pt.size = 0.2)+NoLegend()
+DimPlot(seu_filt, group.by = c("seurat_clusters","cellType_byClust"),label = F,pt.size = 0.2)
 ```
 
 ---
