@@ -669,20 +669,24 @@ For a detailed explanation and discussion of dimension reduction approaches here
 
 - To see different options for clustering with Seurat, you can alter the parameter: algorithm. If you want to learn about which algorithms are available, you can quickly read the Seurat manual by typing ?Seurat in R
 
+---
 
 ## Identify clusters
   
 We will have a quick look first at how to run the clustering, using the *FindClusters()* function. We just need to provide our Seurat object and a resolution.
 
-```{r clust_default,include=TRUE,eval=T}
+```{r ,include=TRUE,eval=T}
 seu_obj <- FindClusters(seu_obj, resolution = 0.5)
 seu_obj[["cluster_byDefault"]] <- seu_obj$seurat_clusters
 ```
+
+---
+
 ## Identify clusters
 
 - Now you can view your default clusters with the DimPlot() function.
 
-```{r clust_default,include=TRUE,eval=T}
+```{r ,include=TRUE,eval=T}
 DimPlot(seu_obj, group.by = "cluster_byDefault")
 
 ```
@@ -1804,7 +1808,7 @@ if(params$isSlides == "yes"){
   
 For comparison, we will generate clusters first with the default resolution of 0.5
 
-```{r clust_default,include=TRUE,eval=T}
+```{r ,include=TRUE,eval=T}
 seu_filt <- FindClusters(seu_filt, resolution = 0.5)
 seu_filt[["cluster_byDefault"]] <- seu_filt$seurat_clusters
 ```
@@ -1881,7 +1885,7 @@ clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
   
 Lets retry clustering with our improved resolution. 
 
-```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
+```{r clust_resoFix3,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
 seu_filt <- FindClusters(seu_filt, resolution = 0.3)
 ```
 
@@ -1920,16 +1924,19 @@ FeaturePlot(seu_filt,features = "LYZ",pt.size = 0)
 
 ```
 
+---
+
 ## Clustering - optimized
   
 Lets retry clustering with 0.6 - which should yield more clusters than 0.5
 
-```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
+```{r clust_resoFix1,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
 
 seu_filt <- FindClusters(seu_filt, resolution = 0.6)
 ```
 
 ---
+
 ## Clustering - optimized
   
 - We can see that we have slightly more clusters than 0.3 and 0.5. We can now compare back to the original clustering, and we see cluster 10 is back, but now there's some extra clusters that don't visually make sense
@@ -1956,7 +1963,7 @@ DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + N
 
 - In any case, if you suspect a cluster is made of different subtypes and can't obtain clear separation without forcing additional clusters, you can isolate (subset) the cluster later and re-cluster
 
-```{r clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
+```{r clust_resoFix2,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE}
 seu_filt <- FindClusters(seu_filt, resolution = 0.4)
 ```
 ---
