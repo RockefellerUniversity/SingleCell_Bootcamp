@@ -491,7 +491,7 @@ seu_merge_harmony &lt;- FindClusters(seu_merge_harmony)
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 10018
-## Number of edges: 338251
+## Number of edges: 338260
 ## 
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.9148
@@ -663,8 +663,8 @@ For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.g
 
 ```
 ##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  12403088  662.4   24674155 1317.8   24674155 1317.8
-## Vcells 443276646 3382.0 1029262218 7852.7 1029262191 7852.7
+## Ncells  12599564  672.9   24076741 1285.9   24076741 1285.9
+## Vcells 444450566 3390.9 1038791729 7925.4 1038061744 7919.8
 ```
 
 ---
@@ -676,6 +676,13 @@ class: inverse, center, middle
 
 ---
 
+# Cell type annotation
+
+Annotation is a often seen as a key step in generating your final analysis. That said it also still important for QC. If you have mixed identities or surprising cell types this could be grounds to do further filtering. So even after all this work on our dataset we may circle back and reprocess our data. 
+
+![](Session3_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
+
+---
 ## Manual Annotation
 
 As mentioned before this dataset has been manually annotated. 
@@ -685,7 +692,7 @@ As mentioned before this dataset has been manually annotated.
 DimPlot(my_seu_merge_rpca, group.by = "paper_annot")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-31-1.png)&lt;!-- --&gt;
 
 ---
 ## Manual Annotation
@@ -697,14 +704,14 @@ This was done by careful assessment of the marker genes. Here we are look at Oli
 FeaturePlot(my_seu_merge_rpca, c("MOBP", "MAG"))
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-31-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-32-1.png)&lt;!-- --&gt;
 
 ---
 ## Automated annotation
 
 To annotate the Single-cell data sets, we can evaluate the gene expression pattern of well known cell-type specific marker genes and make a manual annotation. This is time consuming and not systematic.
 
-Here, we will introduce two more strategies to make cell type annotations automatically:
+Here, we will introduce two more strategies to make cell type annotations computationally:
   1. Mapping and annotating query datasets with Seurat using a reference data set.  [link](https://satijalab.org/seurat/articles/integration_mapping.html)
   2. Make annotation with SingleR [link](https://bioconductor.org/packages/release/bioc/html/SingleR.html)
 
@@ -722,7 +729,6 @@ For this we need a reference dataset and a query dataset. Our annotation ends up
 
 Depending on the format of the data, you may be set to go straightaway, need to do some light processing, or reanalyze the whole thing. 
 
-
 ---
 class: inverse, center, middle
 
@@ -731,7 +737,6 @@ class: inverse, center, middle
 &lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
 
 ---
-
 
 ## Annotation with SingleR
 
@@ -882,7 +887,7 @@ rownames(mat) &lt;- rownames(pred_res)
 pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE, fontsize_col = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-40-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-41-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -898,7 +903,7 @@ summ_table &lt;- table(my_seu_merge_rpca$hpcad_singleR_labels, my_seu_merge_rpca
 pheatmap(summ_table, scale = "column", fontsize_row = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-41-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-42-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -908,7 +913,7 @@ pheatmap(summ_table, scale = "column", fontsize_row = 5)
 DimPlot(my_seu_merge_rpca, group.by = "hpcad_singleR_labels")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-42-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-43-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -1021,7 +1026,7 @@ rownames(mat) &lt;- rownames(pred_res2)
 pheatmap::pheatmap(mat, scale = "row", show_rownames = FALSE, fontsize_col = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-50-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -1040,7 +1045,7 @@ summ_table &lt;- table(my_seu_merge_rpca$abm_singleR_labels, my_seu_merge_rpca$p
 pheatmap(summ_table, scale = "column", fontsize_row = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-53-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -1050,7 +1055,7 @@ pheatmap(summ_table, scale = "column", fontsize_row = 5)
 DimPlot(my_seu_merge_rpca, group.by = "abm_singleR_labels")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-53-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-54-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -1128,7 +1133,7 @@ colnames(mat) &lt;- gsub("prediction.score.", "", colnames(mat))
 pheatmap(mat, scale = "row", show_rownames = FALSE)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-58-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-59-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -1148,7 +1153,7 @@ summ_table &lt;- table(my_seu_merge_rpca$abm_seurat_labels, my_seu_merge_rpca$pa
 pheatmap(summ_table, scale = "column", fontsize_row = 5)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-60-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-61-1.png)&lt;!-- --&gt;
 
 ---
 ## Annotation with SingleR
@@ -1158,7 +1163,7 @@ pheatmap(summ_table, scale = "column", fontsize_row = 5)
 DimPlot(my_seu_merge_rpca, group.by = "abm_seurat_labels")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-61-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-62-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -1182,7 +1187,7 @@ tbl &lt;- table(my_seu_merge_rpca$abm_seurat_labels, my_seu_merge_rpca$abm_singl
 pheatmap::pheatmap(tbl, scale = "row")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-62-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-63-1.png)&lt;!-- --&gt;
 
 ---
 ## Seurat vs SingleR annotation
@@ -1211,8 +1216,8 @@ Often domain specific knowledge and good reference datasets will outperform the 
 
 ```
 ##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  13479026  719.9   24674155 1317.8   24674155 1317.8
-## Vcells 311951725 2380.1 1029262218 7852.7 1029262191 7852.7
+## Ncells  13675617  730.4   24076741 1285.9   24076741 1285.9
+## Vcells 313125270 2389.0 1038791729 7925.4 1038061744 7919.8
 ```
 
 ---
@@ -1261,7 +1266,7 @@ p_all &lt;- DimPlot(seu_obj, reduction = "umap", group.by = "paper_annot", label
 p_all
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-67-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
 
 ---
 ## Differentials within cell types
@@ -1310,7 +1315,7 @@ DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"), reduction = "umap"
     group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-69-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -1492,7 +1497,7 @@ ggplot(exn_toPlot, aes(x = SNX31, fill = condition)) + geom_density() + ggtitle(
     theme_classic() + xlim(0, 2)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-75-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-76-1.png)&lt;!-- --&gt;
 
 ---
 ## MAST - including covariates
@@ -2308,7 +2313,7 @@ p_pseudo &lt;- ggplot(de_pseudo_exn %&gt;%
 ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend = "bottom")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-85-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-86-1.png)&lt;!-- --&gt;
 
 ---
 ## Seurat FindMarkers for MAST
@@ -2354,7 +2359,7 @@ p_mast &lt;- ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig
 ggarrange(p_seuM, p_mast, common.legend = TRUE, legend = "bottom")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-88-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-89-1.png)&lt;!-- --&gt;
 
 ---
 ## Seurat FindMarkers take home
@@ -2367,8 +2372,8 @@ Also, using the packages directly allow for a higher level of fine tuning for mo
 
 ```
 ##             used   (Mb) gc trigger    (Mb)   max used    (Mb)
-## Ncells  14085523  752.3   24674155  1317.8   24674155  1317.8
-## Vcells 519792652 3965.8 1449361170 11057.8 1509683020 11518.0
+## Ncells  14283014  762.8   24076741  1285.9   24076741  1285.9
+## Vcells 521228350 3976.7 1492676371 11388.3 1554804553 11862.3
 ```
 
 
@@ -2495,7 +2500,7 @@ seu_obj &lt;- quick_clust(seu_obj)
 DimPlot(seu_obj, group.by = "seurat_clusters", pt.size = 0.2, label = TRUE) + NoLegend()
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-92-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-93-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -2540,7 +2545,7 @@ seu_obj &lt;- NormalizeData(seu_obj, assay = "HTO", normalization.method = "CLR"
 ---
 ## Differentiate Hashtags
 
-We can use HTODemux() to classify our cells into groups. This uses clustering of the cells to help determine which sample each celll is from:
+We can use HTODemux() to classify our cells into groups. This uses clustering of the cells to help determine which sample each cell is from:
 
 1) Cluster cells based on HTO signal into K+1 groups.   
 
@@ -2739,9 +2744,9 @@ class: inverse, center, middle
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": false
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));

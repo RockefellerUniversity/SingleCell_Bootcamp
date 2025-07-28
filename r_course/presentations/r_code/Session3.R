@@ -346,6 +346,11 @@ if(params$isSlides == "yes"){
 
 
 
+## ----echo=F-------------------------------------------------------------------
+
+DimPlot(my_seu_merge_rpca, group.by = "paper_annot")
+
+
 ## -----------------------------------------------------------------------------
 
 DimPlot(my_seu_merge_rpca, group.by = "paper_annot")

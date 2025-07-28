@@ -376,85 +376,13 @@ DimPlot(seu_obj)
 
 
 
-## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
-if(params$isSlides == "yes"){
-  cat("class: inverse, center, middle
-
-# Clustering
-
-<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html>
-
----
-"
-  )
-}else{
-  cat("# Clustering
-
-
----
-"
-  )
-
-}
-
-
-
-## ----clust_default,include=TRUE,eval=T----------------------------------------
+## ----include=TRUE,eval=T------------------------------------------------------
 seu_obj <- FindClusters(seu_obj, resolution = 0.5)
 seu_obj[["cluster_byDefault"]] <- seu_obj$seurat_clusters
 
 
-## ----fig.height=4,fig.width=7-------------------------------------------------
-DimPlot(seu_obj, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend()
-
-
-
-
-## ----clust_resoEval,include=TRUE,eval=T, warning=FALSE, message=FALSE---------
-library(clustree)
-
-reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
-reso_res <- lapply(1:length(reso), function(x,seu_obj,reso){
-  seu_obj <- FindClusters(seu_obj,resolution = reso[x])
-  clust <- setNames(seu_obj$seurat_clusters,Cells(seu_obj))
-  return(clust)}, seu_obj, reso)
-names(reso_res) <- paste0("k",1:length(reso))
-
-
-## ----eval=F-------------------------------------------------------------------
-# remotes::install_github("thomasp85/tweenr")
-
-
 ## ----include=TRUE,eval=T------------------------------------------------------
-k_tab <- do.call(cbind,reso_res)
-k_dat <- as.data.frame(k_tab)
-
-head(k_dat,2)
-
-
-## ----clust_resoEval2,include=TRUE,eval=F--------------------------------------
-# clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
-
-
-## ----include=TRUE,eval=T, echo=F, warning=FALSE, fig.height=4,fig.width=7-----
-clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
-
-
-## ----clust_resoFix,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE----
-seu_obj <- FindClusters(seu_obj, resolution = 0.6)
-
-
-## ----fig.height=4,fig.width=7-------------------------------------------------
-DimPlot(seu_obj, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
-
-
-## ----include=TRUE,eval=T, fig.height=4,fig.width=7----------------------------
-DimPlot(seu_obj, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
-
-
-## ----fig.height=4,fig.width=6-------------------------------------------------
-
-FeaturePlot(seu_obj,features = "LYZ",pt.size = 0)
+DimPlot(seu_obj, group.by = "cluster_byDefault")
 
 
 
@@ -547,7 +475,7 @@ DimPlot(seu_obj ,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLege
 DimPlot(seu_cbFilt,group.by = "seurat_clusters",pt.size = 0.1,label = TRUE)+NoLegend()
 
 
-## ----fig.height=4,fig.width=7-------------------------------------------------
+## ----fig.height=4,fig.width=7, warning=F--------------------------------------
 
 mark_gene <- c("LYZ","HLA-DRA")
 
@@ -555,20 +483,20 @@ FeaturePlot(seu_obj,features = mark_gene,pt.size = 0)
 
 
 
-## ----fig.height=3,fig.width=7-------------------------------------------------
+## ----fig.height=3,fig.width=7, warning=F--------------------------------------
 
 
 VlnPlot(seu_obj,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
 
 
-## ----fig.height=4,fig.width=7-------------------------------------------------
+## ----fig.height=4,fig.width=7, warning=F--------------------------------------
 
 FeaturePlot(seu_cbFilt,features = mark_gene,pt.size = 0)
 
 
 
-## ----fig.height=3,fig.width=7-------------------------------------------------
+## ----fig.height=3,fig.width=7, warning = F------------------------------------
 
 VlnPlot(seu_cbFilt,features = mark_gene,group.by = "seurat_clusters",pt.size = 0)
 
@@ -752,7 +680,7 @@ dat$Phase <- factor(dat$Phase,levels = c("G1","S","G2M"))
 dat$cat <- factor(dat$cat,levels = c("cyclon_G1Score","cyclon_SScore","cyclon_G2MScore"))
 
 
-## ----fig.height=4,fig.width=7-------------------------------------------------
+## ----fig.height=4,fig.width=7, warning=F--------------------------------------
 ggplot(dat,aes(x=Phase,y=score,fill=Phase))+geom_violin()+
   labs(x="",y="Score",fill="Phase")+
   facet_wrap(~cat)+theme_classic()
@@ -1014,27 +942,157 @@ if(params$isSlides == "yes"){
 # 
 
 
-## ----fig.height=3,fig.width=7-------------------------------------------------
-seu_filt <- quick_clust(seu_filt)
+## ----eval = T, warning=F, message=F-------------------------------------------
 
-DimPlot(seu_filt)
+seu_filt <- data_proc(seu_filt)
+
+
+
+## ----eval = T, warning=F, message=F-------------------------------------------
+
+seu_filt <- RunPCA(seu_filt, assay = "RNA", npcs = 50)
+# Determine percent of variation associated with each PC
+pct <- seu_filt[["pca"]]@stdev / sum(seu_filt[["pca"]]@stdev) * 100
+# Calculate cumulative percents for each PC
+cumu <- cumsum(pct)
+# Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
+co1 <- which(cumu > 90 & pct < 5)[1]
+# Determine the difference between variation of PC and subsequent PC, last point where change of % of variation is more than 0.1%.
+co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1), decreasing = T)[1] + 1
+pc <- min(co1, co2)
+
+
+
+## ----eval = T, warning=F, message=F-------------------------------------------
+
+seu_filt <- FindNeighbors(seu_filt,dims = 1:pc, reduction = "pca")
+seu_filt <- RunUMAP(seu_filt,dims = 1:pc, reduction = "pca")
+
 
 
 ## ----eval=F, echo=F-----------------------------------------------------------
 # 
-# save(seu_filt, file="data/pbmc8k_SCT2.RData")
-# saveRDS(seu_filt, file="data/pbmc8k_SCT2.rds")
-# save(sce, file="data/pbmc8k_sce.RData")
+# save(seu_filt, file="data/pbmc8k_SCT3.RData")
+# saveRDS(seu_filt, file="data/pbmc8k_SCT3.rds")
+# save(sce, file="data/pbmc8k_sce_updated.RData")
 # 
 
 
 ## ----sceload, eval=T, echo=F--------------------------------------------------
-load("data/pbmc8k_sce.RData")
+load("data/pbmc8k_sce_updated.RData")
 
 
 ## ----sctload, eval=T, echo=F--------------------------------------------------
-load("data/pbmc8k_SCT2.RData")
-#seu_filt <- readRDS("data/pbmc8k_SCT2.rds")
+load("data/pbmc8k_SCT3.RData")
+#seu_filt <- readRDS("data/pbmc8k_SCT3.rds")
+
+
+## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Clustering
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html>
+
+---
+"
+  )
+}else{
+  cat("# Clustering
+
+
+---
+"
+  )
+  
+}
+
+
+
+## ----include=TRUE,eval=T------------------------------------------------------
+seu_filt <- FindClusters(seu_filt, resolution = 0.5)
+seu_filt[["cluster_byDefault"]] <- seu_filt$seurat_clusters
+
+
+## ----fig.height=4,fig.width=7-------------------------------------------------
+
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2)+NoLegend()
+
+
+
+
+## ----clust_resoEval,include=TRUE,eval=T, warning=FALSE, message=FALSE---------
+library(clustree)
+
+reso <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+reso_res <- lapply(1:length(reso), function(x,seu_filt,reso){
+  seu_filt <- FindClusters(seu_filt,resolution = reso[x])
+  clust <- setNames(seu_filt$seurat_clusters,Cells(seu_filt))
+  return(clust)}, seu_filt, reso)
+names(reso_res) <- paste0("k",1:length(reso))
+
+
+## ----eval=F-------------------------------------------------------------------
+# remotes::install_github("thomasp85/tweenr")
+
+
+## ----include=TRUE,eval=T------------------------------------------------------
+k_tab <- do.call(cbind,reso_res)
+k_dat <- as.data.frame(k_tab)
+
+head(k_dat,2)
+
+
+## ----clust_resoEval2,include=TRUE,eval=F--------------------------------------
+# clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+
+
+## ----include=TRUE,eval=T, echo=F, warning=FALSE, fig.height=4,fig.width=7-----
+clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+
+
+## ----clust_resoFix3,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE----
+seu_filt <- FindClusters(seu_filt, resolution = 0.3)
+
+
+## ----fig.height=4,fig.width=7-------------------------------------------------
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+
+
+## ----include=TRUE,eval=T, fig.height=4,fig.width=7----------------------------
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
+
+
+## ----fig.height=4,fig.width=6-------------------------------------------------
+
+FeaturePlot(seu_filt,features = "LYZ",pt.size = 0)
+
+
+
+## ----clust_resoFix1,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE----
+
+seu_filt <- FindClusters(seu_filt, resolution = 0.6)
+
+
+## ----fig.height=4,fig.width=7-------------------------------------------------
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+
+
+## ----include=TRUE,eval=T, fig.height=4,fig.width=7----------------------------
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
+
+
+## ----clust_resoFix2,include=TRUE,eval=T, fig.height=4,fig.width=7, warning=FALSE, message=FALSE----
+seu_filt <- FindClusters(seu_filt, resolution = 0.4)
+
+
+## ----fig.height=4,fig.width=7-------------------------------------------------
+DimPlot(seu_filt, group.by = "seurat_clusters",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Optimized Clusters")
+
+
+## ----include=TRUE,eval=T, fig.height=4,fig.width=7----------------------------
+DimPlot(seu_filt, group.by = "cluster_byDefault",label = TRUE,pt.size = 0.2) + NoLegend() + ggtitle("Default Clusters")
 
 
 ## ----markGene_cal,include=TRUE,eval=F-----------------------------------------
@@ -1043,11 +1101,11 @@ load("data/pbmc8k_SCT2.RData")
 
 
 ## ----eval=F, echo=F-----------------------------------------------------------
-# save(markers, file="data/pbmc8k_markers.RData")
+# save(markers, file="data/pbmc8k_markers_updated.RData")
 
 
 ## ----echo=F, eval=T-----------------------------------------------------------
-load("data/pbmc8k_markers.RData")
+load("data/pbmc8k_markers_updated.RData")
 
 
 ## -----------------------------------------------------------------------------
@@ -1142,15 +1200,15 @@ gc()
 ## ----sec2_resEval_cellTypeAsign,include=TRUE,eval=T---------------------------
 
 seu_filt[["cellType_byClust"]] <- NA
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0)] <- "Naive CD4+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] <- "Memory CD4+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] <- "CD8+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] <- "NK cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9,11)] <- "DC"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0,5)] <- "Naive CD4+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] <- "Memory CD4+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] <- "CD8+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(6)] <- "NK cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7,10)] <- "DC"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(8)] <- "FCGR3A+ Monocytes"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2)] <- "B cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1,6)] <- "CD14+ Monocytes"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(12)] <- "Platelets"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1)] <- "CD14+ Monocytes"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(11)] <- "Platelets"
 seu_filt$cellType_byClust[is.na(seu_filt$cellType_byClust)] <- "Unspecified"
 
 
@@ -1161,7 +1219,7 @@ table(seu_filt$cellType_byClust)
 
 ## ----fig.height=4,fig.width=7-------------------------------------------------
 
-DimPlot(seu_filt, group.by = c("seurat_clusters","cellType_byClust"),label = TRUE,pt.size = 0.2)+NoLegend()
+DimPlot(seu_filt, group.by = c("seurat_clusters","cellType_byClust"),label = F,pt.size = 0.2)
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------

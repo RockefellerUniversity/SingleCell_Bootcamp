@@ -2420,19 +2420,19 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 16:36:34 UMAP embedding parameters a = 0.9922 b = 1.112
+## 18:14:34 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 16:36:34 Read 8381 rows and found 17 numeric columns
+## 18:14:34 Read 8381 rows and found 17 numeric columns
 ```
 
 ```
-## 16:36:34 Using Annoy for neighbor search, n_neighbors = 30
+## 18:14:34 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 16:36:34 Building Annoy index with metric = cosine, n_trees = 50
+## 18:14:34 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -2445,13 +2445,14 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 16:36:35 Writing NN index file to temp file /tmp/RtmpxXE8Nv/file31c65fd56f93
-## 16:36:35 Searching Annoy index using 1 thread, search_k = 3000
-## 16:36:37 Annoy recall = 100%
-## 16:36:38 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 16:36:38 Initializing from normalized Laplacian + noise (using RSpectra)
-## 16:36:39 Commencing optimization for 500 epochs, with 353242 positive edges
-## 16:36:47 Optimization finished
+## 18:14:35 Writing NN index file to temp file /tmp/Rtmpvh1TT7/file328361c6892a
+## 18:14:35 Searching Annoy index using 1 thread, search_k = 3000
+## 18:14:37 Annoy recall = 100%
+## 18:14:38 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 18:14:38 Initializing from normalized Laplacian + noise (using RSpectra)
+## 18:14:39 Commencing optimization for 500 epochs, with 353242 positive edges
+## 18:14:39 Using rng type: pcg
+## 18:14:47 Optimization finished
 ```
 
 ---
@@ -2480,24 +2481,26 @@ For a detailed explanation and discussion of dimension reduction approaches here
 
 [Bioinformatic presentation - Babraham Institute](https://www.bioinformatics.babraham.ac.uk/training/10XRNASeq/Dimension%20Reduction.pdf)
 
+
 ---
 
-class: inverse, center, middle
+## A basic scRNAseq workflow
 
-# Clustering
-
-&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt;
+![overview](./imgs/basicworkflow.png)
 
 ---
 
 ## Clustering
-- The cells are clustered using *FindClusters()* function in Seurat.
+- The cells are then clustered using *FindClusters()* function in Seurat.
+
 - The clustering is differentiated by **original Louvain algorithm**.
-- To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
+
+- To see different options for clustering with Seurat, you can alter the parameter: algorithm. If you want to learn about which algorithms are available, you can quickly read the Seurat manual by typing ?Seurat in R
 
 ---
-## Identify clusters
 
+## Identify clusters
+  
 We will have a quick look first at how to run the clustering, using the *FindClusters()* function. We just need to provide our Seurat object and a resolution.
 
 
@@ -2522,243 +2525,21 @@ seu_obj[["cluster_byDefault"]] &lt;- seu_obj$seurat_clusters
 ```
 
 ---
+
 ## Identify clusters
 
-Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
+- Now you can view your default clusters with the DimPlot() function.
 
 
 ``` r
-DimPlot(seu_obj, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend()
+DimPlot(seu_obj, group.by = "cluster_byDefault")
 ```
 
 ![](Session2_files/figure-html/unnamed-chunk-40-1.png)&lt;!-- --&gt;
 
----
-## Testing resolutions
 
-To identify the best resolution for each dataset we iteratively test potential resolutions using clustree.
-
-
-``` r
-library(clustree)
-
-reso &lt;- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-reso_res &lt;- lapply(1:length(reso), function(x, seu_obj, reso) {
-    seu_obj &lt;- FindClusters(seu_obj, resolution = reso[x])
-    clust &lt;- setNames(seu_obj$seurat_clusters, Cells(seu_obj))
-    return(clust)
-}, seu_obj, reso)
-```
-
-```
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.9701
-## Number of communities: 8
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.9538
-## Number of communities: 11
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.9411
-## Number of communities: 12
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.9282
-## Number of communities: 14
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.9170
-## Number of communities: 15
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.9066
-## Number of communities: 16
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.8967
-## Number of communities: 16
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.8880
-## Number of communities: 17
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.8800
-## Number of communities: 17
-## Elapsed time: 0 seconds
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.8722
-## Number of communities: 19
-## Elapsed time: 0 seconds
-```
-
-``` r
-names(reso_res) &lt;- paste0("k", 1:length(reso))
-```
-
-Some newer Macs have issues with *clustree*. Installing *tweenr* directly should help. 
-
-
-``` r
-remotes::install_github("thomasp85/tweenr")
-```
 
 ---
-## Testing resolutions
-
-To identify the best resolution for each dataset we iteratively test potential resolutions.
-
-
-``` r
-k_tab &lt;- do.call(cbind, reso_res)
-k_dat &lt;- as.data.frame(k_tab)
-
-head(k_dat, 2)
-```
-
-```
-##                            k1 k2 k3 k4 k5 k6 k7 k8 k9 k10
-## PBMC_8k_AAACCTGAGCATCATC-1  3  6  6  6  6  6  6  5  5   4
-## PBMC_8k_AAACCTGAGCTAACTC-1  2  1  1  1  1  1  1  6  6   5
-```
-
----
-## Evaluate resolutions with clustree
-- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
-- To identify the better resolution
-  + less cross talks between lineages
-  + more clusters identified
-  
-
-``` r
-clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
-```
-
----
-## Evaluate resolutions with clustree
-- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
-* In this case, we use *resolution=0.4*
-
-![](Session2_files/figure-html/unnamed-chunk-43-1.png)&lt;!-- --&gt;
-
----
-## Clustering - optimized
-
-Lets retry clustering with our improved resolution. 
-
-
-``` r
-seu_obj &lt;- FindClusters(seu_obj, resolution = 0.6)
-```
-
-```
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 8381
-## Number of edges: 314488
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.9066
-## Number of communities: 16
-## Elapsed time: 0 seconds
-```
-
----
-## Clustering - optimized
-
-We can see that we have slightly more clusters. We can now compare back to the original clustering, and there are some clearly defined clusters, which weren't there before.
-
-
-
-``` r
-DimPlot(seu_obj, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend() +
-    ggtitle("Optimized Clusters")
-```
-
-![](Session2_files/figure-html/unnamed-chunk-44-1.png)&lt;!-- --&gt;
-
----
-## Clustering - default
-
-We can see that we have slightly more clusters. We can now compare back to the original clustering, and see that cluster 12 is clearly defined now, where it wasn't before.
-
-
-``` r
-DimPlot(seu_obj, group.by = "cluster_byDefault", label = TRUE, pt.size = 0.2) + NoLegend() +
-    ggtitle("Default Clusters")
-```
-
-![](Session2_files/figure-html/unnamed-chunk-45-1.png)&lt;!-- --&gt;
-
----
-
-## Gene marker expression
-
-- LYZ is a monocyte marker 
-- We can plot the expression of LYZ onto our clusters using FeaturePlot()
-- Although the expression of LYZ is specific, there seems to be some background expression 
-
-
-
-``` r
-FeaturePlot(seu_obj, features = "LYZ", pt.size = 0)
-```
-
-![](Session2_files/figure-html/unnamed-chunk-46-1.png)&lt;!-- --&gt;
-
----
-
 
 ## A basic scRNAseq workflow
 
@@ -2853,7 +2634,7 @@ cbFilt_mtx &lt;- Read10X_h5("~/Downloads/cbFilt_PBMC8K_20250131_filtered_forseur
 We are going to try out a few tools and approaches. We want to wrap some of our analysis steps into a function to simplify rerunning things.
 
 Normalization: 
-  * Log normalization with scale factor = 10,000
+  * Log normalization with scale factor = 10,000 (this is approx. the avg # of counts in a cell for 10X scRNA-seq data)
   * Find Variable features with vst, select top 2000 variable features
   
 
@@ -2912,7 +2693,7 @@ seu_cbFilt &lt;- seu
 DimPlot(seu_obj, group.by = "seurat_clusters", pt.size = 0.1, label = TRUE) + NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-45-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluate with marker gene expression
@@ -2925,11 +2706,12 @@ DimPlot(seu_cbFilt, group.by = "seurat_clusters", pt.size = 0.1, label = TRUE) +
     NoLegend()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-52-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-46-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluate with marker gene expression
 
+- We will check the expression of some monocyte markers: LYZ and HLA-DRA (present in B-cells also)
 - Without CellBender
 
 
@@ -2939,7 +2721,7 @@ mark_gene &lt;- c("LYZ", "HLA-DRA")
 FeaturePlot(seu_obj, features = mark_gene, pt.size = 0)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-53-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-47-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluate with marker gene expression
@@ -2951,7 +2733,7 @@ FeaturePlot(seu_obj, features = mark_gene, pt.size = 0)
 VlnPlot(seu_obj, features = mark_gene, group.by = "seurat_clusters", pt.size = 0)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-54-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-48-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluate with marker gene expression
@@ -2963,7 +2745,7 @@ VlnPlot(seu_obj, features = mark_gene, group.by = "seurat_clusters", pt.size = 0
 FeaturePlot(seu_cbFilt, features = mark_gene, pt.size = 0)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-55-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-49-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluate with marker gene expression
@@ -2975,13 +2757,13 @@ FeaturePlot(seu_cbFilt, features = mark_gene, pt.size = 0)
 VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size = 0)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-56-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-50-1.png)&lt;!-- --&gt;
 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  5280259 282.0    9555772  510.4   9555772  510.4
-## Vcells 64340838 490.9  259277527 1978.2 281848251 2150.4
+## Ncells  5345295 285.5    8890801  474.9   8890801  474.9
+## Vcells 65135455 497.0  261682323 1996.5 323516713 2468.3
 ```
 
 ---
@@ -3095,7 +2877,7 @@ ggplot(dat, aes(x = byPattern, y = byGene)) + geom_point() + geom_smooth() + lab
 ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-62-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-56-1.png)&lt;!-- --&gt;
 
 ---
 
@@ -3173,6 +2955,16 @@ seu_cbFilt &lt;- CellCycleScoring(seu_cbFilt, s.features = feat_s, g2m.features 
 ```
 
 ```
+## Warning: The `slot` argument of `GetAssayData()` is deprecated as of SeuratObject 5.0.0.
+## i Please use the `layer` argument instead.
+## i The deprecated feature was likely used in the Seurat package.
+##   Please report the issue at &lt;https://github.com/satijalab/seurat/issues&gt;.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.
+```
+
+```
 ## Warning: The following features are not present in the object: MLF1IP, not
 ## searching for symbol synonyms
 ```
@@ -3205,7 +2997,7 @@ ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_violin() + labs(x = 
     y = "Score", fill = "Phase") + facet_wrap(~cat) + theme_classic()
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-65-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-59-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -3375,12 +3167,7 @@ ggplot(dat, aes(x = Phase, y = score, fill = Phase)) + geom_violin() + labs(x = 
     y = "Score", fill = "Phase") + facet_wrap(~cat) + theme_classic()
 ```
 
-```
-## Warning: Removed 363 rows containing non-finite outside the scale range
-## (`stat_ydensity()`).
-```
-
-![](Session2_files/figure-html/unnamed-chunk-72-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-66-1.png)&lt;!-- --&gt;
 
 ---
 ## Compare the two strategies
@@ -3558,7 +3345,7 @@ VlnPlot(seu_cbFilt, group.by = "doublet", features = c("doublet_score", "nCount_
     "nFeature_RNA"), pt.size = 0)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-84-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-78-1.png)&lt;!-- --&gt;
 
 ---
 ## Assessing Doublets
@@ -3571,7 +3358,30 @@ FeatureScatter(seu_cbFilt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", p
     group.by = "doublet")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-85-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-79-1.png)&lt;!-- --&gt;
+
+
+
+---
+
+## Other doublet removal methods
+
+- There are different software used for doublet removal in both R and Python (which you can use with reticulate). Follow this [link](https://www.sciencedirect.com/science/article/pii/S2405471220304592) for a good review about them.  
+
+- DoubletFinder is a popular software in R. It all depends on your assumptions about your data.
+
+
+
+
+---
+
+## Other doublet removal methods
+  
+- Scrublet: creates an artificial doublet from your data to compare with cells by summing the expression of 2 random cells. Uses raw data and can mistakenly identify cells with high depth as doublets.
+
+- DoubletFinder: creates an artificial doublet from your data by averaging the expression of 2 random cells. Uses normalized data and can reliably identify doublets regardless of RNA content. It can miss doublets with high RNA content.
+
+
 
 ---
 class: inverse, center, middle
@@ -3607,7 +3417,7 @@ VlnPlot(seu_cbFilt, group.by = "dset", features = c("nCount_RNA", "nFeature_RNA"
 
 If a bimodal distribution is identified, we need to check for any interference as it suggests that there could be multiple populations within our dataset. This could be biological (i.e very different cell types) or technical (doublets). We can see some evidence of bimodality in our dataset here.
 
-![](Session2_files/figure-html/unnamed-chunk-87-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-81-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluating interactions
@@ -3616,7 +3426,7 @@ Scatter plots can be used to look for interactions between specific variables, l
   * UMIs (*nCount_RNA*) and the genes detected (*nFeature_RNA*) should be in high correlation
   * Doublets with high UMIs and high genes detected.
 
-![](Session2_files/figure-html/unnamed-chunk-88-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-82-1.png)&lt;!-- --&gt;
 
 ---
 ## Evaluating interactions
@@ -3715,14 +3525,14 @@ seu_filt &lt;- subset(seu_cbFilt, subset = doublet == "FALSE" &amp; percent.mt &
 
 - Distribution of variables before filtering
 
-![](Session2_files/figure-html/unnamed-chunk-93-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-87-1.png)&lt;!-- --&gt;
 
 ---
 ## Filtering doublets and cell debris
 
 - Distribution of variables after filtering
 
-![](Session2_files/figure-html/unnamed-chunk-94-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-88-1.png)&lt;!-- --&gt;
 
 
 
@@ -3768,19 +3578,55 @@ seu_filt &lt;- ScaleData(seu_filt, vars.to.regress = pot_conf)
 ```
 
 ---
-## Quick re-processing of data
+## Re-processing of data
 
-  - It's important to re-run dimensionality reduction and re-cluster your cells once you've done filtering
-  - Let's use the function quick_clust() we created earlier
+- It's important to re-run dimensionality reduction and re-cluster your cells once you've done filtering
+- Let's start by using data_proc() to quickly normalize and find variables in our data
+
 
 
 ``` r
-seu_filt &lt;- quick_clust(seu_filt)
-
-DimPlot(seu_filt)
+seu_filt &lt;- data_proc(seu_filt)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-97-1.png)&lt;!-- --&gt;
+
+---
+
+## Re-processing of data
+
+- Next, we will quickly re-run PCA and derive the elbow, saving the number of principal components to use in "pc"
+
+
+``` r
+seu_filt &lt;- RunPCA(seu_filt, assay = "RNA", npcs = 50)
+# Determine percent of variation associated with each PC
+pct &lt;- seu_filt[["pca"]]@stdev/sum(seu_filt[["pca"]]@stdev) * 100
+# Calculate cumulative percents for each PC
+cumu &lt;- cumsum(pct)
+# Determine which PC exhibits cumulative percent greater than 90% and %
+# variation associated with the PC as less than 5
+co1 &lt;- which(cumu &gt; 90 &amp; pct &lt; 5)[1]
+# Determine the difference between variation of PC and subsequent PC, last
+# point where change of % of variation is more than 0.1%.
+co2 &lt;- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) &gt; 0.1), decreasing = T)[1] +
+    1
+pc &lt;- min(co1, co2)
+```
+
+---
+
+## Re-processing of data
+
+- Now, we will perform non-linear dimensionality reduction with our previously calculated optimal pcs
+
+- After this we are ready to re-cluster
+
+
+``` r
+seu_filt &lt;- FindNeighbors(seu_filt, dims = 1:pc, reduction = "pca")
+seu_filt &lt;- RunUMAP(seu_filt, dims = 1:pc, reduction = "pca")
+```
+
 
 
 
@@ -3790,6 +3636,397 @@ DimPlot(seu_filt)
 
 
 ---
+## A basic scRNAseq workflow
+
+![overview](./imgs/basicworkflow.png)
+
+---
+
+class: inverse, center, middle
+
+# Clustering
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt;
+
+---
+
+## Clustering
+
+- We will once more use the *FindClusters()* function in Seurat, but we will refine the resolution
+- This will give us an optimal number of clusters
+- To find out a better resolution, we test clustering with different resolutions and evaluate in a clustree.
+
+---
+## Identify clusters
+  
+For comparison, we will generate clusters first with the default resolution of 0.5
+
+
+``` r
+seu_filt &lt;- FindClusters(seu_filt, resolution = 0.5)
+```
+
+```
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.8912
+## Number of communities: 13
+## Elapsed time: 0 seconds
+```
+
+``` r
+seu_filt[["cluster_byDefault"]] &lt;- seu_filt$seurat_clusters
+```
+
+---
+## Identify clusters
+  
+Looking at the UMAP we can see good separation of clusters. But there may be room for improvement.
+
+
+``` r
+DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend()
+```
+
+![](Session2_files/figure-html/unnamed-chunk-97-1.png)&lt;!-- --&gt;
+
+---
+## Testing resolutions
+  
+To identify the best resolution for each dataset we iteratively test potential resolutions using clustree.
+
+
+``` r
+library(clustree)
+
+reso &lt;- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
+    seu_filt &lt;- FindClusters(seu_filt, resolution = reso[x])
+    clust &lt;- setNames(seu_filt$seurat_clusters, Cells(seu_filt))
+    return(clust)
+}, seu_filt, reso)
+```
+
+```
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.9578
+## Number of communities: 7
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.9375
+## Number of communities: 9
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.9202
+## Number of communities: 10
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.9038
+## Number of communities: 12
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.8912
+## Number of communities: 13
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.8801
+## Number of communities: 13
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.8679
+## Number of communities: 14
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.8592
+## Number of communities: 17
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.8503
+## Number of communities: 18
+## Elapsed time: 0 seconds
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.8426
+## Number of communities: 18
+## Elapsed time: 0 seconds
+```
+
+``` r
+names(reso_res) &lt;- paste0("k", 1:length(reso))
+```
+
+Some newer Macs have issues with *clustree*. Installing *tweenr* directly should help. 
+
+
+``` r
+remotes::install_github("thomasp85/tweenr")
+```
+
+---
+## Testing resolutions
+  
+To identify the best resolution for each dataset we iteratively test potential resolutions
+
+
+``` r
+k_tab &lt;- do.call(cbind, reso_res)
+k_dat &lt;- as.data.frame(k_tab)
+
+head(k_dat, 2)
+```
+
+```
+##                            k1 k2 k3 k4 k5 k6 k7 k8 k9 k10
+## PBMC_8k_GCAGTTAGTTCCATGA-1  3  7  7  8  9  9 10 13 12  13
+## PBMC_8k_CCTTCCCTCATCTGTT-1  1  3  6  7  8  8  8  9  9  11
+```
+
+---
+  ## Evaluate resolutions with clustree
+- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
+- To identify the better resolution
+  + less cross talks between lineages
+  + more clusters identified
+
+
+``` r
+clustree(k_dat, prefix = "k", node_colour = "sc3_stability")
+```
+
+---
+## Evaluate resolutions with clustree
+
+- The resolution from top to the bottom are *0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1*
+  * Let's try *resolution=0.3* first, which has the least cross-talk
+  
+![](Session2_files/figure-html/unnamed-chunk-100-1.png)&lt;!-- --&gt;
+
+---
+## Clustering - optimized
+  
+Lets retry clustering with our improved resolution. 
+
+
+``` r
+seu_filt &lt;- FindClusters(seu_filt, resolution = 0.3)
+```
+
+```
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.9202
+## Number of communities: 10
+## Elapsed time: 0 seconds
+```
+
+---
+## Clustering - optimized
+  
+- We can see that we have slightly less clusters. We can now compare back to the original clustering, and there are some clusters that previously overlapped and are now classified as one. 
+
+
+
+``` r
+DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend() +
+    ggtitle("Optimized Clusters")
+```
+
+![](Session2_files/figure-html/unnamed-chunk-101-1.png)&lt;!-- --&gt;
+
+---
+## Clustering - default
+
+- We can see that we have slightly less clusters. We can now compare back to the original clustering, and there are some clusters that previously overlapped and are now classified as one. 
+
+- Specifically cluster 2 and 6 are now cluster 1
+
+
+``` r
+DimPlot(seu_filt, group.by = "cluster_byDefault", label = TRUE, pt.size = 0.2) +
+    NoLegend() + ggtitle("Default Clusters")
+```
+
+![](Session2_files/figure-html/unnamed-chunk-102-1.png)&lt;!-- --&gt;
+
+---
+  
+## Gene marker expression
+  
+- We can plot the expression of LYZ onto our clusters using FeaturePlot()
+- We see that it is clearly present in cluster 1,6,7,9 
+- However, the expression of LYZ on new cluster 4 indicates that maybe cluster 4 is composed of 2 cell types
+
+
+``` r
+FeaturePlot(seu_filt, features = "LYZ", pt.size = 0)
+```
+
+![](Session2_files/figure-html/unnamed-chunk-103-1.png)&lt;!-- --&gt;
+
+---
+
+## Clustering - optimized
+  
+Lets retry clustering with 0.6 - which should yield more clusters than 0.5
+
+
+``` r
+seu_filt &lt;- FindClusters(seu_filt, resolution = 0.6)
+```
+
+```
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.8801
+## Number of communities: 13
+## Elapsed time: 0 seconds
+```
+
+---
+
+## Clustering - optimized
+  
+- We can see that we have slightly more clusters than 0.3 and 0.5. We can now compare back to the original clustering, and we see cluster 10 is back, but now there's some extra clusters that don't visually make sense
+
+
+
+``` r
+DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend() +
+    ggtitle("Optimized Clusters")
+```
+
+![](Session2_files/figure-html/unnamed-chunk-104-1.png)&lt;!-- --&gt;
+
+---
+## Clustering - default
+
+- We can see that we have slightly more clusters than 0.3 and 0.5. We can now compare back to the original clustering, and we see cluster 10 is back, but now there's some extra clusters that don't visually make sense
+
+
+``` r
+DimPlot(seu_filt, group.by = "cluster_byDefault", label = TRUE, pt.size = 0.2) +
+    NoLegend() + ggtitle("Default Clusters")
+```
+
+![](Session2_files/figure-html/unnamed-chunk-105-1.png)&lt;!-- --&gt;
+
+
+---
+## Clustering - optimized
+
+- Let's try 0.4 to see if it rescues cluster 10 but unites original clusters 2 and 6
+
+- In any case, if you suspect a cluster is made of different subtypes and can't obtain clear separation without forcing additional clusters, you can isolate (subset) the cluster later and re-cluster
+
+
+``` r
+seu_filt &lt;- FindClusters(seu_filt, resolution = 0.4)
+```
+
+```
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 8088
+## Number of edges: 267251
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.9038
+## Number of communities: 12
+## Elapsed time: 0 seconds
+```
+---
+## Clustering - optimized
+  
+- We now see that original clusters 2 and 6 are united in cluster 1, and original clusters 4 and 10 remain separated as clusters 4 and 9. 
+
+
+
+``` r
+DimPlot(seu_filt, group.by = "seurat_clusters", label = TRUE, pt.size = 0.2) + NoLegend() +
+    ggtitle("Optimized Clusters")
+```
+
+![](Session2_files/figure-html/unnamed-chunk-106-1.png)&lt;!-- --&gt;
+
+---
+## Clustering - default
+
+- We now see that original clusters 2 and 6 are united in cluster 1, and original clusters 4 and 10 remain separated as clusters 4 and 9. 
+
+
+
+``` r
+DimPlot(seu_filt, group.by = "cluster_byDefault", label = TRUE, pt.size = 0.2) +
+    NoLegend() + ggtitle("Default Clusters")
+```
+
+![](Session2_files/figure-html/unnamed-chunk-107-1.png)&lt;!-- --&gt;
+
+
+
+---
+
 ## A basic scRNAseq workflow
 
 ![overview](./imgs/basicworkflow.png)
@@ -3818,13 +4055,13 @@ head(markers)
 ```
 
 ```
-##        p_val avg_log2FC pct.1 pct.2 p_val_adj cluster   gene
-## RPL31      0  0.7077770 0.997 0.989         0       0  RPL31
-## RPL35A     0  0.5494061 0.999 0.991         0       0 RPL35A
-## RPS3A      0  0.5203382 1.000 0.993         0       0  RPS3A
-## RPS6       0  0.6406802 1.000 0.993         0       0   RPS6
-## RPS15A     0  0.5376731 1.000 0.993         0       0 RPS15A
-## RPL32      0  0.5446820 1.000 0.994         0       0  RPL32
+##       p_val avg_log2FC pct.1 pct.2 p_val_adj cluster  gene
+## LEF1      0  2.3541627 0.658 0.165         0       0  LEF1
+## CCR7      0  2.2946188 0.659 0.168         0       0  CCR7
+## LDHB      0  1.3104935 0.939 0.607         0       0  LDHB
+## RPL30     0  0.5992342 0.999 0.987         0       0 RPL30
+## RPL9      0  0.5829411 0.999 0.988         0       0  RPL9
+## RPL31     0  0.7571619 0.998 0.988         0       0 RPL31
 ```
 
 ---
@@ -3843,21 +4080,23 @@ head(top_genes)
 ```
 ## # A tibble: 6 x 7
 ## # Groups:   cluster [3]
-##       p_val avg_log2FC pct.1 pct.2 p_val_adj cluster gene     
-##       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt; &lt;fct&gt;   &lt;chr&gt;    
-## 1 1.08e-173       2.45 0.334 0.075 3.64e-169 0       FHIT     
-## 2 1.64e- 93       1.95 0.252 0.073 5.51e- 89 0       LINC01550
-## 3 0               3.39 0.368 0.035 0         1       QPCT     
-## 4 0               3.29 0.482 0.049 0         1       ASGR1    
-## 5 0               7.56 0.575 0.006 0         2       VPREB3   
-## 6 0               7.50 0.455 0.016 0         2       IGLC2
+##       p_val avg_log2FC pct.1 pct.2 p_val_adj cluster gene         
+##       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt; &lt;fct&gt;   &lt;chr&gt;        
+## 1 3.52e-215       3.14 0.267 0.033 1.18e-210 0       RP11-291B21.2
+## 2 0               2.35 0.658 0.165 0         0       LEF1         
+## 3 0               5.57 0.905 0.041 0         1       S100A12      
+## 4 0               5.30 0.974 0.111 0         1       S100A8       
+## 5 0               8.60 0.57  0.005 0         2       VPREB3       
+## 6 0               8.59 0.45  0.015 0         2       IGLC2
 ```
 
 ---
 
 ## Identify cluster-specific marker genes
 
-We can then use the *DoHeatmap()* from Seurat to plot just these genes.
+- We can then use the *DoHeatmap()* from Seurat to plot just these genes
+
+- You can see here whether clusters have unique markers or if they overlap with other clusters
 
 
 ``` r
@@ -3867,10 +4106,10 @@ DoHeatmap(seu_filt, features = top_genes$gene) + NoLegend()
 ```
 ## Warning in DoHeatmap(seu_filt, features = top_genes$gene): The following
 ## features were omitted as they were not found in the scale.data slot for the RNA
-## assay: MALAT1, AAK1
+## assay: AAK1, CASP8
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-102-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-111-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center, middle
@@ -3919,7 +4158,7 @@ known_marker &lt;- c("GNLY", "NKG7")
 FeaturePlot(seu_filt, features = known_marker)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-104-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-113-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -3971,7 +4210,7 @@ avgExp_mat &lt;- do.call(cbind, avgExp_byClust)
 pheatmap(avgExp_mat, scale = "row")
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-106-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-115-1.png)&lt;!-- --&gt;
 
 
 
@@ -3983,15 +4222,15 @@ We can then manually annotate the clusters based on these markers. We do this ma
 
 ``` r
 seu_filt[["cellType_byClust"]] &lt;- NA
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0)] &lt;- "Naive CD4+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] &lt;- "Memory CD4+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] &lt;- "CD8+ T cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7)] &lt;- "NK cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(9, 11)] &lt;- "DC"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(0, 5)] &lt;- "Naive CD4+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(3)] &lt;- "Memory CD4+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(4)] &lt;- "CD8+ T cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(6)] &lt;- "NK cells"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(7, 10)] &lt;- "DC"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(8)] &lt;- "FCGR3A+ Monocytes"
 seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(2)] &lt;- "B cells"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1, 6)] &lt;- "CD14+ Monocytes"
-seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(12)] &lt;- "Platelets"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(1)] &lt;- "CD14+ Monocytes"
+seu_filt$cellType_byClust[seu_filt$seurat_clusters %in% c(11)] &lt;- "Platelets"
 seu_filt$cellType_byClust[is.na(seu_filt$cellType_byClust)] &lt;- "Unspecified"
 ```
 
@@ -4007,11 +4246,11 @@ table(seu_filt$cellType_byClust)
 ```
 ## 
 ##             B cells     CD14+ Monocytes        CD8+ T cells                  DC 
-##                1117                1666                1024                 263 
+##                1142                1627                 966                 268 
 ##   FCGR3A+ Monocytes Memory CD4+ T cells            NK cells  Naive CD4+ T cells 
-##                 211                 933                 263                1483 
+##                 208                1002                 321                2346 
 ##           Platelets         Unspecified 
-##                  54                1074
+##                  54                 154
 ```
 
 ---
@@ -4020,11 +4259,11 @@ table(seu_filt$cellType_byClust)
 We can also display seurat clusters and cell types in UMAP.
 
 ``` r
-DimPlot(seu_filt, group.by = c("seurat_clusters", "cellType_byClust"), label = TRUE,
-    pt.size = 0.2) + NoLegend()
+DimPlot(seu_filt, group.by = c("seurat_clusters", "cellType_byClust"), label = F,
+    pt.size = 0.2)
 ```
 
-![](Session2_files/figure-html/unnamed-chunk-109-1.png)&lt;!-- --&gt;
+![](Session2_files/figure-html/unnamed-chunk-118-1.png)&lt;!-- --&gt;
 
 ---
 
@@ -4119,9 +4358,9 @@ UMAPS:
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": false
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
