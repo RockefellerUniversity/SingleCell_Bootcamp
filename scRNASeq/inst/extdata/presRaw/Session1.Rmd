@@ -673,7 +673,7 @@ Assessment of the overall quality of a scRNA-seq/snRNA-seq experiment after Cell
 ---
 ## Web Summary Example
 
-We will be looking at the web summary generated from a PBMC dataset with ~1,000 cells from a healthy human donor. The full experiment details can be found on the 10X website [here](https://www.10xgenomics.com/datasets/1-k-pbm-cs-from-a-healthy-donor-v-3-chemistry-3-standard-3-0-0).
+We will be looking at the web summary generated from a PBMC dataset with ~1,000 cells from a healthy human donor. The full experiment details can be found on the 10X website [here](https://www.10xgenomics.com/datasets/1-k-pbm-cs-from-a-healthy-donor-v-3-chemistry-3-standard-3-0-0) and you can get a copy of a web summary from Cell Ranger version 8 [here](./../../data/web_summary.html).
 
 [NOTE: Older web summaries contain largely the same information, but slightly different layout]
 
