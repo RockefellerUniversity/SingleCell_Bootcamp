@@ -137,7 +137,8 @@ jobs:
         with:
           lfs: true
       - name: Checkout LFS objects
-        run: git lfs pull
+        run: git lfs pull --include="scRNASeq/inst/extdata/data/*"
+        
       - name: Query dependencies
         run: |
           install.packages('remotes')
