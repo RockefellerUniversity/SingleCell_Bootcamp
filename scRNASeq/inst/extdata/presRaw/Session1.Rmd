@@ -673,7 +673,7 @@ Assessment of the overall quality of a scRNA-seq/snRNA-seq experiment after Cell
 ---
 ## Web Summary Example
 
-We will be looking at the web summary generated from a PBMC dataset with ~1,000 cells from a healthy human donor. The full experiment details can be found on the 10X website [here](https://www.10xgenomics.com/datasets/1-k-pbm-cs-from-a-healthy-donor-v-3-chemistry-3-standard-3-0-0) and you can get a copy of a web summary from Cell Ranger version 8 [here](./../../data/web_summary.html).
+We will be looking at the web summary generated from a PBMC dataset with ~1,000 cells from a healthy human donor. The full experiment details can be found on the 10X website [here](https://www.10xgenomics.com/datasets/1-k-pbm-cs-from-a-healthy-donor-v-3-chemistry-3-standard-3-0-0).
 
 [NOTE: Older web summaries contain largely the same information, but slightly different layout]
 
@@ -792,7 +792,6 @@ Key Metrics we look for:
 
   * Reflects the complexity of libraries
   * Consider reconstructing library if too low
-
 
 
 ---
@@ -938,7 +937,7 @@ Knee plots should be interpreted in the context of the biology under investigati
 
 It is important to know what version and parameters were used to run Cell Ranger. 
 
-This cell calling step is continually updated and it can have a dramatic affect on your results. The [Web Summary](https://cf.10xgenomics.com/samples/cell-exp/9.0.0/5k_Human_Donor4_PBMC_3p_gem-x_5k_Human_Donor4_PBMC_3p_gem-x/5k_Human_Donor4_PBMC_3p_gem-x_5k_Human_Donor4_PBMC_3p_gem-x_web_summary.html) on 10X Genomics for this dataset is from Cell Ranger V3.0 if you want to compare. 
+This cell calling step is continually updated and it can have a dramatic affect on your results. The [Web Summary](https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_1k_v3/pbmc_1k_v3_web_summary.html) on 10X Genomics for this dataset is from Cell Ranger V3.0 if you want to compare. 
 
 Cell Ranger V9.0 was released relatively recently and, as with almost every prior version, there's been a change in default parameters (EmptyDrops false discovery rate (FDR) threshold has been lowered).
 
