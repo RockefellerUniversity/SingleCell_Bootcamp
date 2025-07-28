@@ -135,9 +135,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          lfs: true
+          lfs: false
+          
       - name: Checkout LFS objects
         run: git lfs pull --include="scRNASeq/inst/extdata/data/*" --exclude="r_course/data/*"
+      
+      - name: Remove large lingering files
+        run: rm -r r_course/data/*
         
       - name: Query dependencies
         run: |
