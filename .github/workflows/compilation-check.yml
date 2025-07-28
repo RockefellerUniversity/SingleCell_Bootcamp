@@ -137,7 +137,7 @@ jobs:
         with:
           lfs: true
       - name: Checkout LFS objects
-        run: git lfs pull --include="scRNASeq/inst/extdata/data/*"
+        run: git lfs pull --include="scRNASeq/inst/extdata/data/*" --exclude="r_course/data/*"
         
       - name: Query dependencies
         run: |
@@ -168,8 +168,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /home/runner/work/_temp/Library
-          key: ${{ env.cache-version }}-${{ runner.os }}-biocdocker-biocbranch-release-r-${{ steps.findrversion.outputs.rversion }}-bioc-${{ steps.findrversion.outputs.biocversionnum }}-2-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ runner.os }}-biocdocker-biocbranch-release-r-${{ steps.findrversion.outputs.rversion }}-bioc-${{ steps.findrversion.outputs.biocversionnum }}-2-
+          key: ${{ env.cache-version }}-${{ runner.os }}-biocdocker-biocbranch-release-r-${{ steps.findrversion.outputs.rversion }}-bioc-${{ steps.findrversion.outputs.biocversionnum }}-3-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ runner.os }}-biocdocker-biocbranch-release-r-${{ steps.findrversion.outputs.rversion }}-bioc-${{ steps.findrversion.outputs.biocversionnum }}-3-
 
       - name: Install dependencies
         run: |
