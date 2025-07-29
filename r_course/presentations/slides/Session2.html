@@ -3,15 +3,16 @@
   <head>
     <title>Single-cell RNA sequencing ~ Session 2    </title>
     <meta charset="utf-8" />
-    <meta name="author" content="Rockefeller University, Bioinformatics Resource Center" />
+    <meta name="author" content="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" />
+    <meta name="author" content="brc@rockefeller.edu" />
     <script src="libs/header-attrs-2.29/header-attrs.js"></script>
-    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="default.css" type="text/css" />
     <link rel="stylesheet" href="metropolisCustom.css" type="text/css" />
     <link rel="stylesheet" href="metropolis-fontsCustom.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
-class: center, middle, inverse, title-slide
+class: middle, inverse, title-slide
 
 .title[
 # Single-cell RNA sequencing ~ Session 2<br />
@@ -20,11 +21,18 @@ class: center, middle, inverse, title-slide
 <hr color='#EB811B' size=1px width=796px><br />
 </html>
 ]
-.author[
-### Rockefeller University, Bioinformatics Resource Center
+.subtitle[
+## <html><br />
+<br />
+<hr color='#EB811B' size=1px width=796px><br />
+</html><br />
+Bioinformatics Resource Center - Rockefeller University
 ]
-.date[
+.author[
 ### <a href="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" class="uri">https://rockefelleruniversity.github.io/SingleCell_Bootcamp/</a>
+]
+.author[
+### <a href="mailto:brc@rockefeller.edu" class="email">brc@rockefeller.edu</a>
 ]
 
 ---
@@ -2420,19 +2428,19 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 18:14:34 UMAP embedding parameters a = 0.9922 b = 1.112
+## 23:34:49 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 18:14:34 Read 8381 rows and found 17 numeric columns
+## 23:34:49 Read 8381 rows and found 17 numeric columns
 ```
 
 ```
-## 18:14:34 Using Annoy for neighbor search, n_neighbors = 30
+## 23:34:49 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 18:14:34 Building Annoy index with metric = cosine, n_trees = 50
+## 23:34:49 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -2445,14 +2453,14 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 18:14:35 Writing NN index file to temp file /tmp/Rtmpvh1TT7/file328361c6892a
-## 18:14:35 Searching Annoy index using 1 thread, search_k = 3000
-## 18:14:37 Annoy recall = 100%
-## 18:14:38 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 18:14:38 Initializing from normalized Laplacian + noise (using RSpectra)
-## 18:14:39 Commencing optimization for 500 epochs, with 353242 positive edges
-## 18:14:39 Using rng type: pcg
-## 18:14:47 Optimization finished
+## 23:34:49 Writing NN index file to temp file /tmp/RtmpvixdT2/file1941262bd95b
+## 23:34:49 Searching Annoy index using 1 thread, search_k = 3000
+## 23:34:52 Annoy recall = 100%
+## 23:34:52 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 23:34:53 Initializing from normalized Laplacian + noise (using RSpectra)
+## 23:34:53 Commencing optimization for 500 epochs, with 353242 positive edges
+## 23:34:53 Using rng type: pcg
+## 23:35:01 Optimization finished
 ```
 
 ---
@@ -2762,8 +2770,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  5345295 285.5    8890801  474.9   8890801  474.9
-## Vcells 65135455 497.0  261682323 1996.5 323516713 2468.3
+## Ncells  5339189 285.2    8682918  463.8   8682918  463.8
+## Vcells 65120916 496.9  261650796 1996.3 313303685 2390.4
 ```
 
 ---

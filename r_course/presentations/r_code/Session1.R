@@ -1,5 +1,5 @@
 params <-
-list(isSlides = "yes")
+list(isSlides = "no")
 
 ## ----include=FALSE------------------------------------------------------------
 suppressPackageStartupMessages(require(knitr))
