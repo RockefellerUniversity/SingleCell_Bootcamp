@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Single-cell RNA sequencing ~ Session 2    </title>
+    <title>Single-cell RNA sequencing ~ Session 2</title>
     <meta charset="utf-8" />
     <meta name="author" content="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" />
     <meta name="author" content="brc@rockefeller.edu" />
@@ -15,11 +15,7 @@
 class: middle, inverse, title-slide
 
 .title[
-# Single-cell RNA sequencing ~ Session 2<br />
-<html><br />
-<br />
-<hr color='#EB811B' size=1px width=796px><br />
-</html>
+# Single-cell RNA sequencing ~ Session 2
 ]
 .subtitle[
 ## <html><br />
@@ -2428,19 +2424,19 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 23:34:49 UMAP embedding parameters a = 0.9922 b = 1.112
+## 02:08:15 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 23:34:49 Read 8381 rows and found 17 numeric columns
+## 02:08:15 Read 8381 rows and found 17 numeric columns
 ```
 
 ```
-## 23:34:49 Using Annoy for neighbor search, n_neighbors = 30
+## 02:08:15 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 23:34:49 Building Annoy index with metric = cosine, n_trees = 50
+## 02:08:15 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -2453,14 +2449,14 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 23:34:49 Writing NN index file to temp file /tmp/RtmpvixdT2/file1941262bd95b
-## 23:34:49 Searching Annoy index using 1 thread, search_k = 3000
-## 23:34:52 Annoy recall = 100%
-## 23:34:52 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 23:34:53 Initializing from normalized Laplacian + noise (using RSpectra)
-## 23:34:53 Commencing optimization for 500 epochs, with 353242 positive edges
-## 23:34:53 Using rng type: pcg
-## 23:35:01 Optimization finished
+## 02:08:15 Writing NN index file to temp file /tmp/RtmptOaKLs/file194373e7840d
+## 02:08:15 Searching Annoy index using 1 thread, search_k = 3000
+## 02:08:18 Annoy recall = 100%
+## 02:08:18 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 02:08:19 Initializing from normalized Laplacian + noise (using RSpectra)
+## 02:08:19 Commencing optimization for 500 epochs, with 353242 positive edges
+## 02:08:19 Using rng type: pcg
+## 02:08:27 Optimization finished
 ```
 
 ---
@@ -2770,8 +2766,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  5339189 285.2    8682918  463.8   8682918  463.8
-## Vcells 65120916 496.9  261650796 1996.3 313303685 2390.4
+## Ncells  5339200 285.2    8683400  463.8   8683400  463.8
+## Vcells 65120993 496.9  261650948 1996.3 313303762 2390.4
 ```
 
 ---
