@@ -1,5 +1,5 @@
 ---
-title: "Single-cell RNA sequencing ~ Session 1<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+title: "Single-cell RNA sequencing ~ Session 1"
 subtitle: " <html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html> Bioinformatics Resource Center - Rockefeller University"
 author: 
   - "https://rockefelleruniversity.github.io/SingleCell_Bootcamp/"
@@ -206,23 +206,23 @@ Major difference between the two are the sequencing depth and coverage profiles 
 ---
 ## The 10x Genomics system
 
-![overview](imgs/10x_full.png)
+![overview](imgs/CopyOf10x_full.png)
 
 ---
 ## The 10x Genomics system - Microfluidics
 
-![Microfluidics](imgs/10x_a.png)
+![Microfluidics](imgs/CopyOf10x_a.png)
 
 ---
 ## The 10x Genomics system  - Gel beads
 
-![beads](./imgs/10x_bead.png)
+![beads](./imgs/CopyOf10x_bead.png)
 
 ---
 
 ## The 10x Genomics system  - Sequencing primers
 
-![primers](./imgs/10x_sequencing.png)
+![primers](./imgs/CopyOf10x_sequencing.png)
 
 ---
 
@@ -230,14 +230,14 @@ Major difference between the two are the sequencing depth and coverage profiles 
 
 **Read 1**
 
-![read1](imgs/Read1.png)
+![read1](imgs/CopyOfRead1.png)
 
 ---
 ## The 10x Genomics system  - Sequencing R2
 
 **Read 2**
 
-![read2](imgs/Read2.png)
+![read2](imgs/CopyOfRead2.png)
 
 
 ---
@@ -355,7 +355,7 @@ In this session we will give a brief overview of running this tool and then dive
 ]
 
 .pull-right[
-![CellRanger](imgs/CellRangerPage.png)
+![CellRanger](imgs/CopyOfCellRangerPage.png)
 ]
 
 ---
@@ -580,11 +580,11 @@ This BAM file is sometimes used in downstream analysis such as scSplit/Velocyto 
 .pull-right[
 
 <div align="center">
-<img src="imgs/sam1.png" alt="igv" height="200" width="450">
+<img src="imgs/CopyOfsam1.png" alt="igv" height="200" width="450">
 </div>
 
 <div align="center">
-<img src="imgs/sam2.png" alt="igv" height="150" width="450">
+<img src="imgs/CopyOfsam2.png" alt="igv" height="150" width="450">
 </div>
 
 ]
@@ -598,7 +598,7 @@ Cell Ranger also outputs _cloupe.cloupe_ files for visualization within the [10X
 This allows for the visualization of scRNA-seq/snRNA-seq as a t-sne/umap with the ability to overlay metrics of QC and gene expression onto the cells in real time.
 
 <div align="center">
-<img src="imgs/cloupe.png" alt="igv" height="350" width="400">
+<img src="imgs/CopyOfcloupe.png" alt="igv" height="350" width="400">
 </div>
 
 
@@ -645,7 +645,7 @@ There are many potential issues which can arise in scRNA-seq/snRNA-seq data incl
 .pull-right[
 
 <div align="center">
-<img src="imgs/bad_cells.png" alt="igv" height="460" width="310">
+<img src="imgs/CopyOfbad_cells.png" alt="igv" height="460" width="310">
 <caption>Huemos et al. (2023)</caption>
 </div>
 
@@ -688,7 +688,7 @@ The web summary also contains useful information on the input files and the vers
 ]
 
 .pull-right[
-![websum](imgs/websum1.png)
+![websum](imgs/CopyOfwebsum1.png)
 ]
 
 ---
@@ -706,7 +706,7 @@ As most people do not run Cell Ranger themselves this is important to check it m
   ]
 
 .pull-right[
-![websum](imgs/websum4.png)
+![websum](imgs/CopyOfwebsum4.png)
   ]
 
 ---
@@ -721,7 +721,7 @@ Again this is an important section to double-check to make sure everything was r
 This is now under the Experimental Design tab of Cell Ranger 9. 
 
 
-![websum](imgs/websum5.png)
+![websum](imgs/CopyOfwebsum5.png)
 
 
 ---
@@ -738,7 +738,7 @@ The **Mapping** panel highlights information on the mapping of reads to the refe
   ]
   
 .pull-right[
-!websum](imgs/websum3.png)
+![websum](imgs/CopyOfwebsum3.png)
 ]
 
 ---
@@ -774,7 +774,7 @@ The **Sequencing** panel highlights information on the quality of the Illumina s
   ]
 
 .pull-right[
-![websum](imgs/websum2.png)
+![websum](imgs/CopyOfwebsum2.png)
 ]
 
 
@@ -807,7 +807,7 @@ The **Cells** panel highlights some of the most important information in the rep
   ]
   
 .pull-right[
-![websum](imgs/websum6.png)
+![websum](imgs/CopyOfwebsum6.png)
 ]
 
 ---
@@ -823,7 +823,7 @@ The **Cells** panel also has other metrics which help describe the depth and amb
   ]
   
 .pull-right[
-![websum](imgs/websum6.png)
+![websum](imgs/CopyOfwebsum6.png)
   ]
 
 
@@ -860,7 +860,7 @@ The knee plot shows:
 
 ]
 .pull-right[
-![](./imgs/websum6.png)
+![](./imgs/CopyOfwebsum6.png)
 ]
 
 ---
@@ -880,7 +880,7 @@ If required, a **--force-cells** flag can be used with _cellranger count_ to ide
   ]
   
 .pull-right[
-![websum](imgs/websum6.png)
+![websum](imgs/CopyOfwebsum6.png)
   ]
 
 ---
@@ -899,7 +899,7 @@ In this example we see no specific cliff and knee suggesting a failure in the in
   ]
   
 .pull-right[
-![websum](imgs/wetfailure.png)
+![websum](imgs/CopyOfwetfailure.png)
   ]
 
 ---
@@ -912,7 +912,7 @@ If there is a clog in the machine we may see a knee plot where the overall numbe
   ]
 
 .pull-right[
-![websum](imgs/lowbarcode.png)
+![websum](imgs/CopyOflowbarcode.png)
   ]
 
 ---
@@ -929,7 +929,7 @@ Knee plots should be interpreted in the context of the biology under investigati
   ]
 
 .pull-right[
-![websum](imgs/hetero.png)
+![websum](imgs/CopyOfhetero.png)
   ]
   
 ---
@@ -953,7 +953,7 @@ Additionally the analysis page contains information on sequencing saturation and
   ]
 
 .pull-right[
-![analysis](imgs/anal1.png)
+![analysis](imgs/CopyOfanal1.png)
   ]
 
 ---
@@ -969,7 +969,7 @@ The t-SNE plot shows the distribution and similarity within your data.
   ]
 
 .pull-right[
-![analysis](imgs/anal2.png)
+![analysis](imgs/CopyOfanal2.png)
   ]
 
 ---
@@ -985,11 +985,11 @@ By reviewing the curve of the down sampled metrics we can assess whether we are 
 .pull-right[
 
 <div align="center">
-<img src="imgs/anal3.png" alt="igv" height="200" width="200">
+<img src="imgs/CopyOfanal3.png" alt="igv" height="200" width="200">
 </div>
 
 <div align="center">
-<img src="imgs/anal4.png" alt="igv" height="200" width="200">
+<img src="imgs/CopyOfanal4.png" alt="igv" height="200" width="200">
 </div>
 ]
 
@@ -1066,7 +1066,7 @@ For example, ScaleBio uses sample fixation, followed by library construction in 
 ]
 
 .pull-right[
-![](./imgs/ScaleBio_scRNA_Workflow-1-2048x635.png) 
+![scalebio](imgs/CopyOfScaleBio_scRNA_Workflow-1-2048x635.png) 
 ]
 
 ---
@@ -1099,7 +1099,7 @@ Tissue is stained and then permeabilized, allowing released mRNA to bind to spat
 
 ]
 .pull-right[
-![](./imgs/Visium-gene-expression-slide-1024x390.png) 
+![visium](imgs/CopyOfVisium-gene-expression-slide-1024x390.png) 
 ]
 
 ---
@@ -1120,6 +1120,6 @@ There is available software to do this:
 ]
 
 .pull-right[
-![](./imgs/Spatial-AnnotatedSCdata-Illus.png) 
+![spatial](imgs/CopyOfSpatial-AnnotatedSCdata-Illus.png) 
 ]
 
