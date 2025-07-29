@@ -148,7 +148,6 @@ if(params$isSlides == "yes"){
 
 ```
 
-
 ## Load cellranger matrix into matrix
 
 ```{r,echo=T,eval=TRUE}
@@ -177,12 +176,10 @@ save(mtx, file = "data/pbmc8k_seurat_read.RData")
 load("data/pbmc8k_seurat_read.RData") 
 ```
 
-
 ```{R, eval=T, echo=F}
 library(Seurat)
 load("data/pbmc8k_mtx_res.RData")
 ```
-
 
 ```{r, eval=F, echo=T}
 is(mtx)
