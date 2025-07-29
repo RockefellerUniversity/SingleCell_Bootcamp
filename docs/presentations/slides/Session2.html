@@ -133,7 +133,6 @@ class: inverse, center, middle
 
 ---
 
-
 ## Load cellranger matrix into matrix
 
 
@@ -147,8 +146,6 @@ library(Seurat)
 
 mtx &lt;- Seurat::Read10X(mtx_dir)
 ```
-
-
 
 
 
@@ -2424,19 +2421,19 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 02:08:15 UMAP embedding parameters a = 0.9922 b = 1.112
+## 16:46:43 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 02:08:15 Read 8381 rows and found 17 numeric columns
+## 16:46:43 Read 8381 rows and found 17 numeric columns
 ```
 
 ```
-## 02:08:15 Using Annoy for neighbor search, n_neighbors = 30
+## 16:46:43 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 02:08:15 Building Annoy index with metric = cosine, n_trees = 50
+## 16:46:43 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -2449,14 +2446,14 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 02:08:15 Writing NN index file to temp file /tmp/RtmptOaKLs/file194373e7840d
-## 02:08:15 Searching Annoy index using 1 thread, search_k = 3000
-## 02:08:18 Annoy recall = 100%
-## 02:08:18 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 02:08:19 Initializing from normalized Laplacian + noise (using RSpectra)
-## 02:08:19 Commencing optimization for 500 epochs, with 353242 positive edges
-## 02:08:19 Using rng type: pcg
-## 02:08:27 Optimization finished
+## 16:46:44 Writing NN index file to temp file /tmp/Rtmp9iqlAz/file1984c0d9910
+## 16:46:44 Searching Annoy index using 1 thread, search_k = 3000
+## 16:46:46 Annoy recall = 100%
+## 16:46:47 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 16:46:48 Initializing from normalized Laplacian + noise (using RSpectra)
+## 16:46:48 Commencing optimization for 500 epochs, with 353242 positive edges
+## 16:46:48 Using rng type: pcg
+## 16:46:56 Optimization finished
 ```
 
 ---
@@ -2766,8 +2763,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  5339200 285.2    8683400  463.8   8683400  463.8
-## Vcells 65120993 496.9  261650948 1996.3 313303762 2390.4
+## Ncells  5339226 285.2    8362627  446.7   8362627  446.7
+## Vcells 65121391 496.9  261651751 1996.3 278970115 2128.4
 ```
 
 ---
