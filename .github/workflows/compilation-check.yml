@@ -144,7 +144,9 @@ jobs:
           bash {0}
           
       - name: Checkout LFS objects
-        run: git lfs pull --include="scRNASeq/inst/extdata/data/*" --exclude="r_course/data/*" --include="scRNASeq/inst/extdata/imgs/*"
+        run: | 
+          git lfs pull --include="scRNASeq/inst/extdata/data/*" --exclude="r_course/data/*"
+          git lfs pull --include="scRNASeq/inst/extdata/imgs/*" --exclude="r_course/data/*"
       
       - name: Remove large lingering files
         run: rm -r r_course/data/*
