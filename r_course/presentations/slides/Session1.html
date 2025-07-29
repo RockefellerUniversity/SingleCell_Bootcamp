@@ -3,15 +3,16 @@
   <head>
     <title>Single-cell RNA sequencing ~ Session 1    </title>
     <meta charset="utf-8" />
-    <meta name="author" content="Rockefeller University, Bioinformatics Resource Centre" />
+    <meta name="author" content="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" />
+    <meta name="author" content="brc@rockefeller.edu" />
     <script src="libs/header-attrs-2.29/header-attrs.js"></script>
-    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="default.css" type="text/css" />
     <link rel="stylesheet" href="metropolisCustom.css" type="text/css" />
     <link rel="stylesheet" href="metropolis-fontsCustom.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
-class: center, middle, inverse, title-slide
+class: middle, inverse, title-slide
 
 .title[
 # Single-cell RNA sequencing ~ Session 1<br />
@@ -20,15 +21,21 @@ class: center, middle, inverse, title-slide
 <hr color='#EB811B' size=1px width=796px><br />
 </html>
 ]
-.author[
-### Rockefeller University, Bioinformatics Resource Centre
+.subtitle[
+## <html><br />
+<br />
+<hr color='#EB811B' size=1px width=796px><br />
+</html><br />
+Bioinformatics Resource Center - Rockefeller University
 ]
-.date[
-### <a href="http://rockefelleruniversity.github.io/SingleCell_Bootcamp/" class="uri">http://rockefelleruniversity.github.io/SingleCell_Bootcamp/</a>
+.author[
+### <a href="https://rockefelleruniversity.github.io/SingleCell_Bootcamp/" class="uri">https://rockefelleruniversity.github.io/SingleCell_Bootcamp/</a>
+]
+.author[
+### <a href="mailto:brc@rockefeller.edu" class="email">brc@rockefeller.edu</a>
 ]
 
 ---
-
 
 
 
@@ -61,12 +68,13 @@ The emergence of high-throughput sequencing technologies such as 454 (Roche) and
 ---
 ## Sequencing overview
 
-![overview](./imgs/wps.png)
+![overview](imgs/wps.png)
 
 ---
 
 ## Sequence files - FastQ
  **FastQ (FASTA with Qualities)**
+ 
 &lt;div align="center"&gt;
 &lt;img src="imgs/fq1.png" alt="igv" height="200" width="800"&gt;
 &lt;/div&gt;
@@ -80,9 +88,11 @@ The emergence of high-throughput sequencing technologies such as 454 (Roche) and
 
 ## Sequence files - FastQ
  **FastQ - Header**
- &lt;div align="center"&gt;
+ 
+&lt;div align="center"&gt;
 &lt;img src="imgs/fq2.png" alt="igv" height="200" width="800"&gt;
 &lt;/div&gt;
+
 - Header for each read can contain additional information
     - HS2000-887_89 - Machine name.
     - 5 - Flowcell lane.
@@ -91,8 +101,10 @@ The emergence of high-throughput sequencing technologies such as 454 (Roche) and
 ---
 
 ## Sequence files - FastQ
- **FastQ - Qualities**
- &lt;div align="center"&gt;
+
+**FastQ - Qualities**
+
+&lt;div align="center"&gt;
 &lt;img src="imgs/fq3.png" alt="igv" height="200" width="800"&gt;
 &lt;/div&gt;
  
@@ -103,7 +115,6 @@ The emergence of high-throughput sequencing technologies such as 454 (Roche) and
  
 
 ---
-
 ## Sequencing use cases
 
 - ChIP-seq - Study transcription factor binding
@@ -114,7 +125,6 @@ The emergence of high-throughput sequencing technologies such as 454 (Roche) and
 - And many more..
 
 ---
-
 ## Bulk sequencing methods
 
 Sequencing typically performed on bulk tissue or cells.
@@ -193,25 +203,23 @@ Major difference between the two are the sequencing depth and coverage profiles 
 ---
 ## The 10x Genomics system
 
-![overview](./imgs/10x_full.png)
+![overview](imgs/10x_full.png)
 
 ---
-
 ## The 10x Genomics system - Microfluidics
 
-![overview](./imgs/10x_a.png)
+![Microfluidics](imgs/10x_a.png)
 
 ---
-
 ## The 10x Genomics system  - Gel beads
 
-![overview](./imgs/10x_bead.png)
+![beads](./imgs/10x_bead.png)
 
 ---
 
 ## The 10x Genomics system  - Sequencing primers
 
-![overview](./imgs/10x_sequencing.png)
+![primers](./imgs/10x_sequencing.png)
 
 ---
 
@@ -219,17 +227,17 @@ Major difference between the two are the sequencing depth and coverage profiles 
 
 **Read 1**
 
-![](./imgs/Read1.png)
+![read1](imgs/Read1.png)
+
 ---
-
-
 ## The 10x Genomics system  - Sequencing R2
 
 **Read 2**
 
-![](./imgs/Read2.png)
----
+![read2](imgs/Read2.png)
 
+
+---
 ## The 10x sequence reads
 
 The sequence reads contain:- 
@@ -240,7 +248,6 @@ The sequence reads contain:-
 - Information on the RNA molecule (transcriptome read)
 
 ---
-
 ## From Sequences to Processed data
 
 As with standard bulk sequencing data, the next steps are typically to align the data to a reference genome/transcriptome and summarize data to a signal matrix.
@@ -278,8 +285,9 @@ The output matrix is often stored in a compressed format such as:-
 
 
 ]
+
 .pull-right[
-![overview](./imgs/countingDrops.png)
+![overview](imgs/countingDrops.png)
 ]
 
 ---
@@ -321,14 +329,16 @@ Cell Ranger is the typical approach we use to process 10x data. The default sett
 If you are working with your own data, the data will often be provided as the Cell Ranger output by the Genomics/Bioinformatics teams, like here at Rockefeller University. 
 
 ---
+## Cell Ranger
 
 .pull-left[
 Cell Ranger is a suite of tools for single cell processing and analysis available from 10X Genomics. It performs key processing steps i.e. demultiplexing, conversion to FASTQ and mapping. It is also the first chance to delve into your data sets QC. 
 
 In this session we will give a brief overview of running this tool and then dive deeper into interpreting the outputs.
 ]
+
 .pull-right[
-![](./imgs/CellRangerPage.png)
+![CellRanger](imgs/CellRangerPage.png)
 ]
 
 ---
@@ -544,25 +554,26 @@ This BAM file is sometimes used in downstream analysis such as scSplit/Velocyto 
   ]
 
 .pull-right[
- &lt;div align="center"&gt;
+
+&lt;div align="center"&gt;
 &lt;img src="imgs/sam1.png" alt="igv" height="200" width="450"&gt;
 &lt;/div&gt;
- &lt;div align="center"&gt;
+
+&lt;div align="center"&gt;
 &lt;img src="imgs/sam2.png" alt="igv" height="150" width="450"&gt;
 &lt;/div&gt;
-&lt;!-- ![](./) --&gt;
-&lt;!-- ![](./imgs/sam2.png) --&gt;
+
 ]
 
 
 ---
-## Cloupe files 
+## Cloupe files
 
-Cell Ranger also outputs _cloupe.cloupe_ files for visualization within the .link[[10X Loupe browser software](https://www.10xgenomics.com/support/software/loupe-browser/latest)].
+Cell Ranger also outputs _cloupe.cloupe_ files for visualization within the [10X Loupe browser software](https://www.10xgenomics.com/support/software/loupe-browser/latest).
 
 This allows for the visualization of scRNA-seq/snRNA-seq as a t-sne/umap with the ability to overlay metrics of QC and gene expression onto the cells in real time.
 
- &lt;div align="center"&gt;
+&lt;div align="center"&gt;
 &lt;img src="imgs/cloupe.png" alt="igv" height="350" width="400"&gt;
 &lt;/div&gt;
 
@@ -582,7 +593,6 @@ class: inverse, center, middle
 Assessment of the overall quality of a scRNA-seq/snRNA-seq experiment after Cell Ranger can give our first chance to dig into the quality of your dataset and gain insight any issues we might face in data analysis.
 
 ---
-
 ## QC is essential
 
 .pull-left[
@@ -595,10 +605,12 @@ There are many potential issues which can arise in scRNA-seq/snRNA-seq data incl
   ]
 
 .pull-right[
- &lt;div align="center"&gt;
+
+&lt;div align="center"&gt;
 &lt;img src="imgs/bad_cells.png" alt="igv" height="460" width="310"&gt;
 &lt;caption&gt;Huemos et al. (2023)&lt;/caption&gt;
 &lt;/div&gt;
+
   ]
 
 ---
@@ -623,13 +635,12 @@ Assessment of the overall quality of a scRNA-seq/snRNA-seq experiment after Cell
 ---
 ## Web Summary Example
 
-We will be looking at the web summary generated from a PBMC dataset with ~1,000 cells from a healthy human donor. The full experiment details can be found on the 10X website .link[[here](https://www.10xgenomics.com/datasets/1-k-pbm-cs-from-a-healthy-donor-v-3-chemistry-3-standard-3-0-0)] and you can get a copy of a web summary from Cell Ranger version 8 .link[[here](./../../data/web_summary.html)].
+We will be looking at the web summary generated from a PBMC dataset with ~1,000 cells from a healthy human donor. The full experiment details can be found on the 10X website [here](https://www.10xgenomics.com/datasets/1-k-pbm-cs-from-a-healthy-donor-v-3-chemistry-3-standard-3-0-0).
 
 [NOTE: Older web summaries contain largely the same information, but slightly different layout]
 
 
 ---
-
 ## Web Summary overview
 
 .pull-left[
@@ -637,8 +648,9 @@ The web summary html file contains an interactive report describing the most ess
 
 The web summary also contains useful information on the input files and the versions used in this analysis for later reproducibility.
 ]
+
 .pull-right[
-![](./imgs/websum1.png)
+![websum](imgs/websum1.png)
 ]
 
 ---
@@ -656,7 +668,7 @@ As most people do not run Cell Ranger themselves this is important to check it m
   ]
 
 .pull-right[
-![](./imgs/websum4.png)
+![websum](imgs/websum4.png)
   ]
 
 ---
@@ -668,8 +680,43 @@ Again this is an important section to double-check to make sure everything was r
 - Input Path - Path to the input fastq files
 - Reference Path and Transcriptome - References used in analysis
 
+This is now under the Experimental Design tab of Cell Ranger 9. 
 
-![](./imgs/websum5.png)
+
+![websum](imgs/websum5.png)
+
+
+---
+## Mapping panel
+
+.pull-left[
+The **Mapping** panel highlights information on the mapping of reads to the reference genome and transcriptome. **Bottom Left**
+
+- Reads Mapped to Genome - Total mapped reads
+- Reads Mapped Confidently to Genome - Uniquely mapped reads
+- Reads Mapped Confidently to Exonic/Intronic/Intergenic - Uniquely mapped reads to specific regions
+- Reads Mapped Confidently to Transcriptome - Reads mapped to a unique gene (and consistent with slice junctions)
+- Reads Mapped Antisense to Gene - Reads mapped to the opposite strand of a gene
+  ]
+  
+.pull-right[
+!websum](imgs/websum3.png)
+]
+
+---
+## Mapping panel
+
+Key Metrics we look for:
+
+**Mapped to Genome &gt; 60% (usually range 50% ~ 90%)**
+
+  * Mapping rate to reference genome
+  * Check reference genome version if too low
+
+**Reads Mapped Confidently to Transcriptome &gt; 30% (usually &gt; 60%)**
+
+  * Reflection of annotation to transcriptome
+  * Check annotation if too low
 
 
 
@@ -689,7 +736,7 @@ The **Sequencing** panel highlights information on the quality of the Illumina s
   ]
 
 .pull-right[
-![](./imgs/websum2.png)
+![websum](imgs/websum2.png)
 ]
 
 
@@ -709,39 +756,6 @@ Key Metrics we look for:
   * Consider reconstructing library if too low
 
 
-
----
-## Mapping panel
-
-.pull-left[
-The **Mapping** panel highlights information on the mapping of reads to the reference genome and transcriptome. **Bottom Left**
-
-- Reads Mapped to Genome - Total mapped reads
-- Reads Mapped Confidently to Genome - Uniquely mapped reads
-- Reads Mapped Confidently to Exonic/Intronic/Intergenic - Uniquely mapped reads to specific regions
-- Reads Mapped Confidently to Transcriptome - Reads mapped to a unique gene (and consistent with slice junctions)
-- Reads Mapped Antisense to Gene - Reads mapped to the opposite strand of a gene
-  ]
-  
-.pull-right[
-![](./imgs/websum3.png)
-]
-
----
-## Mapping panel
-
-Key Metrics we look for:
-
-**Mapped to Genome &gt; 60% (usually range 50% ~ 90%)**
-
-  * Mapping rate to reference genome
-  * Check reference genome version if too low
-
-**Reads Mapped Confidently to Transcriptome &gt; 30% (usually &gt; 60%)**
-
-  * Reflection of annotation to transcriptome
-  * Check annotation if too low
-
 ---
 ## Cells panel
 
@@ -753,8 +767,9 @@ The **Cells** panel highlights some of the most important information in the rep
 - Median Genes per Cell - Median number of genes detected (at least 1 count) per cell associated barcodes
 
   ]
+  
 .pull-right[
-![](./imgs/websum6.png)
+![websum](imgs/websum6.png)
 ]
 
 ---
@@ -770,7 +785,7 @@ The **Cells** panel also has other metrics which help describe the depth and amb
   ]
   
 .pull-right[
-![](./imgs/websum6.png)
+![websum](imgs/websum6.png)
   ]
 
 
@@ -825,8 +840,9 @@ In newer versions of Cell Ranger a two step process is used to define cell-assoc
 If required, a **--force-cells** flag can be used with _cellranger count_ to identify a specific number of cell-associated barcodes.
 
   ]
+  
 .pull-right[
-![](./imgs/websum6.png)
+![websum](imgs/websum6.png)
   ]
 
 ---
@@ -845,7 +861,7 @@ In this example we see no specific cliff and knee suggesting a failure in the in
   ]
   
 .pull-right[
-![](./imgs/wetfailure.png)
+![websum](imgs/wetfailure.png)
   ]
 
 ---
@@ -858,7 +874,7 @@ If there is a clog in the machine we may see a knee plot where the overall numbe
   ]
 
 .pull-right[
-![](./imgs/lowbarcode.png)
+![websum](imgs/lowbarcode.png)
   ]
 
 ---
@@ -875,7 +891,7 @@ Knee plots should be interpreted in the context of the biology under investigati
   ]
 
 .pull-right[
-![](./imgs/hetero.png)
+![websum](imgs/hetero.png)
   ]
   
 ---
@@ -883,9 +899,9 @@ Knee plots should be interpreted in the context of the biology under investigati
 
 It is important to know what version and parameters were used to run Cell Ranger. 
 
-This cell calling step is continually updated and it can have a dramatic affect on your results. The .link[[Web Summary](https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_1k_v3/pbmc_1k_v3_web_summary.html)] on 10X Genomics for this dataset is from Cell Ranger V3.0 if you want to compare. 
+This cell calling step is continually updated and it can have a dramatic affect on your results. The [Web Summary](https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_1k_v3/pbmc_1k_v3_web_summary.html) on 10X Genomics for this dataset is from Cell Ranger V3.0 if you want to compare. 
 
-Cell Ranger V8.0 was released relatively recently and, as with almost every prior version, there's been a change in default parameters.
+Cell Ranger V9.0 was released relatively recently and, as with almost every prior version, there's been a change in default parameters (EmptyDrops false discovery rate (FDR) threshold has been lowered).
 
 
 ---
@@ -899,11 +915,11 @@ Additionally the analysis page contains information on sequencing saturation and
   ]
 
 .pull-right[
-![](./imgs/anal1.png)
+![analysis](imgs/anal1.png)
   ]
 
 ---
-## t-SNE and clustering
+## t-SNE/UMAP and clustering
 
 .pull-left[
 The t-SNE plot shows the distribution and similarity within your data.
@@ -915,7 +931,7 @@ The t-SNE plot shows the distribution and similarity within your data.
   ]
 
 .pull-right[
-![](./imgs/anal2.png)
+![analysis](imgs/anal2.png)
   ]
 
 ---
@@ -929,16 +945,17 @@ By reviewing the curve of the down sampled metrics we can assess whether we are 
 ]
 
 .pull-right[
- &lt;div align="center"&gt;
+
+&lt;div align="center"&gt;
 &lt;img src="imgs/anal3.png" alt="igv" height="200" width="200"&gt;
 &lt;/div&gt;
- &lt;div align="center"&gt;
+
+&lt;div align="center"&gt;
 &lt;img src="imgs/anal4.png" alt="igv" height="200" width="200"&gt;
 &lt;/div&gt;
 ]
 
 ---
-
 ## QC issues going forward?
 
 Early issues with QC can manifest in many ways downstream. This is from a published dataset:
@@ -957,6 +974,20 @@ Early issues with QC can manifest in many ways downstream. This is from a publis
 Fingers crossed there's no QC issues. 
 
 Often at this step we wouldn't make any decisions unless there is a clear complete failure. This is an important first step in setting expectations/preparing for what you may need to do for the dataset.
+
+---
+## Cell Ranger 9
+
+New Cell Ranger came out recently. We are yet to test it but new features include:
+
+* Automated annotation for human data sets [in beta]
+* UMAPs are made instead of tSNE
+* New [Web Summary](https://cf.10xgenomics.com/samples/cell-exp/9.0.0/5k_Human_Donor4_PBMC_3p_gem-x_5k_Human_Donor4_PBMC_3p_gem-x/5k_Human_Donor4_PBMC_3p_gem-x_5k_Human_Donor4_PBMC_3p_gem-x_web_summary.html) layout
+* EmptyDrops false discovery rate (FDR) threshold has been lowered 
+* cellranger mkfastq is being deprecated
+* [New Workflow](https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/running-pipelines/cr-3p-multi#hashing-5p-gex-vdj) for hashtagged data
+
+  
 
 
 
