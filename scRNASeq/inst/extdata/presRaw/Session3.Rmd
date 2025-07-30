@@ -151,7 +151,7 @@ We will discuss a number of approaches and methods we may need to use to merge d
 ---
 ## Example dataset
 
-We will be using a dataset containing 4 snRNAseq samples. This is from a [preprint](https://www.biorxiv.org/content/10.1101/2024.12.31.630881v3) studying Alzheimers disease. Though this dataset has 10 samples, we will be using 4 for our example. There are 2 AD samples and 2 Control samples from the entorhinal cortex taht have been collected post-mortem.
+We will be using a dataset containing 4 snRNAseq samples. This is from a [preprint](https://www.biorxiv.org/content/10.1101/2024.12.31.630881v3) studying Alzheimers disease. Though this dataset has 10 samples, we will be using 4 for our example. There are 2 AD samples and 2 Control samples from the entorhinal cortex that have been collected post-mortem.
 
 You could access the raw data from [GE0: GSE287652](https://www.ncbi.nlm.nih.gov/gds/?term=GSE287652). But we have it here already loaded into a Seurat object and after some preprocessing. 
 
@@ -163,7 +163,7 @@ my_seu_list <- readRDS("data/to_integrate.rds")
 ---
 ## Example dataset
 
-Each dataset has been individually processed, QC'd and reviewed prior to combining into a list. Sotring everything in a list will make our life easier later. 
+Each dataset has been individually processed, QC'd and reviewed prior to combining into a list. Storing everything in a list will make our life easier later. 
 
 1) Load into Seurat object. 
 
@@ -1653,6 +1653,8 @@ We notice that the top DE gene from our analysis is XIST, which has much higher 
 
 This suggests that sex could be a confounding factor and is potentially a red flag that we should explore.   
 
+Our samples show a clear pattern of XIST expression that does not overlap with AD vs CON. 
+
 ```{r mast_xist_feature, echo=T, eval=T, fig.width=10, fig.height=3}
 FeaturePlot(seu_exn, features = "XIST", split.by = "sample_id")
 ```
@@ -1665,7 +1667,11 @@ We can see from the sample info taken from the publication that C3 and AD2b are 
 
 <img src="./imgs/sample_info_male_female.png"height="125" width="650">
 
-In a bulk experiment these groups would be balanced for sex, but in this case we treat cells as samples and so an imbalance in cell number for each sex across groups could occur.
+In a bulk experiment these groups would be balanced for sex.
+
+However, in this analysis with MAST we treat each cell as a sample, and so an imbalance in cell number for each sex across groups could bias our results.
+
+
 ---
 ## MAST - sex as covariate
 
@@ -1732,14 +1738,7 @@ de_mast_exn_sex <- de_mast_exn_sex[order(de_mast_exn_sex$FDR),]
 head(de_mast_exn_sex, 3)
 ```
 
-```{r}
-de_mast_exn_sex$sig <- de_mast_exn_sex$FDR < 0.05
 
-ggplot(de_mast_exn_sex, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
-  geom_point() +
-  scale_color_manual(values = c("grey", "red")) +
-  theme_bw()
-```
 
 ---
 
@@ -1763,7 +1762,7 @@ de_mast_exn[de_mast_exn$geneID == "XIST", ]
  * MAST can account for covariates 
  * MAST models zeroes separately, Wilcoxon does not
   + This can lead to more biases where the differences in number of zero values can heavily influence DE calculation for Wilcoxon.
-  + including CDR in MAST can also guard help with zero dropout biases.
+  + including CDR in MAST can also help with zero dropout biases.
  * MAST will give more reliable log fold change values as its based on the continuous data
   + Wilcoxon doesn't use fold change in it's calculation, so often mean expression values are used and dropouts can skew these values
  * However, Wilcoxon is fast and generally pretty robust, especially for differences between cell types where large differences are expected, and you are only taking the top markers.
@@ -1773,12 +1772,12 @@ de_mast_exn[de_mast_exn$geneID == "XIST", ]
 
 ## MAST vs Wilcoxon
 
- * MAST models zeroes within the data, Wilcoxon does not
-  + This can lead to biases where the differences in number of zero values can heavily influence DE calculation for Wilcoxon.
+ * MAST can account for covariates 
+ * MAST models zeroes separately, Wilcoxon does not
+  + This can lead to more biases where the differences in number of zero values can heavily influence DE calculation for Wilcoxon.
+  + including CDR in MAST can also help with zero dropout biases.
  * MAST will give more reliable log fold change values as its based on the continuous data
   + Wilcoxon doesn't use fold change in it's calculation, so often mean expression values are used and dropouts can skew these values
- * MAST can account for covariates 
- * Wilcoxon results can be biased towards samples that have more cells  
  * However, Wilcoxon is fast and generally pretty robust, especially for differences between cell types where large differences are expected, and you are only taking the top markers.
 
 **Limitation of both methods:** Cells are treated as independent replicates, even though this is likely not a valid assumption. This is called pseudoreplication and results in many false positive DE genes.  
@@ -1854,8 +1853,9 @@ if(params$isSlides == "yes"){
 
 ## Pseudobulk analysis
 
-  - counts within a data set or subset of cells (e.g. cluster) are aggregated to get a gene by *replicate* table (like bulk RNAseq)
   - requires replicates
+  - counts within a data set or subset of cells (e.g. cluster) are aggregated by replicate to get a gene by *replicate* table (like bulk RNAseq)
+  - once counts are aggregated, we can leverage the well-established tools for bulk RNAseq, such as DESeq2 and edgeR. 
   - quick and lightweight
 
 <img src="./imgs/pseudobulk_diagram.png"height="350" width="700">
@@ -1865,7 +1865,7 @@ if(params$isSlides == "yes"){
 
 ## Pseudobulk using DESeq2
 
-Pseudobulk analysis can leverage the well-established tools for bulk RNAseq, such as DESeq2 and edgeR. We will show you how to use DESeq2 here.
+We will show you how to use DESeq2 here.
 
 First, the *AggregateExpression* function from Seurat is used to get the sum of counts for each gene across all cells grouped by metadata columns. 
 
@@ -1882,7 +1882,9 @@ head(counts_aggr, 3)
 
 ## Pseudobulk - make DESeq2 object
 
-Set up DESeq2 object with the aggregated counts and a data frame with column metadata. We now have reduced the analysis to two groups with only two samples each.
+DESeq2 requires a table with sample metadata, and the rows of this table will correspond to the columns in our aggregated counts table.
+
+First we add a column with AD or CON for each sample. 
 
 ```{r pseudo_prep,include=T,echo=T}
 library(DESeq2)
@@ -1891,10 +1893,40 @@ column_meta <- data.frame(
   condition = ifelse(grepl("AD", colnames(counts_aggr)), "AD", "CON")
 )
 column_meta$condition <- factor(column_meta$condition, levels = c("CON", "AD"))
+column_meta
+```
 
+---
 
-dds_pseudo_exn <- DESeqDataSetFromMatrix(countData = counts_aggr, colData = column_meta, design = ~condition)
-colData(dds_pseudo_exn)
+## Pseudobulk - sex as covariate
+
+We know that sex has a big impact on gene expression for our samples, so we can decide whether to control for this as we did with MAST. 
+
+Add sex to the metadata of the samples.
+```{r deseq2_sex_cov1, eval=T, echo=T, fig.height = 3}
+
+sample_ids <- rownames(column_meta)
+column_meta$sex <- ifelse(sample_ids == "AD2b_AD", "female", 
+                                      ifelse(sample_ids == "AD4_AD", "male",
+                                             ifelse(sample_ids == "C1_CON", "male",
+                                                    ifelse(sample_ids == "C3_CON", "female", "none!"))))
+column_meta$sex <- as.factor(column_meta$sex)
+column_meta
+```
+
+---
+
+## Pseudobulk - make DESeq object
+
+We construct a DESeq object with the *DESeqDataSetFromMatrix* function. 
+
+This function requires:
+  * counts: our aggregated counts per sample
+  * colData: metadata for the samples where the rownames are identical to the column names of the counts table
+  * design: the design for the model, including the primary comparison group and any covariates
+```{r}
+dds_pseudo_exn <- DESeqDataSetFromMatrix(countData = counts_aggr, colData = column_meta, design = ~sex + condition)
+dds_pseudo_exn
 ```
 
 ---
@@ -1912,6 +1944,19 @@ table(keep)
 dds_pseudo_exn <- dds_pseudo_exn[keep,]
 ```
 
+---
+
+## DESeq2 - Look at PCA plots 
+
+There is separation by our condition (AD vs CON), which is promising. 
+
+We also see strong separation by sex, so including this variable as a covariate is a good idea. If this was not the case, you might exclude sex from the design function. 
+
+```{r, fig.width=8, fig.height=3}
+pca_cond <- plotPCA(rlog(dds_pseudo_exn), intgroup = "condition")  + coord_cartesian() + theme_bw() + ggtitle("Color by condition")
+pca_sex <- plotPCA(rlog(dds_pseudo_exn), intgroup = "sex")  + coord_cartesian() + theme_bw() + ggtitle("Color by sex")
+ggarrange(pca_cond, pca_sex, ncol = 2)
+```
 
 ---
 ## Run DESeq2
@@ -1935,6 +1980,8 @@ resultsNames(dds_pseudo_exn)
 
 We then extract the results for AD over control using the *results* function and providing the name of the coefficient from the previous slide. 
 
+Because we include sex in the design, this will tell us the effect of condition while controlling for sex. 
+
 ```{r pseudo_results2,include=T,echo=T}
 res_pseudo_exn <- results(dds_pseudo_exn, name = "condition_AD_vs_CON")
 de_pseudo_exn <- res_pseudo_exn %>%
@@ -1946,19 +1993,19 @@ head(de_pseudo_exn, 3)
 ```
 
 ---
-## DESeq2 results - MA and PCA
+## Investigate mitochondiral genes
 
-```{r pseudo_MA_PCA, fig.width = 10}
-ma <- ggplot(de_pseudo_exn, aes(x = baseMean, y = log2FoldChange)) + geom_point() + theme_bw() +scale_x_log10() + ggtitle("MA plot") 
-pca <- plotPCA(rlog(dds_pseudo_exn))  + coord_cartesian() + theme_bw() + ggtitle("PCA")
+Our top genes are mitochondrial genes, which immediately raises a red flag. A violin plot confirms that our AD samples have high mitochondiral expression, but one sample might be driving this. 
 
-ggarrange(ma, pca, ncol = 2)
+While it could be a biological effect, we also know that mitochondrial gene expression can be a technical artifact. We likely need more replicates to be more confident in the results. 
+```{r}
+VlnPlot(seu_exn, features = "percent.mt", split.by = "celltype_condition", group.by = "sample_id")
 ```
 
 ---
 ## DESeq2 results - Volcano
 
-It's clear that we have many fewer differentially expressed genes using a pseudobulk strategy. This is not surprising with only two replicates per condition, but also highlights the potential for a very high false positive rate when each cell assumed to be independent. 
+A volcano plot shows that we have many fewer differentially expressed genes using a pseudobulk strategy. This is not surprising with only two replicates per condition, but also highlights the potential for a very high false positive rate when each cell assumed to be independent. 
 ```{r pseudo_plot,include=T,echo=T, fig.height = 3}
 
 de_pseudo_exn$sig = de_pseudo_exn$padj < 0.05
@@ -1970,57 +2017,6 @@ ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), co
 
 ```
 
----
-## Visualize top DE genes
-
-Look at the genes that go down in AD (up in control) with a violin plot
-```{r pseudo_violin1, echo=T, eval=T, fig.width=7}
-de_pseudo_exn_df <- na.omit(de_pseudo_exn)
-top_down_AD_ps <- head(de_pseudo_exn_df[de_pseudo_exn_df$log2FoldChange < 0, ], 5)
-VlnPlot(seu_exn, features = top_down_AD_ps$geneID, stack = T, flip = T, pt.size = 1)  + scale_x_discrete(labels=c('CON', 'AD'))
-
-```
-
----
-
-## DESeq2 - sex as covariate
-
-Add sex to metadata of DESeq2 dds object and make PCA plot. As expected, we see that sex is driving more of the variance than our groups. 
-```{r deseq2_sex_cov1, eval=T, echo=T, fig.height = 3}
-
-sample_ids <- rownames(colData(dds_pseudo_exn))
-colData(dds_pseudo_exn)$sex <- ifelse(sample_ids == "AD2b_AD", "female", 
-                                      ifelse(sample_ids == "AD4_AD", "male",
-                                             ifelse(sample_ids == "C1_CON", "male",
-                                                    ifelse(sample_ids == "C3_CON", "female", "none!"))))
-colData(dds_pseudo_exn)$sex <- as.factor(colData(dds_pseudo_exn)$sex)
-plotPCA(rlog(dds_pseudo_exn), intgroup = "sex")  + coord_cartesian() + theme_bw() + ggtitle("PCA")
-```
-
----
-
-## Re-run DESeq2 with sex as covariate
-
-Sex can then be added as a covariate in the design of the DEseq object. We then re-run the *DESeq* function to get the updated DE results. 
-
-```{r deseq2_sex_cov2, eval=T, echo=T}
-dds_pseudo_exn_sex <- dds_pseudo_exn
-design(dds_pseudo_exn_sex) <- ~sex + condition
-dds_pseudo_exn_sex <- DESeq(dds_pseudo_exn_sex)
-```
-
----
-## Re-run DESeq2 with sex as covariate
-
-We notice that we now have no DE genes. This isn't terribly surprising given that we only have two replicates per condition and the sex is driving a lot of our variance.
-
-This doesn't mean the genes that were identified before adding sex as a covariate are invalid, you would just approach them with caution. This likely would be an indication that more replicates were necessary  to more confidently find DE genes. 
-```{r deseq2_sex_cov3, eval=T, echo=T}
-
-res_pseudo_exn_sex <- results(dds_pseudo_exn_sex, name = "condition_AD_vs_CON")
-
-head(res_pseudo_exn_sex, 3)
-```
 
 ---
 
