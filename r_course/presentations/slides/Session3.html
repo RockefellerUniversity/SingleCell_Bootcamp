@@ -667,8 +667,8 @@ For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.g
 
 ```
 ##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  13119037  700.7   24979530 1334.1   24979530 1334.1
-## Vcells 445310082 3397.5 1039497785 7930.8 1038619666 7924.1
+## Ncells  13113826  700.4   26369605 1408.3   26369605 1408.3
+## Vcells 445297731 3397.4 1038673001 7924.5 1038102921 7920.1
 ```
 
 ---
@@ -1220,8 +1220,8 @@ Often domain specific knowledge and good reference datasets will outperform the 
 
 ```
 ##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  14194244  758.1   24979530 1334.1   24979530 1334.1
-## Vcells 313984966 2395.6 1039497785 7930.8 1038619666 7924.1
+## Ncells  14189368  757.8   26369605 1408.3   26369605 1408.3
+## Vcells 313973443 2395.5 1038673001 7924.5 1038102921 7920.1
 ```
 
 ---
@@ -2221,25 +2221,36 @@ de_pseudo_exn &lt;- res_pseudo_exn %&gt;%
     arrange(pvalue) %&gt;%
     rownames_to_column(var = "geneID")
 
-head(de_pseudo_exn, 3)
+head(de_pseudo_exn)
 ```
 
 ```
-##   geneID  baseMean log2FoldChange     lfcSE      stat       pvalue         padj
-## 1 MT-CO2  9695.738       2.340271 0.2159551 10.836840 2.302885e-27 3.645928e-23
-## 2 MT-CO3 13158.319       2.251177 0.2100959 10.714996 8.656110e-27 6.852177e-23
-## 3 MT-ND4  5601.007       2.365366 0.2494758  9.481344 2.510276e-21 1.324757e-17
+##       geneID   baseMean log2FoldChange     lfcSE      stat       pvalue
+## 1     MT-CO2  9695.7377       2.340271 0.2159551 10.836840 2.302885e-27
+## 2     MT-CO3 13158.3193       2.251177 0.2100959 10.714996 8.656110e-27
+## 3     MT-ND4  5601.0075       2.365366 0.2494758  9.481344 2.510276e-21
+## 4     MT-CYB  5876.4953       2.023059 0.2200411  9.194005 3.784826e-20
+## 5 KCNMB2-AS1   931.8513      -2.223157 0.3026241 -7.346268 2.038178e-13
+## 6     MT-ND2  1996.9322       2.061468 0.2812951  7.328489 2.327621e-13
+##           padj
+## 1 3.645928e-23
+## 2 6.852177e-23
+## 3 1.324757e-17
+## 4 1.498034e-16
+## 5 6.141817e-10
+## 6 6.141817e-10
 ```
 
 ---
 ## Investigate mitochondiral genes
 
-Our top genes are mitochondrial genes, which immediately raises a red flag. A violin plot confirms that our AD samples have high mitochondiral expression, but one sample might be driving this. 
+Our top genes are mitochondrial genes, which immediately raises a red flag. A violin plot confirms that our AD samples have high mitochondrial expression, but one sample might be driving this. 
 
 While it could be a biological effect, we also know that mitochondrial gene expression can be a technical artifact. We likely need more replicates to be more confident in the results. 
 
 ``` r
-VlnPlot(seu_exn, features = "percent.mt", split.by = "celltype_condition", group.by = "sample_id")
+VlnPlot(seu_exn, features = c("percent.mt", de_pseudo_exn$geneID[1:2]), split.by = "celltype_condition",
+    group.by = "sample_id")
 ```
 
 ![](Session3_files/figure-html/unnamed-chunk-85-1.png)&lt;!-- --&gt;
@@ -2337,16 +2348,21 @@ names(de_mast_re) &lt;- c("geneID", "log2Fc", "z", "pvalue")
 de_mast_re$FDR &lt;- p.adjust(de_mast_re$pvalue, "fdr")
 de_mast_re &lt;- de_mast_re[order(de_mast_re$FDR), ]
 
-head(de_mast_re, 3)
+head(de_mast_re)
 ```
 
 ```
-##        geneID    log2Fc        z       pvalue          FDR
-##        &lt;char&gt;     &lt;num&gt;    &lt;num&gt;        &lt;num&gt;        &lt;num&gt;
-## 1:   HSP90AB1 0.7011930 14.65392 5.486664e-09 6.003508e-05
-## 2: AL133166.1 0.6755124 10.12379 1.346825e-08 7.368480e-05
-## 3: AC120193.1 0.6986804 10.06780 2.992759e-08 1.091559e-04
+##        geneID    log2Fc         z       pvalue          FDR
+##        &lt;char&gt;     &lt;num&gt;     &lt;num&gt;        &lt;num&gt;        &lt;num&gt;
+## 1:   HSP90AB1 0.7011930 14.653918 5.486664e-09 6.003508e-05
+## 2: AL133166.1 0.6755124 10.123787 1.346825e-08 7.368480e-05
+## 3: AC120193.1 0.6986804 10.067801 2.992759e-08 1.091559e-04
+## 4:     TSPYL1 0.5967601 10.509932 6.776372e-08 1.853677e-04
+## 5: AP001347.1 0.5044854  7.085390 1.976311e-07 4.324960e-04
+## 6:      FANCL 0.5166986  8.152693 2.420493e-07 4.414173e-04
 ```
+
+
 
 ---
 
@@ -2371,39 +2387,33 @@ class: inverse, center, middle
 
 ---
 
-## Seurat FindMarkers for DESeq2
 
-The Seurat *FindMarkers* function has an option to use MAST or DESeq2 with the 'test.use' argument, and the Seurat differential expression [vignette](https://satijalab.org/seurat/articles/de_vignette.html) describes this in their workflows. Shouldn't we just use this?
+## Seurat FindMarkers?
 
+The Seurat *FindMarkers* function has an option to use MAST or DESeq2 with the 'test.use' argument, and the Seurat differential expression [vignette](https://satijalab.org/seurat/articles/de_vignette.html) describes this in their workflows. 
 
+Shouldn't we just use this?
 
-``` r
-# test deseq output to deseq using findmarkers
-Idents(seu_exn_aggr) &lt;- "condition"
-seu_deseq &lt;- FindMarkers(object = seu_exn_aggr, ident.1 = "AD", ident.2 = "CON",
-    test.use = "DESeq2", slot = "counts", min.cells.group = 2)
-
-seu_deseq$sig = seu_deseq$p_val_adj &lt; 0.05
-```
 
 ---
-## Compare DESeq2 results to Seurat
+## Seurat FindMarkers?
 
+The Seurat *FindMarkers* function has an option to use MAST or DESeq2 with the 'test.use' argument, and the Seurat differential expression [vignette](https://satijalab.org/seurat/articles/de_vignette.html) describes this in their workflows. 
 
-``` r
-p_seuD &lt;- ggplot(seu_deseq, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
-    geom_point() + scale_color_manual(values = c("grey", "red")) + theme_bw() + ggtitle("FindMarkers")
-p_pseudo &lt;- ggplot(de_pseudo_exn %&gt;%
-    na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) + geom_point() +
-    scale_color_manual(values = c("grey", "red")) + theme_bw() + ggtitle("Using DESeq2 directly")
+Shouldn't we just use this?
 
-ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend = "bottom")
-```
+Take home: For MAST or DESeq2, it's not recommended. 
 
-![](Session3_files/figure-html/unnamed-chunk-90-1.png)&lt;!-- --&gt;
-
+  * for pseudobulk with DESeq2, covariates cannot be included
+  * more complex models in MAST, such as mixed models with random effect, are not possible
+  * FindMarkers (as of Seruat v5.0) returns the log2FoldChange as calculated by Seurat
+    + simply based on the average expression in each group without considering the underlying method and how they calculate fold change.
+    + this mismatch often results in strange volcano plots
+    
 ---
 ## Seurat FindMarkers for MAST
+
+We can test this out with MAST. Below we use *FindMarkers* to compare AD to CON, while controlling for the CDR (number of genes detected in a cell)
 
 Note: Running this will take a while, so load the object on the next slide to see the plot
 
@@ -2436,6 +2446,8 @@ seu_mast &lt;- readRDS("~/Downloads/seu_mast_exn.rds")
 ---
 ## Compare results
 
+It's pretty clear the fold change values in the *FindMarkers* volcano plot don't match up well with the p-values. 
+
 
 ``` r
 p_seuM &lt;- ggplot(seu_mast, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
@@ -2446,21 +2458,29 @@ p_mast &lt;- ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig
 ggarrange(p_seuM, p_mast, common.legend = TRUE, legend = "bottom")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-93-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-91-1.png)&lt;!-- --&gt;
 
 ---
-## Seurat FindMarkers take home
 
-Currently (Seurat v5.0) the fold change information from DESeq2 or MAST is not carried over by *FindMarkers*. When defining gene sets with fold change cutoffs or visualizing gene expression changes, by not using the fold changes that account for normalization done by that algorithm, you can get funky results.
+## Things to remember
 
-Also, using the packages directly allow for a higher level of fine tuning for more complex parameters (e.g random effect in MAST). 
+  * While it's okay for finding markers between distinct clusters, *FindMarkers* from Seurat and the default Wilcoxon rank sum test are generally not appropriate for more subtle changes between conditions
+  
+  * MAST can be run without replicates, but approach the results with caution 
+      + treating each cell as an independent sample is not really a valid assumption, leading to pseudoreplication bias and many false positive DE genes.
+      
+  * With replicates, using a pseudobulk strategy is often preferred due to ease of use and well-established methods from bulk RNAseq
+  
+  * MAST using a mixed model with random effect can also be used when replicates exist, but this is less common and more computationally expensive. 
+  
+
 
 ---
 
 ```
 ##             used   (Mb) gc trigger    (Mb)   max used    (Mb)
-## Ncells  14363435  767.1   24979530  1334.1   24979530  1334.1
-## Vcells 519900105 3966.6 1451466903 11073.9 1511877788 11534.8
+## Ncells  14348411  766.3   26369605  1408.3   26369605  1408.3
+## Vcells 519581344 3964.1 1451450927 11073.7 1511860221 11534.6
 ```
 
 
@@ -2587,7 +2607,7 @@ seu_obj &lt;- quick_clust(seu_obj)
 DimPlot(seu_obj, group.by = "seurat_clusters", pt.size = 0.2, label = TRUE) + NoLegend()
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-97-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-95-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -2780,20 +2800,6 @@ seu_obj_onlysinglet &lt;- subset(seu_obj, HTO_classification.global == "Singlet"
 
 seu_obj_onlyHTOA &lt;- subset(seu_obj, HTO_classification == "HTO-A")
 ```
-  
----
-## Cell Ranger 9
-
-New Cell Ranger came out last week. We are yet to test it but new features include:
-
-* Automated annotation for human data sets [in beta]
-* UMAPs are made instead of tSNE
-* New [Web Summary](https://cf.10xgenomics.com/samples/cell-exp/9.0.0/5k_Human_Donor4_PBMC_3p_gem-x_5k_Human_Donor4_PBMC_3p_gem-x/5k_Human_Donor4_PBMC_3p_gem-x_5k_Human_Donor4_PBMC_3p_gem-x_web_summary.html) layout
-* EmptyDrops false discovery rate (FDR) threshold has been lowered 
-* cellranger mkfastq is being deprecated
-* [New Workflow](https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/running-pipelines/cr-3p-multi#hashing-5p-gex-vdj) for hashtagged data
-
-  
 
 ---
 

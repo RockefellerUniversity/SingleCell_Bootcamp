@@ -1042,11 +1042,11 @@ de_pseudo_exn <- res_pseudo_exn %>%
   arrange(pvalue) %>%
   rownames_to_column(var = "geneID") 
 
-head(de_pseudo_exn, 3)
+head(de_pseudo_exn)
 
 
-## -----------------------------------------------------------------------------
-VlnPlot(seu_exn, features = "percent.mt", split.by = "celltype_condition", group.by = "sample_id")
+## ----fig.width=10, fig.height= 4----------------------------------------------
+VlnPlot(seu_exn, features = c("percent.mt", de_pseudo_exn$geneID[1:2]), split.by = "celltype_condition", group.by = "sample_id")
 
 
 ## ----pseudo_plot,include=T,echo=T, fig.height = 3-----------------------------
@@ -1123,7 +1123,7 @@ names(de_mast_re) <- c("geneID","log2Fc","z","pvalue")
 de_mast_re$FDR <- p.adjust(de_mast_re$pvalue,'fdr')
 de_mast_re <- de_mast_re[order(de_mast_re$FDR),]
 
-head(de_mast_re, 3)
+head(de_mast_re)
 
 
 ## ----mast_re_plot,include=T,echo=T, eval=T------------------------------------
@@ -1156,32 +1156,6 @@ if(params$isSlides == "yes"){
   
 }
 
-
-
-## -----------------------------------------------------------------------------
-# test deseq output to deseq using findmarkers
-Idents(seu_exn_aggr) <- "condition"
-seu_deseq <- FindMarkers(object = seu_exn_aggr,
-                         ident.1 = "AD",
-                         ident.2 = "CON",
-                         test.use = "DESeq2", 
-                         slot = "counts",
-                         min.cells.group = 2)
-
-seu_deseq$sig = seu_deseq$p_val_adj < 0.05
-
-
-## -----------------------------------------------------------------------------
-p_seuD <- ggplot(seu_deseq, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
-  geom_point() +
-  scale_color_manual(values = c("grey", "red")) +
-  theme_bw() + ggtitle("FindMarkers")
-p_pseudo <- ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) +
-  geom_point() +
-  scale_color_manual(values = c("grey", "red")) +
-  theme_bw() + ggtitle("Using DESeq2 directly")
-
-ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend="bottom")
 
 
 ## ----eval=F-------------------------------------------------------------------
