@@ -35,7 +35,7 @@ suppressPackageStartupMessages(require(scDblFinder))
 knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning = F, message=F)
 ```
 
-```{r sec3_loadPack,include=F,eval=FALSE}
+```{r sec3_loadPack,include=F,eval=T}
 library(Seurat)
 library(scran)
 library(scater)
@@ -1430,7 +1430,7 @@ ggplot(exn_toPlot, aes(x = SNX31, fill = condition)) + geom_density() + ggtitle(
 ## MAST - including covariates
 
 Covariate or batch terms can be accounted for in the model formula
-  * For example, the fraction of genes expressed in a cell, or the cellular detection rate (CDR), is a suggested covariate
+  * For example, the number of genes expressed in a cell, or the cellular detection rate (CDR), is a suggested covariate
     + CDR is thought to measure unwanted technical and biological factors (e.g. batch, cell size)
 
 
@@ -1461,7 +1461,7 @@ sca_exn
 ---
 ## Using MAST - calculate CDR
 
-The CDR (the fraction of genes that are detected in each cell) is calculated for each cell, then scaled (z-score).
+The CDR (the number of genes that are detected in each cell) is calculated for each cell, then scaled (z-score).
 
 ```{r mast_prep2, include=T,echo=T, eval=T}
 cdr <- colSums(assay(sca_exn)>0)
@@ -1560,8 +1560,8 @@ sumDT_exn <- readRDS("./data/sumDT_exn.rds")
 
 The table from the *zlm* function contains p-values in the 'Pr(>Chisq)' column. There are three p-values for each gene:
 
-  * continuous gene expression (component = 'C'): whether the is gene changing in cells where it is detected.
-  * gene detection rate (component = 'D'): whether the gene has adifferent cellular detection rates between groups.
+  * continuous gene expression (component = 'C'): whether the gene expression is changing in cells where it is detected.
+  * gene detection rate (component = 'D'): whether the gene has different rates of being detected in a given cell across groups.
   * combined p-value for the hurdle method (component = 'H')
 
 See table on next slide...
@@ -1651,7 +1651,7 @@ VlnPlot(seu_exn, features = sorta_down_AD$geneID, stack = T, flip = T, pt.size =
 
 We notice that the top DE gene from our analysis is XIST, which has much higher expression in females compared to males.
 
-This suggests that sex could be a confounding factor and is potentially a red flag that we should explore. XIST does seem to have localized expression to the group of cells that are only in one of the controls.  
+This suggests that sex could be a confounding factor and is potentially a red flag that we should explore.   
 
 ```{r mast_xist_feature, echo=T, eval=T, fig.width=10, fig.height=3}
 FeaturePlot(seu_exn, features = "XIST", split.by = "sample_id")
@@ -1661,7 +1661,7 @@ FeaturePlot(seu_exn, features = "XIST", split.by = "sample_id")
 ---
 ## Sample information
 
-We can see from the sample info taken from the publication that C3 and AD2b are indeed female. So we appear to have pulled out a *sample dependent* effect, not a *group dependent* effect like we are aiming for.
+We can see from the sample info taken from the publication that C3 and AD2b are female. This could be driving the gene expression changes we are seeing. 
 
 <img src="./imgs/sample_info_male_female.png"height="125" width="650">
 
@@ -1669,9 +1669,9 @@ We can see from the sample info taken from the publication that C3 and AD2b are 
 ---
 ## MAST - sex as covariate
 
-We will re-run MAST with sex as a covariate.
+If we add sex to metadata of SingleCellAssay object we can see the number of male and female cells in our groups. 
 
-Add sex to metadata of SingleCellAssay object
+The AD group has a lower proportion of female cells than CON, explaining the XIST difference. 
 ```{r mast_sex_cov1, eval=T, echo=T}
 
 colData(sca_exn)$sex <- ifelse(colData(sca_exn)$sample_id == "AD2b", "female", 
@@ -1679,12 +1679,15 @@ colData(sca_exn)$sex <- ifelse(colData(sca_exn)$sample_id == "AD2b", "female",
                                       ifelse(colData(sca_exn)$sample_id == "C1", "male",
                                              ifelse(colData(sca_exn)$sample_id == "C3", "female", "none!"))))
 
+table(colData(sca_exn)$Group, colData(sca_exn)$sex)
 ```
 
 ---
 ## MAST - sex as covariate
 
-Run MAST with sex as a covariate
+We seem to have pulled out a sex dependent effect in our data as opposed to changes due to our condition (AD vs CON).
+
+Because of this, we will re-run MAST with sex as a covariate
 
 Note: This can take a long time to run, the result can be loaded on next slide
 ```{r mast_sex_cov2, eval=F, echo=T}
