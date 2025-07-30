@@ -1592,14 +1592,12 @@ de_mast_exn <- de_mast_exn[order(de_mast_exn$FDR),]
 head(de_mast_exn, 3)
 ```
 
-
 ---
 ## MAST results
 
-The volcano plot form the MAST results looks more balanced than the Wilcoxon test, but we still have many genes that have low p-values paired with very low fold changes. This is because we treat each cell as a replicate. We will try ways to mitigate this later on. 
+The volcano plot from the MAST results looks more balanced than the Wilcoxon test, but we still have many genes that have low p-values paired with very low fold changes. This is because we treat each cell as a replicate. We will try ways to mitigate this later on.
 
 ```{r mast_noRE_plot,include=T,echo=T, eval=T}
-
 de_mast_exn$sig <- de_mast_exn$FDR < 0.05
 
 ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
@@ -1607,6 +1605,8 @@ ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
   scale_color_manual(values = c("grey", "red")) +
   theme_bw()
 ```
+
+
 
 ---
 ## Visualize top DE genes
@@ -1665,11 +1665,11 @@ We can see from the sample info taken from the publication that C3 and AD2b are 
 
 <img src="./imgs/sample_info_male_female.png"height="125" width="650">
 
-
+In a bulk experiment these groups would be balanced for sex, but in this case we treat cells as samples and so an imbalance in cell number for each sex across groups could occur.
 ---
 ## MAST - sex as covariate
 
-If we add sex to metadata of SingleCellAssay object we can see the number of male and female cells in our groups. 
+If we add sex to the metadata of the SingleCellAssay object, we can see the number of male and female cells in our groups. 
 
 The AD group has a lower proportion of female cells than CON, explaining the XIST difference. 
 ```{r mast_sex_cov1, eval=T, echo=T}
@@ -1760,12 +1760,12 @@ de_mast_exn[de_mast_exn$geneID == "XIST", ]
 
 ## MAST vs Wilcoxon
 
- * MAST models zeroes within the data, Wilcoxon does not
-  + This can lead to biases where the differences in number of zero values can heavily influence DE calculation for Wilcoxon.
+ * MAST can account for covariates 
+ * MAST models zeroes separately, Wilcoxon does not
+  + This can lead to more biases where the differences in number of zero values can heavily influence DE calculation for Wilcoxon.
+  + including CDR in MAST can also guard help with zero dropout biases.
  * MAST will give more reliable log fold change values as its based on the continuous data
   + Wilcoxon doesn't use fold change in it's calculation, so often mean expression values are used and dropouts can skew these values
- * MAST can account for covariates 
- * Wilcoxon results can be biased towards samples that have more cells  
  * However, Wilcoxon is fast and generally pretty robust, especially for differences between cell types where large differences are expected, and you are only taking the top markers.
 
 
