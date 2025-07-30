@@ -666,9 +666,9 @@ For more systematic comparison check out this [paper](https://pmc.ncbi.nlm.nih.g
 
 
 ```
-##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  12594089  672.6   25106191 1340.9   25106191 1340.9
-## Vcells 444437929 3390.8 1038839482 7925.8 1038821834 7925.6
+##             used   (Mb) gc trigger   (Mb)  max used   (Mb)
+## Ncells  13113942  700.4   26592568 1420.2  26592568 1420.2
+## Vcells 445298034 3397.4  997316394 7609.0 997315331 7609.0
 ```
 
 ---
@@ -1219,9 +1219,9 @@ Often domain specific knowledge and good reference datasets will outperform the 
 
 
 ```
-##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  13670477  730.1   25106191 1340.9   25106191 1340.9
-## Vcells 313113455 2388.9 1038839482 7925.8 1038821834 7925.6
+##             used   (Mb) gc trigger   (Mb)  max used   (Mb)
+## Ncells  14189472  757.8   26592568 1420.2  26592568 1420.2
+## Vcells 313973726 2395.5  997316394 7609.0 997315331 7609.0
 ```
 
 ---
@@ -1232,6 +1232,8 @@ class: inverse, center, middle
 &lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=720px&gt;&lt;/html&gt; 
 
 ---
+
+
 
 ## Differential expression analysis
 
@@ -1273,6 +1275,7 @@ p_all
 ![](Session3_files/figure-html/unnamed-chunk-68-1.png)&lt;!-- --&gt;
 
 ---
+
 ## Differentials within cell types
 
 In this section we will compare conditions *within* important subsets of cells, such as interesting cell types. We will look at gene expression differences between AD and control cells. 
@@ -1306,6 +1309,22 @@ table(seu_obj$celltype_condition)
 ##                    101
 ```
 
+---
+## Differentials within cell types
+
+It can be useful to visualize these proportions as well. We see that we generally have more AD cells, but every cluster has a reasonable number of both. 
+
+``` r
+plot_percents &lt;- data.frame(table(seu_obj$celltype_condition)) %&gt;%
+    tidyr::separate(Var1, sep = "_", into = c("cell_type", "condition")) %&gt;%
+    group_by(cell_type) %&gt;%
+    mutate(percent = Freq/sum(Freq))
+
+ggplot(plot_percents, aes(x = cell_type, y = percent, fill = condition)) + geom_bar(stat = "identity") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](Session3_files/figure-html/unnamed-chunk-69-1.png)&lt;!-- --&gt;
 
 ---
 
@@ -1319,7 +1338,7 @@ DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"), reduction = "umap"
     group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-69-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-70-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -1457,6 +1476,10 @@ head(de_wilcox, 3)
 ---
 ## Wilcoxon Rank Sum Test
 
+These results show a strange volcano plot. There are any genes with no change are called significant and it is not centered on zero. 
+
+Generally you will not be using this kind of test to identify differentially expressed genes between conditions. We will next discuss parametric tests that are better suited.
+
 
 ``` r
 de_wilcox$sig &lt;- de_wilcox$p_val_adj &lt; 0.05
@@ -1501,13 +1524,13 @@ ggplot(exn_toPlot, aes(x = SNX31, fill = condition)) + geom_density() + ggtitle(
     theme_classic() + xlim(0, 2)
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-76-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-77-1.png)&lt;!-- --&gt;
 
 ---
 ## MAST - including covariates
 
 Covariate or batch terms can be accounted for in the model formula
-  * For example, the fraction of genes expressed in a cell, or the cellular detection rate (CDR), is a suggested covariate
+  * For example, the number of genes expressed in a cell, or the cellular detection rate (CDR), is a suggested covariate
     + CDR is thought to measure unwanted technical and biological factors (e.g. batch, cell size)
 
 
@@ -1518,7 +1541,7 @@ Covariate or batch terms can be accounted for in the model formula
 ---
 ## Using MAST
 
-MAST requires a *SingleCellAssay* object with counts on a log scale. Importantly, zero counts should remain zero in any normalized data. 
+MAST requires a *SingleCellAssay* object with counts on a log scale and zero counts preserved after normalization. We can use the 'data' layer in the Seurat object.
 
 Here we are going to compare AD to control in excitatory neurons. These neurons are extracted from the Seurat object, and then we build the SingleCellAssay object. 
 
@@ -1552,7 +1575,7 @@ sca_exn
 ---
 ## Using MAST - calculate CDR
 
-The CDR (the fraction of genes that are detected in each cell) is calculated for each cell, then scaled (z-score).
+The CDR (the number of genes that are detected in each cell) is calculated for each cell, then scaled (z-score).
 
 
 ``` r
@@ -1606,9 +1629,12 @@ We obtain the embeddings from the PCA calculation previously done on the Seurat 
 
 
 ``` r
-pca_embed &lt;- data.frame(Embeddings(seu_exn, reduction = "pca"))
+pca_embed &lt;- data.frame(Embeddings(seu_exn, reduction = "pca"))  # get PCA embeddings
+
+# divide variance from each PC by total variance to get amount of variance
+# explained by that PC
 pca_vars &lt;- Stdev(seu_exn, reduction = "pca")^2
-total_var &lt;- sum(pca_vars)  # total variance
+total_var &lt;- sum(pca_vars)
 pct_var_explained &lt;- pca_vars/total_var * 100
 pct_var_explained &lt;- round(pct_var_explained, 1)
 
@@ -1641,7 +1667,7 @@ The CDR is included in the model and will be accounted for in determining differ
 
 The *zlm* function can take a long time when you have a high number of cells. It returns a data table with information about the test.
 
-Note: This can tke a long time to run, the result can be loaded on next slide
+Note: This can take a long time to run, the result can be loaded on next slide
 
 ``` r
 zlmCond_exn &lt;- zlm(~ngeneson + Group, sca_exn)
@@ -1667,7 +1693,18 @@ sumDT_exn &lt;- readRDS("~/Downloads/sumDT_exn.rds")
 ---
 ## MAST results
 
-The table from the *zlm* function contains p-values for both the continuous gene expression (component = 'C'), gene detection rate (component = 'D'), and the combined p-value for the hurdle method (component = 'H'). 
+The table from the *zlm* function contains p-values in the 'Pr(&gt;Chisq)' column. There are three p-values for each gene:
+
+  * continuous gene expression (component = 'C'): whether the gene expression is changing in cells where it is detected.
+  * gene detection rate (component = 'D'): whether the gene has different rates of being detected in a given cell across groups.
+  * combined p-value for the hurdle method (component = 'H')
+
+See table on next slide...
+
+---
+## MAST results
+
+Reminder: this table holds the p-values for the continuous gene expression (component = 'C') and gene detection rate (component = 'D'), as well as the combined p-value (component = 'H') in the 'Pr(&gt;Chisq)' column.
 
 The log2FC is also in this table in the 'coef' column.
 
@@ -1718,9 +1755,10 @@ head(de_mast_exn, 3)
 ## 3: ADARB2 -1.142667 -30.08747 6.272292e-183 5.458985e-179
 ```
 
-
 ---
 ## MAST results
+
+The volcano plot from the MAST results looks more balanced than the Wilcoxon test, but we still have many genes that have low p-values paired with very low fold changes. This is because we treat each cell as a replicate. We will try ways to mitigate this later on.
 
 
 ``` r
@@ -1732,10 +1770,12 @@ ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) + geom_poi
 
 ![](Session3_files/figure-html/mast_noRE_plot-1.png)&lt;!-- --&gt;
 
+
+
 ---
 ## Visualize top DE genes
 
-Look at the genes that go down in AD (up in control) in a violin plot
+Look at the top genes that go down in AD (up in control) in a violin plot. These genes are celarly changing across the conditions. 
 
 ``` r
 de_mast_exn_df &lt;- data.frame(de_mast_exn)
@@ -1788,7 +1828,7 @@ VlnPlot(seu_exn, features = sorta_down_AD$geneID, stack = T, flip = T, pt.size =
 
 We notice that the top DE gene from our analysis is XIST, which has much higher expression in females compared to males.
 
-This suggests that sex could be a confounding factor and is potentially a red flag that we should explore. XIST does seem to have localized expression to the group of cells that are only in one of the controls.  
+This suggests that sex could be a confounding factor and is potentially a red flag that we should explore.   
 
 
 ``` r
@@ -1801,28 +1841,39 @@ FeaturePlot(seu_exn, features = "XIST", split.by = "sample_id")
 ---
 ## Sample information
 
-We can see from the sample info taken from the publication that C3 is indeed female. So we appear to have pulled out a *sample dependent* effect, not a *group dependent* effect like we are aiming for.
+We can see from the sample info taken from the publication that C3 and AD2b are female. This could be driving the gene expression changes we are seeing. 
 
 &lt;img src="./imgs/sample_info_male_female.png"height="125" width="650"&gt;
 
-
+In a bulk experiment these groups would be balanced for sex, but in this case we treat cells as samples and so an imbalance in cell number for each sex across groups could occur.
 ---
 ## MAST - sex as covariate
 
-We will re-run MAST with sex as a covariate.
+If we add sex to the metadata of the SingleCellAssay object, we can see the number of male and female cells in our groups. 
 
-Add sex to metadata of SingleCellAssay object
+The AD group has a lower proportion of female cells than CON, explaining the XIST difference. 
 
 ``` r
 colData(sca_exn)$sex &lt;- ifelse(colData(sca_exn)$sample_id == "AD2b", "female", ifelse(colData(sca_exn)$sample_id ==
     "AD4", "male", ifelse(colData(sca_exn)$sample_id == "C1", "male", ifelse(colData(sca_exn)$sample_id ==
     "C3", "female", "none!"))))
+
+table(colData(sca_exn)$Group, colData(sca_exn)$sex)
+```
+
+```
+##      
+##       female male
+##   CON    969  326
+##   AD     328 2010
 ```
 
 ---
 ## MAST - sex as covariate
 
-Run MAST with sex as a covariate
+We seem to have pulled out a sex dependent effect in our data as opposed to changes due to our condition (AD vs CON).
+
+Because of this, we will re-run MAST with sex as a covariate
 
 Note: This can take a long time to run, the result can be loaded on next slide
 
@@ -1831,6 +1882,8 @@ zlmCond_exn_sex &lt;- zlm(~ngeneson + sex + Group, sca_exn)
 sumZLM_exn_sex &lt;- summary(zlmCond_exn_sex, doLRT = paste0("Group", "AD"))
 sumDT_exn_sex &lt;- sumZLM_exn_sex$datatable
 ```
+
+
 
 
 
@@ -1872,6 +1925,16 @@ head(de_mast_exn_sex, 3)
 ## 3:       PEG3  1.00613240 24.410163 8.852879e-168 7.704956e-164
 ```
 
+
+``` r
+de_mast_exn_sex$sig &lt;- de_mast_exn_sex$FDR &lt; 0.05
+
+ggplot(de_mast_exn_sex, aes(x = log2Fc, y = -log10(pvalue), color = sig)) + geom_point() +
+    scale_color_manual(values = c("grey", "red")) + theme_bw()
+```
+
+![](Session3_files/figure-html/unnamed-chunk-81-1.png)&lt;!-- --&gt;
+
 ---
 
 ## MAST results for XIST
@@ -1883,9 +1946,9 @@ de_mast_exn_sex[de_mast_exn_sex$geneID == "XIST", ]
 ```
 
 ```
-##    geneID     log2Fc         z       pvalue          FDR
-##    &lt;char&gt;      &lt;num&gt;     &lt;num&gt;        &lt;num&gt;        &lt;num&gt;
-## 1:   XIST -0.3376534 -4.619174 3.986526e-12 5.897348e-11
+##    geneID     log2Fc         z       pvalue          FDR    sig
+##    &lt;char&gt;      &lt;num&gt;     &lt;num&gt;        &lt;num&gt;        &lt;num&gt; &lt;lgcl&gt;
+## 1:   XIST -0.3376534 -4.619174 3.986526e-12 5.897348e-11   TRUE
 ```
 
 Previous MAST output:
@@ -1904,6 +1967,19 @@ de_mast_exn[de_mast_exn$geneID == "XIST", ]
 
 ## MAST vs Wilcoxon
 
+ * MAST can account for covariates 
+ * MAST models zeroes separately, Wilcoxon does not
+  + This can lead to more biases where the differences in number of zero values can heavily influence DE calculation for Wilcoxon.
+  + including CDR in MAST can also guard help with zero dropout biases.
+ * MAST will give more reliable log fold change values as its based on the continuous data
+  + Wilcoxon doesn't use fold change in it's calculation, so often mean expression values are used and dropouts can skew these values
+ * However, Wilcoxon is fast and generally pretty robust, especially for differences between cell types where large differences are expected, and you are only taking the top markers.
+
+
+---
+
+## MAST vs Wilcoxon
+
  * MAST models zeroes within the data, Wilcoxon does not
   + This can lead to biases where the differences in number of zero values can heavily influence DE calculation for Wilcoxon.
  * MAST will give more reliable log fold change values as its based on the continuous data
@@ -1912,6 +1988,7 @@ de_mast_exn[de_mast_exn$geneID == "XIST", ]
  * Wilcoxon results can be biased towards samples that have more cells  
  * However, Wilcoxon is fast and generally pretty robust, especially for differences between cell types where large differences are expected, and you are only taking the top markers.
 
+**Limitation of both methods:** Cells are treated as independent replicates, even though this is likely not a valid assumption. This is called pseudoreplication and results in many false positive DE genes.  
 
 ---
 class: inverse, center, middle
@@ -2051,6 +2128,8 @@ The *DESeq* function estimates size factors and dispersions before fitting the d
 
 Look at the [DESeq2 manual](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html) and our course on [bulk RNAseq](https://rockefelleruniversity.github.io/RU_RNAseq/) to get more information about how DESeq2 normalizes and determines differentially expressed genes. 
 
+We can look at the comparisons in our object with the *resultsNames* function. 
+
 
 ``` r
 dds_pseudo_exn &lt;- DESeq(dds_pseudo_exn)
@@ -2061,14 +2140,14 @@ resultsNames(dds_pseudo_exn)
 ## [1] "Intercept"           "condition_AD_vs_CON"
 ```
 
-``` r
-res_pseudo_exn &lt;- results(dds_pseudo_exn, name = "condition_AD_vs_CON")
-```
-
 ---
 ## Run DESeq2
 
+We then extract the results for AD over control using the *results* function and providing the name of the coefficient from the previous slide. 
+
+
 ``` r
+res_pseudo_exn &lt;- results(dds_pseudo_exn, name = "condition_AD_vs_CON")
 de_pseudo_exn &lt;- res_pseudo_exn %&gt;%
     data.frame %&gt;%
     arrange(pvalue) %&gt;%
@@ -2134,7 +2213,7 @@ VlnPlot(seu_exn, features = top_down_AD_ps$geneID, stack = T, flip = T, pt.size 
 
 ## DESeq2 - sex as covariate
 
-Add sex to metadata of DESeq2 dds object and make PCA plot
+Add sex to metadata of DESeq2 dds object and make PCA plot. As expected, we see that sex is driving more of the variance than our groups. 
 
 ``` r
 sample_ids &lt;- rownames(colData(dds_pseudo_exn))
@@ -2152,14 +2231,23 @@ plotPCA(rlog(dds_pseudo_exn), intgroup = "sex") + coord_cartesian() + theme_bw()
 
 ## Re-run DESeq2 with sex as covariate
 
-We notice that we now have no DE genes. This isn't terribly surprising given that we only have two replicates per condition and the sex is driving a lot of our variance.
+Sex can then be added as a covariate in the design of the DEseq object. We then re-run the *DESeq* function to get the updated DE results. 
 
-This doesn't mean the genes that were identified before adding sex as a covariate are invalid, you would just approach them with caution. This likely would be an indication that more replicates were necessary  to more confidently find DE genes. 
 
 ``` r
 dds_pseudo_exn_sex &lt;- dds_pseudo_exn
 design(dds_pseudo_exn_sex) &lt;- ~sex + condition
 dds_pseudo_exn_sex &lt;- DESeq(dds_pseudo_exn_sex)
+```
+
+---
+## Re-run DESeq2 with sex as covariate
+
+We notice that we now have no DE genes. This isn't terribly surprising given that we only have two replicates per condition and the sex is driving a lot of our variance.
+
+This doesn't mean the genes that were identified before adding sex as a covariate are invalid, you would just approach them with caution. This likely would be an indication that more replicates were necessary  to more confidently find DE genes. 
+
+``` r
 res_pseudo_exn_sex &lt;- results(dds_pseudo_exn_sex, name = "condition_AD_vs_CON")
 
 head(res_pseudo_exn_sex, 3)
@@ -2317,7 +2405,7 @@ p_pseudo &lt;- ggplot(de_pseudo_exn %&gt;%
 ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend = "bottom")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-86-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-88-1.png)&lt;!-- --&gt;
 
 ---
 ## Seurat FindMarkers for MAST
@@ -2363,7 +2451,7 @@ p_mast &lt;- ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig
 ggarrange(p_seuM, p_mast, common.legend = TRUE, legend = "bottom")
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-89-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-91-1.png)&lt;!-- --&gt;
 
 ---
 ## Seurat FindMarkers take home
@@ -2376,8 +2464,8 @@ Also, using the packages directly allow for a higher level of fine tuning for mo
 
 ```
 ##             used   (Mb) gc trigger    (Mb)   max used    (Mb)
-## Ncells  14277871  762.6   25106191  1340.9   25106191  1340.9
-## Vcells 520954361 3974.6 1450245253 11064.5 1510604479 11525.0
+## Ncells  14368660  767.4   26592568  1420.2   26592568  1420.2
+## Vcells 521370551 3977.8 1439043763 10979.1 1498937253 11436.0
 ```
 
 
@@ -2504,7 +2592,7 @@ seu_obj &lt;- quick_clust(seu_obj)
 DimPlot(seu_obj, group.by = "seurat_clusters", pt.size = 0.2, label = TRUE) + NoLegend()
 ```
 
-![](Session3_files/figure-html/unnamed-chunk-93-1.png)&lt;!-- --&gt;
+![](Session3_files/figure-html/unnamed-chunk-95-1.png)&lt;!-- --&gt;
 
 
 ---

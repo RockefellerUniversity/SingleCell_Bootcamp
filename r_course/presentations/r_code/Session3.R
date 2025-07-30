@@ -12,22 +12,23 @@ suppressPackageStartupMessages(require(scDblFinder))
 knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning = F, message=F)
 
 
-## ----sec3_loadPack,include=F,eval=FALSE---------------------------------------
-# library(Seurat)
-# library(scran)
-# library(scater)
-# library(ggplot2)
-# library(pheatmap)
-# library(TSCAN)
-# library(SoupX)
-# library(DropletUtils)
-# library(scuttle)
-# 
-# library(ggpubr)
-# library(DESeq2)
-# library(tibble)
-# library(dplyr)
-# library(MAST)
+## ----sec3_loadPack,include=F,eval=T-------------------------------------------
+library(Seurat)
+library(scran)
+library(scater)
+library(ggplot2)
+library(pheatmap)
+library(TSCAN)
+library(SoupX)
+library(DropletUtils)
+library(scuttle)
+
+library(ggpubr)
+library(DESeq2)
+library(tibble)
+library(dplyr)
+library(MAST)
+library(tidyr)
 
 
 ## ----sec_mergeData_funcUsed_dataProc,include=TRUE-----------------------------
@@ -634,6 +635,19 @@ seu_obj$celltype_condition <- paste(seu_obj$paper_annot, seu_obj$condition, sep 
 table(seu_obj$celltype_condition)
 
 
+
+## -----------------------------------------------------------------------------
+
+plot_percents <- data.frame(table(seu_obj$celltype_condition)) %>%
+  tidyr::separate(Var1, sep = "_", into = c("cell_type", "condition")) %>%
+  group_by(cell_type) %>%
+  mutate(percent = Freq/sum(Freq))
+
+ggplot(plot_percents, aes(x = cell_type, y = percent, fill = condition)) +
+  geom_bar(stat = "identity") +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
 ## ----results='hide',include=T,echo=T, eval=T, fig.width=10, fig.height=5------
 
 DimPlot(subset(seu_obj, paper_annot == "Excitatory Neurons"),  reduction = "umap", group.by = "condition", label = F) + ggtitle("Excitatory Neurons only - AD vs Control")
@@ -787,9 +801,11 @@ colData(sca_exn)[1:3, c("paper_annot", "ngeneson", "Group")]
 
 
 ## ----mast_cdr_pca-------------------------------------------------------------
-pca_embed <- data.frame(Embeddings(seu_exn, reduction = "pca"))
+pca_embed <- data.frame(Embeddings(seu_exn, reduction = "pca")) # get PCA embeddings
+
+# divide variance from each PC by total variance to get amount of variance explained by that PC
 pca_vars <-  Stdev(seu_exn, reduction = "pca")^2
-total_var <- sum(pca_vars) # total variance
+total_var <- sum(pca_vars) 
 pct_var_explained <- pca_vars/total_var * 100 
 pct_var_explained <- round(pct_var_explained, 1)
 
@@ -840,7 +856,6 @@ head(de_mast_exn, 3)
 
 
 ## ----mast_noRE_plot,include=T,echo=T, eval=T----------------------------------
-
 de_mast_exn$sig <- de_mast_exn$FDR < 0.05
 
 ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
@@ -849,7 +864,7 @@ ggplot(de_mast_exn, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
   theme_bw()
 
 
-## ----mast_topSig, echo=T, eval=T, fig.width=10--------------------------------
+## ----mast_topSig, echo=T, eval=T, fig.width=8---------------------------------
 de_mast_exn_df <- data.frame(de_mast_exn)
 de_mast_exn_df <- na.omit(de_mast_exn_df)
 top_down_AD <- head(de_mast_exn_df[de_mast_exn_df$log2Fc < 0, ], 5)
@@ -883,6 +898,7 @@ colData(sca_exn)$sex <- ifelse(colData(sca_exn)$sample_id == "AD2b", "female",
                                       ifelse(colData(sca_exn)$sample_id == "C1", "male",
                                              ifelse(colData(sca_exn)$sample_id == "C3", "female", "none!"))))
 
+table(colData(sca_exn)$Group, colData(sca_exn)$sex)
 
 
 ## ----mast_sex_cov2, eval=F, echo=T--------------------------------------------
@@ -913,6 +929,15 @@ de_mast_exn_sex$FDR <- p.adjust(de_mast_exn_sex$pvalue,'fdr')
 de_mast_exn_sex <- de_mast_exn_sex[order(de_mast_exn_sex$FDR),]
 
 head(de_mast_exn_sex, 3)
+
+
+## -----------------------------------------------------------------------------
+de_mast_exn_sex$sig <- de_mast_exn_sex$FDR < 0.05
+
+ggplot(de_mast_exn_sex, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_bw()
 
 
 ## ----mast_noRE_xist_table,include=T,echo=T, eval=T----------------------------
@@ -999,11 +1024,12 @@ dds_pseudo_exn <- dds_pseudo_exn[keep,]
 
 dds_pseudo_exn <- DESeq(dds_pseudo_exn)
 resultsNames(dds_pseudo_exn)
-res_pseudo_exn <- results(dds_pseudo_exn, name = "condition_AD_vs_CON")
+
 
 
 
 ## ----pseudo_results2,include=T,echo=T-----------------------------------------
+res_pseudo_exn <- results(dds_pseudo_exn, name = "condition_AD_vs_CON")
 de_pseudo_exn <- res_pseudo_exn %>%
   data.frame %>%
   arrange(pvalue) %>%
@@ -1052,6 +1078,10 @@ plotPCA(rlog(dds_pseudo_exn), intgroup = "sex")  + coord_cartesian() + theme_bw(
 dds_pseudo_exn_sex <- dds_pseudo_exn
 design(dds_pseudo_exn_sex) <- ~sex + condition
 dds_pseudo_exn_sex <- DESeq(dds_pseudo_exn_sex)
+
+
+## ----deseq2_sex_cov3, eval=T, echo=T------------------------------------------
+
 res_pseudo_exn_sex <- results(dds_pseudo_exn_sex, name = "condition_AD_vs_CON")
 
 head(res_pseudo_exn_sex, 3)
