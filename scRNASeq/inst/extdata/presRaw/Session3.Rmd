@@ -45,7 +45,6 @@ library(TSCAN)
 library(SoupX)
 library(DropletUtils)
 library(scuttle)
-
 library(ggpubr)
 library(DESeq2)
 library(tibble)
@@ -314,8 +313,6 @@ First we need to identify features for integration. We do this on our list of Se
 
 ```{r sec3_mergeData_RPCA_prep,include=TRUE,eval=T}
 
-
-
 feats <- SelectIntegrationFeatures(my_seu_list)
 
 my_seu_list_rpca <- lapply(my_seu_list, function(seu, feats){
@@ -357,7 +354,7 @@ To assess the integration we can use similar metrics to assessing the QC of the 
 - Are there discrete clusters?
 - Are there distinct markers (and do they make sense)?
 
-We also check the overlap of our datasets. Generally we expect most cells between samples to overlap, butt this can be very experiment dependent. 
+We also check the overlap of our datasets. Generally we expect most cells between samples to overlap, but this can be very experiment dependent. 
 
 ---
 ## Evaluating RPCA using clusters
@@ -382,7 +379,7 @@ DimPlot(my_seu_merge_rpca, group.by = "seurat_clusters", pt.size = 0.2)
 ---
 ## Heatmap - clusters
 
-We can check the numbers in each cluster. Broadly, there are similar numbers per cluster now. To do this we make a heatmap and then scale it along the row to accunt for the different number of cells in each sample.  
+We can check the numbers in each cluster. Broadly, there are similar numbers per cluster now. To do this we make a heatmap and then scale it along the row to account for the different number of cells in each sample.  
 
 ```{R}
 library(pheatmap)
@@ -458,15 +455,15 @@ if(params$isSlides == "yes"){
 
 Harmony works in a different way to rPCA. 
 
-1) Fuzzy clustering - It will assign clusters, but allow cells to belong to multiple clusters, and caluclate the strength of assingmetn to each cluster. 
+1) Fuzzy clustering - It will assign clusters, but allow cells to belong to multiple clusters, and calculate the strength of assingment to each cluster. 
 
 2) During clustering there is a penalty term, to maintain diversity of groups i.e. a cluster with just one sample is penalized. This means any structure due to a batch effect is not hard. 
 
 3) The centroid of each cluster is calculated for all cells and each individual sample, then a correction factor for each sample based on these centroids. 
 
-4) Cells are then moved based on the dataset correction factor, weighted by their individual assignment scores for each clsuter
+4) Cells are then moved based on the dataset correction factor, weighted by their individual assignment scores for each cluster
 
-5) Repeat iteratviely until convergence. 
+5) Repeat iteratively until convergence. 
 
 ---
 ## Harmony
