@@ -689,7 +689,7 @@ rm(seu_merge_harmony)
 
 ```{r, echo=F, warning=FALSE, message=F}
 rm(seu_merge_harmony, my_seu_list_rpca,my_seu_list,seu_merge)
-gc()
+temp <- gc()
 ```
 
 ---
@@ -1122,7 +1122,7 @@ Often domain specific knowledge and good reference datasets will outperform the 
 
 ```{r, echo=F, warning=FALSE, message=F}
 rm(hpcad)
-gc()
+temp <- gc()
 ```
 
 ---
@@ -2252,7 +2252,7 @@ Also, using the packages directly allow for a higher level of fine tuning for mo
 ---
 ```{r, echo=F, warning=FALSE, message=F}
 rm(seu_obj, counts, counts_mat, sca_exn, seu_exn, seu_exn_data,sumDT_exn, sumDT_exn_sex, dds_pseudo_exn,res_pseudo_exn, seu_mast,seu_deseq)
-gc()
+temp <- gc()
 ```
 
 
@@ -2379,7 +2379,7 @@ hto.mat[,1]
 ```{r, echo=F, eval=T, warning=F, message=FALSE, include=F}
 
 rm(hto.mat, rna.mat )
-gc()
+temp <- gc()
 ```
 
 ---
