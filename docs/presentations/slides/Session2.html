@@ -2421,19 +2421,19 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 ```
 
 ```
-## 21:56:07 UMAP embedding parameters a = 0.9922 b = 1.112
+## 15:38:05 UMAP embedding parameters a = 0.9922 b = 1.112
 ```
 
 ```
-## 21:56:07 Read 8381 rows and found 17 numeric columns
+## 15:38:05 Read 8381 rows and found 17 numeric columns
 ```
 
 ```
-## 21:56:07 Using Annoy for neighbor search, n_neighbors = 30
+## 15:38:05 Using Annoy for neighbor search, n_neighbors = 30
 ```
 
 ```
-## 21:56:07 Building Annoy index with metric = cosine, n_trees = 50
+## 15:38:05 Building Annoy index with metric = cosine, n_trees = 50
 ```
 
 ```
@@ -2446,14 +2446,14 @@ seu_obj &lt;- RunUMAP(seu_obj, dims = 1:pc, reduction = "pca")
 
 ```
 ## **************************************************|
-## 21:56:07 Writing NN index file to temp file /tmp/RtmpC5dmwy/file197039cd00bd
-## 21:56:07 Searching Annoy index using 1 thread, search_k = 3000
-## 21:56:10 Annoy recall = 100%
-## 21:56:10 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 21:56:11 Initializing from normalized Laplacian + noise (using RSpectra)
-## 21:56:11 Commencing optimization for 500 epochs, with 353242 positive edges
-## 21:56:11 Using rng type: pcg
-## 21:56:19 Optimization finished
+## 15:38:06 Writing NN index file to temp file /tmp/RtmpAkOaKy/file197272f98843
+## 15:38:06 Searching Annoy index using 1 thread, search_k = 3000
+## 15:38:09 Annoy recall = 100%
+## 15:38:09 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 15:38:10 Initializing from normalized Laplacian + noise (using RSpectra)
+## 15:38:10 Commencing optimization for 500 epochs, with 353242 positive edges
+## 15:38:10 Using rng type: pcg
+## 15:38:18 Optimization finished
 ```
 
 ---
@@ -2763,8 +2763,8 @@ VlnPlot(seu_cbFilt, features = mark_gene, group.by = "seurat_clusters", pt.size 
 
 ```
 ##            used  (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells  5339124 285.2    8504751  454.3   8504751  454.3
-## Vcells 65121113 496.9  261650797 1996.3 278991991 2128.6
+## Ncells  5338959 285.2    8509907  454.5   8509907  454.5
+## Vcells 65120836 496.9  261650263 1996.3 278991723 2128.6
 ```
 
 ---
@@ -3676,7 +3676,7 @@ seu_filt &lt;- FindClusters(seu_filt, resolution = 0.5)
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.8912
 ## Number of communities: 13
-## Elapsed time: 0 seconds
+## Elapsed time: 1 seconds
 ```
 
 ``` r
@@ -3730,7 +3730,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.9375
 ## Number of communities: 9
-## Elapsed time: 0 seconds
+## Elapsed time: 1 seconds
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 8088
@@ -3757,7 +3757,7 @@ reso_res &lt;- lapply(1:length(reso), function(x, seu_filt, reso) {
 ## Running Louvain algorithm...
 ## Maximum modularity in 10 random starts: 0.8912
 ## Number of communities: 13
-## Elapsed time: 0 seconds
+## Elapsed time: 1 seconds
 ## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 ## 
 ## Number of nodes: 8088

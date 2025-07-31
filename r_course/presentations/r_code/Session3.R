@@ -3,25 +3,17 @@ list(isSlides = "no")
 
 ## ----setup, include=FALSE-----------------------------------------------------
 suppressPackageStartupMessages(require(knitr))
-suppressPackageStartupMessages(require(DropletUtils))
+
 suppressPackageStartupMessages(require(SingleCellExperiment))
-suppressPackageStartupMessages(require(scran))
-suppressPackageStartupMessages(require(scater))
-suppressPackageStartupMessages(require(scuttle))
-suppressPackageStartupMessages(require(scDblFinder))
+
 knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning = F, message=F)
 
 
 ## ----sec3_loadPack,include=F,eval=T-------------------------------------------
 library(Seurat)
-library(scran)
-library(scater)
+
 library(ggplot2)
 library(pheatmap)
-library(TSCAN)
-library(SoupX)
-library(DropletUtils)
-library(scuttle)
 library(ggpubr)
 library(DESeq2)
 library(tibble)
@@ -319,7 +311,7 @@ rm(seu_merge_harmony)
 
 ## ----echo=F, warning=FALSE, message=F-----------------------------------------
 rm(seu_merge_harmony, my_seu_list_rpca,my_seu_list,seu_merge)
-gc()
+temp <- gc()
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
@@ -580,7 +572,7 @@ pheatmap::pheatmap(tbl,scale = "row")
 
 ## ----echo=F, warning=FALSE, message=F-----------------------------------------
 rm(hpcad)
-gc()
+temp <- gc()
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
@@ -1204,7 +1196,7 @@ ggarrange(p_seuM, p_mast, common.legend = TRUE, legend="bottom")
 
 ## ----echo=F, warning=FALSE, message=F-----------------------------------------
 rm(seu_obj, counts, counts_mat, sca_exn, seu_exn, seu_exn_data,sumDT_exn, sumDT_exn_sex, dds_pseudo_exn,res_pseudo_exn, seu_mast,seu_deseq)
-gc()
+temp <- gc()
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
@@ -1266,7 +1258,7 @@ hto.mat[,1]
 ## ----echo=F, eval=T, warning=F, message=FALSE, include=F----------------------
 
 rm(hto.mat, rna.mat )
-gc()
+temp <- gc()
 
 
 ## ----sec3_CITE_hto,include=TRUE,eval=T----------------------------------------
