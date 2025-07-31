@@ -1978,17 +1978,17 @@ de_pseudo_exn <- res_pseudo_exn %>%
   arrange(pvalue) %>%
   rownames_to_column(var = "geneID") 
 
-head(de_pseudo_exn, 3)
+head(de_pseudo_exn)
 ```
 
 ---
 ## Investigate mitochondiral genes
 
-Our top genes are mitochondrial genes, which immediately raises a red flag. A violin plot confirms that our AD samples have high mitochondiral expression, but one sample might be driving this. 
+Our top genes are mitochondrial genes, which immediately raises a red flag. A violin plot confirms that our AD samples have high mitochondrial expression, but one sample might be driving this. 
 
 While it could be a biological effect, we also know that mitochondrial gene expression can be a technical artifact. We likely need more replicates to be more confident in the results. 
-```{r}
-VlnPlot(seu_exn, features = "percent.mt", split.by = "celltype_condition", group.by = "sample_id")
+```{r, fig.width=10, fig.height= 4}
+VlnPlot(seu_exn, features = c("percent.mt", de_pseudo_exn$geneID[1:2]), split.by = "celltype_condition", group.by = "sample_id")
 ```
 
 ---
@@ -2103,8 +2103,10 @@ names(de_mast_re) <- c("geneID","log2Fc","z","pvalue")
 de_mast_re$FDR <- p.adjust(de_mast_re$pvalue,'fdr')
 de_mast_re <- de_mast_re[order(de_mast_re$FDR),]
 
-head(de_mast_re, 3)
+head(de_mast_re)
 ```
+
+
 
 ---
 
@@ -2143,42 +2145,33 @@ if(params$isSlides == "yes"){
 
 ```
 
-## Seurat FindMarkers for DESeq2
 
-The Seurat *FindMarkers* function has an option to use MAST or DESeq2 with the 'test.use' argument, and the Seurat differential expression [vignette](https://satijalab.org/seurat/articles/de_vignette.html) describes this in their workflows. Shouldn't we just use this?
+## Seurat FindMarkers?
 
+The Seurat *FindMarkers* function has an option to use MAST or DESeq2 with the 'test.use' argument, and the Seurat differential expression [vignette](https://satijalab.org/seurat/articles/de_vignette.html) describes this in their workflows. 
 
-```{r}
-# test deseq output to deseq using findmarkers
-Idents(seu_exn_aggr) <- "condition"
-seu_deseq <- FindMarkers(object = seu_exn_aggr,
-                         ident.1 = "AD",
-                         ident.2 = "CON",
-                         test.use = "DESeq2", 
-                         slot = "counts",
-                         min.cells.group = 2)
+Shouldn't we just use this?
 
-seu_deseq$sig = seu_deseq$p_val_adj < 0.05
-```
 
 ---
-## Compare DESeq2 results to Seurat
+## Seurat FindMarkers?
 
-```{r}
-p_seuD <- ggplot(seu_deseq, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
-  geom_point() +
-  scale_color_manual(values = c("grey", "red")) +
-  theme_bw() + ggtitle("FindMarkers")
-p_pseudo <- ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) +
-  geom_point() +
-  scale_color_manual(values = c("grey", "red")) +
-  theme_bw() + ggtitle("Using DESeq2 directly")
+The Seurat *FindMarkers* function has an option to use MAST or DESeq2 with the 'test.use' argument, and the Seurat differential expression [vignette](https://satijalab.org/seurat/articles/de_vignette.html) describes this in their workflows. 
 
-ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend="bottom")
-```
+Shouldn't we just use this?
 
+Take home: For MAST or DESeq2, it's not recommended. 
+
+  * for pseudobulk with DESeq2, covariates cannot be included
+  * more complex models in MAST, such as mixed models with random effect, are not possible
+  * FindMarkers (as of Seruat v5.0) returns the log2FoldChange as calculated by Seurat
+    + simply based on the average expression in each group without considering the underlying method and how they calculate fold change.
+    + this mismatch often results in strange volcano plots
+    
 ---
 ## Seurat FindMarkers for MAST
+
+We can test this out with MAST. Below we use *FindMarkers* to compare AD to CON, while controlling for the CDR (number of genes detected in a cell)
 
 Note: Running this will take a while, so load the object on the next slide to see the plot
 ```{r, eval=F}
@@ -2220,6 +2213,8 @@ seu_mast <- readRDS("./data/seu_mast_exn.rds")
 ---
 ## Compare results
 
+It's pretty clear the fold change values in the *FindMarkers* volcano plot don't match up well with the p-values. 
+
 ```{r}
 
 p_seuM <- ggplot(seu_mast, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
@@ -2235,11 +2230,19 @@ ggarrange(p_seuM, p_mast, common.legend = TRUE, legend="bottom")
 ```
 
 ---
-## Seurat FindMarkers take home
 
-Currently (Seurat v5.0) the fold change information from DESeq2 or MAST is not carried over by *FindMarkers*. When defining gene sets with fold change cutoffs or visualizing gene expression changes, by not using the fold changes that account for normalization done by that algorithm, you can get funky results.
+## Things to remember
 
-Also, using the packages directly allow for a higher level of fine tuning for more complex parameters (e.g random effect in MAST). 
+  * While it's okay for finding markers between distinct clusters, *FindMarkers* from Seurat and the default Wilcoxon rank sum test are generally not appropriate for more subtle changes between conditions
+  
+  * MAST can be run without replicates, but approach the results with caution 
+      + treating each cell as an independent sample is not really a valid assumption, leading to pseudoreplication bias and many false positive DE genes.
+      
+  * With replicates, using a pseudobulk strategy is often preferred due to ease of use and well-established methods from bulk RNAseq
+  
+  * MAST using a mixed model with random effect can also be used when replicates exist, but this is less common and more computationally expensive. 
+  
+
 
 ---
 ```{r, echo=F, warning=FALSE, message=F}
@@ -2487,20 +2490,6 @@ seu_obj_onlysinglet <- subset(seu_obj, HTO_classification.global=="Singlet")
 seu_obj_onlyHTOA <- subset(seu_obj, HTO_classification=="HTO-A")
 
 ```
-  
----
-## Cell Ranger 9
-
-New Cell Ranger came out last week. We are yet to test it but new features include:
-
-* Automated annotation for human data sets [in beta]
-* UMAPs are made instead of tSNE
-* New [Web Summary](https://cf.10xgenomics.com/samples/cell-exp/9.0.0/5k_Human_Donor4_PBMC_3p_gem-x_5k_Human_Donor4_PBMC_3p_gem-x/5k_Human_Donor4_PBMC_3p_gem-x_5k_Human_Donor4_PBMC_3p_gem-x_web_summary.html) layout
-* EmptyDrops false discovery rate (FDR) threshold has been lowered 
-* cellranger mkfastq is being deprecated
-* [New Workflow](https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/running-pipelines/cr-3p-multi#hashing-5p-gex-vdj) for hashtagged data
-
-  
 
 ---
 

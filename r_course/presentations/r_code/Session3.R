@@ -22,7 +22,6 @@ library(TSCAN)
 library(SoupX)
 library(DropletUtils)
 library(scuttle)
-
 library(ggpubr)
 library(DESeq2)
 library(tibble)
@@ -139,8 +138,6 @@ if(params$isSlides == "yes"){
 
 
 ## ----sec3_mergeData_RPCA_prep,include=TRUE,eval=T-----------------------------
-
-
 
 feats <- SelectIntegrationFeatures(my_seu_list)
 
@@ -931,15 +928,6 @@ de_mast_exn_sex <- de_mast_exn_sex[order(de_mast_exn_sex$FDR),]
 head(de_mast_exn_sex, 3)
 
 
-## -----------------------------------------------------------------------------
-de_mast_exn_sex$sig <- de_mast_exn_sex$FDR < 0.05
-
-ggplot(de_mast_exn_sex, aes(x = log2Fc, y = -log10(pvalue), color = sig)) +
-  geom_point() +
-  scale_color_manual(values = c("grey", "red")) +
-  theme_bw()
-
-
 ## ----mast_noRE_xist_table,include=T,echo=T, eval=T----------------------------
 
 de_mast_exn_sex[de_mast_exn_sex$geneID == "XIST", ]
@@ -1007,10 +995,23 @@ column_meta <- data.frame(
   condition = ifelse(grepl("AD", colnames(counts_aggr)), "AD", "CON")
 )
 column_meta$condition <- factor(column_meta$condition, levels = c("CON", "AD"))
+column_meta
 
 
-dds_pseudo_exn <- DESeqDataSetFromMatrix(countData = counts_aggr, colData = column_meta, design = ~condition)
-colData(dds_pseudo_exn)
+## ----deseq2_sex_cov1, eval=T, echo=T, fig.height = 3--------------------------
+
+sample_ids <- rownames(column_meta)
+column_meta$sex <- ifelse(sample_ids == "AD2b_AD", "female", 
+                                      ifelse(sample_ids == "AD4_AD", "male",
+                                             ifelse(sample_ids == "C1_CON", "male",
+                                                    ifelse(sample_ids == "C3_CON", "female", "none!"))))
+column_meta$sex <- as.factor(column_meta$sex)
+column_meta
+
+
+## -----------------------------------------------------------------------------
+dds_pseudo_exn <- DESeqDataSetFromMatrix(countData = counts_aggr, colData = column_meta, design = ~sex + condition)
+dds_pseudo_exn
 
 
 ## ----pseudo_filter,include=T,echo=T-------------------------------------------
@@ -1018,6 +1019,12 @@ smallestGroupSize <- 2
 keep <- rowSums(counts(dds_pseudo_exn) >= 10) >= smallestGroupSize
 table(keep)
 dds_pseudo_exn <- dds_pseudo_exn[keep,]
+
+
+## ----fig.width=8, fig.height=3------------------------------------------------
+pca_cond <- plotPCA(rlog(dds_pseudo_exn), intgroup = "condition")  + coord_cartesian() + theme_bw() + ggtitle("Color by condition")
+pca_sex <- plotPCA(rlog(dds_pseudo_exn), intgroup = "sex")  + coord_cartesian() + theme_bw() + ggtitle("Color by sex")
+ggarrange(pca_cond, pca_sex, ncol = 2)
 
 
 ## ----pseudo_results,include=T,echo=T------------------------------------------
@@ -1035,14 +1042,11 @@ de_pseudo_exn <- res_pseudo_exn %>%
   arrange(pvalue) %>%
   rownames_to_column(var = "geneID") 
 
-head(de_pseudo_exn, 3)
+head(de_pseudo_exn)
 
 
-## ----pseudo_MA_PCA, fig.width = 10--------------------------------------------
-ma <- ggplot(de_pseudo_exn, aes(x = baseMean, y = log2FoldChange)) + geom_point() + theme_bw() +scale_x_log10() + ggtitle("MA plot") 
-pca <- plotPCA(rlog(dds_pseudo_exn))  + coord_cartesian() + theme_bw() + ggtitle("PCA")
-
-ggarrange(ma, pca, ncol = 2)
+## ----fig.width=10, fig.height= 4----------------------------------------------
+VlnPlot(seu_exn, features = c("percent.mt", de_pseudo_exn$geneID[1:2]), split.by = "celltype_condition", group.by = "sample_id")
 
 
 ## ----pseudo_plot,include=T,echo=T, fig.height = 3-----------------------------
@@ -1054,37 +1058,6 @@ ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), co
   theme_bw()
 
 
-
-
-## ----pseudo_violin1, echo=T, eval=T, fig.width=7------------------------------
-de_pseudo_exn_df <- na.omit(de_pseudo_exn)
-top_down_AD_ps <- head(de_pseudo_exn_df[de_pseudo_exn_df$log2FoldChange < 0, ], 5)
-VlnPlot(seu_exn, features = top_down_AD_ps$geneID, stack = T, flip = T, pt.size = 1)  + scale_x_discrete(labels=c('CON', 'AD'))
-
-
-
-## ----deseq2_sex_cov1, eval=T, echo=T, fig.height = 3--------------------------
-
-sample_ids <- rownames(colData(dds_pseudo_exn))
-colData(dds_pseudo_exn)$sex <- ifelse(sample_ids == "AD2b_AD", "female", 
-                                      ifelse(sample_ids == "AD4_AD", "male",
-                                             ifelse(sample_ids == "C1_CON", "male",
-                                                    ifelse(sample_ids == "C3_CON", "female", "none!"))))
-colData(dds_pseudo_exn)$sex <- as.factor(colData(dds_pseudo_exn)$sex)
-plotPCA(rlog(dds_pseudo_exn), intgroup = "sex")  + coord_cartesian() + theme_bw() + ggtitle("PCA")
-
-
-## ----deseq2_sex_cov2, eval=T, echo=T------------------------------------------
-dds_pseudo_exn_sex <- dds_pseudo_exn
-design(dds_pseudo_exn_sex) <- ~sex + condition
-dds_pseudo_exn_sex <- DESeq(dds_pseudo_exn_sex)
-
-
-## ----deseq2_sex_cov3, eval=T, echo=T------------------------------------------
-
-res_pseudo_exn_sex <- results(dds_pseudo_exn_sex, name = "condition_AD_vs_CON")
-
-head(res_pseudo_exn_sex, 3)
 
 
 ## ----results='asis',include=TRUE,echo=FALSE-----------------------------------
@@ -1150,7 +1123,7 @@ names(de_mast_re) <- c("geneID","log2Fc","z","pvalue")
 de_mast_re$FDR <- p.adjust(de_mast_re$pvalue,'fdr')
 de_mast_re <- de_mast_re[order(de_mast_re$FDR),]
 
-head(de_mast_re, 3)
+head(de_mast_re)
 
 
 ## ----mast_re_plot,include=T,echo=T, eval=T------------------------------------
@@ -1183,32 +1156,6 @@ if(params$isSlides == "yes"){
   
 }
 
-
-
-## -----------------------------------------------------------------------------
-# test deseq output to deseq using findmarkers
-Idents(seu_exn_aggr) <- "condition"
-seu_deseq <- FindMarkers(object = seu_exn_aggr,
-                         ident.1 = "AD",
-                         ident.2 = "CON",
-                         test.use = "DESeq2", 
-                         slot = "counts",
-                         min.cells.group = 2)
-
-seu_deseq$sig = seu_deseq$p_val_adj < 0.05
-
-
-## -----------------------------------------------------------------------------
-p_seuD <- ggplot(seu_deseq, aes(x = avg_log2FC, y = -log10(p_val_adj), color = sig)) +
-  geom_point() +
-  scale_color_manual(values = c("grey", "red")) +
-  theme_bw() + ggtitle("FindMarkers")
-p_pseudo <- ggplot(de_pseudo_exn %>% na.omit, aes(x = log2FoldChange, y = -log10(pvalue), color = sig)) +
-  geom_point() +
-  scale_color_manual(values = c("grey", "red")) +
-  theme_bw() + ggtitle("Using DESeq2 directly")
-
-ggarrange(p_seuD, p_pseudo, common.legend = TRUE, legend="bottom")
 
 
 ## ----eval=F-------------------------------------------------------------------
