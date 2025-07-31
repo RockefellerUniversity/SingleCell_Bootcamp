@@ -1,22 +1,22 @@
 Package: scRNASeq
 Type: Package
 Title: scRNAseq Bootcamp
-Version: 0.1.1
-Author: Matt Paul, Ji-Dung Luo and Thomas Carroll.
+Version: 3.0.0
+Author: Matt Paul, Ji-Dung Luo, Jenelys Ruiz-Ortiz and Thomas Carroll.
 Maintainer: Thomas Carroll <tc.infomatics@gmail>
-Description: This pacakge shows an example framework to build a teaching course. 
+Description: This package contains course material for the BRC scRNAseq bootcamp.
 License: What license is it under?
 LazyData: TRUE
 biocViews: Training
 Remotes: satijalab/seurat-wrappers
-Depends: DropletUtils, scDblFinder, SingleCellExperiment, scran, scater, Seurat, 
-    dplyr, scuttle, biomaRt, Herper, clustree, ggplot2, pheatmap, harmony, 
-    SingleR, RCurl,TSCAN, SoupX, clustree, devtools, hdf5r, celldex, irlba, ggpubr, DESeq2, dplyr, tibble, MAST, tidyr
+Depends: SingleCellExperiment, Seurat, 
+    dplyr, Herper, clustree, ggplot2, pheatmap, harmony, 
+    SingleR, devtools, celldex, 
+    ggpubr, DESeq2, dplyr, tibble, MAST, tidyr
 Suggests: knitr,
     rmarkdown,
     testthat,
-    yaml,
-    SeuratData
+    yaml
 SystemRequirements: R, RStudio
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
