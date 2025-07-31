@@ -241,6 +241,12 @@ jobs:
           compileCourses::compileSingleCourseMaterial(repo="RockefellerUniversity",subdir="scRNASeq",branch="main")
         shell: Rscript {0}
 
+      - name: free disk space 4
+        run: |
+          df -h
+        shell:
+          bash {0}
+
       - name: Move to docs
         run: |
           mkdir -p docs
