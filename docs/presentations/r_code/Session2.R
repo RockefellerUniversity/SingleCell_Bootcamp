@@ -5,7 +5,7 @@ list(isSlides = "no")
 suppressPackageStartupMessages(require(knitr))
 suppressPackageStartupMessages(require(Seurat))
 suppressPackageStartupMessages(require(dplyr))
-suppressPackageStartupMessages(require(bioMart))
+
 suppressPackageStartupMessages(require(SeuratWrappers))
 suppressPackageStartupMessages(require(ggplot2))
 knitr::opts_chunk$set(echo = TRUE, tidy = T)
