@@ -26,25 +26,17 @@ params:
 
 ```{r setup, include=FALSE}
 suppressPackageStartupMessages(require(knitr))
-suppressPackageStartupMessages(require(DropletUtils))
+
 suppressPackageStartupMessages(require(SingleCellExperiment))
-suppressPackageStartupMessages(require(scran))
-suppressPackageStartupMessages(require(scater))
-suppressPackageStartupMessages(require(scuttle))
-suppressPackageStartupMessages(require(scDblFinder))
+
 knitr::opts_chunk$set(echo = TRUE, tidy = T, fig.height=4, fig.width=7, warning = F, message=F)
 ```
 
 ```{r sec3_loadPack,include=F,eval=T}
 library(Seurat)
-library(scran)
-library(scater)
+
 library(ggplot2)
 library(pheatmap)
-library(TSCAN)
-library(SoupX)
-library(DropletUtils)
-library(scuttle)
 library(ggpubr)
 library(DESeq2)
 library(tibble)
